@@ -18,7 +18,7 @@ import {
 import { filterScores } from './search';
 import type { Score } from './types';
 
-const pdf = (id: string) => ({ id, sha256: id, blob: new Blob(['x']), size: 1, pageCount: 2 });
+const pdf = (id: string) => ({ id, sha256: id, size: 1, pageCount: 2 });
 
 beforeEach(async () => {
   await Promise.all(db.tables.map((t) => t.clear()));

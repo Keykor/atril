@@ -57,7 +57,7 @@ PWA en TypeScript, todo en el cliente, sin backend. Se mantiene el rumbo del pla
 | Render PDF   | pdfjs-dist en Web Worker                                                                 |
 | Anotaciones  | Capa SVG por página + canvas vivo para el trazo en curso + perfect-freehand              |
 | Estado       | `dexie-react-hooks` (`useLiveQuery`) + `useState`. Sin Zustand                           |
-| Persistencia | IndexedDB con Dexie, PDFs como Blob                                                      |
+| Persistencia | IndexedDB con Dexie, PDFs como ArrayBuffer                                               |
 | Rutas        | Router mínimo propio sobre `history` (para el botón atrás de Android). Sin librería      |
 | Estilos      | CSS plano con variables (tokens sacados de los diseños). Sin framework                   |
 | Fuentes      | Instrument Sans y Caveat self-hosteadas con `@fontsource` (Google Fonts no anda offline) |
@@ -92,13 +92,17 @@ type ID = string; // crypto.randomUUID()
 interface PdfFile {
   id: ID;
   sha256: string;
-  blob: Blob;
   size: number;
   pageCount: number;
+  missing?: boolean; // viene de un backup liviano: hay que reimportar el PDF
+}
+interface PdfData {
+  id: ID; // el mismo id que PdfFile
+  data: ArrayBuffer;
 }
 interface Thumbnail {
   scoreId: ID;
-  blob: Blob;
+  data: ArrayBuffer; // JPEG
 }
 interface Tag {
   id: ID;
@@ -192,6 +196,7 @@ interface JumpLink {
 ```ts
 db.version(1).stores({
   pdfs: 'id, &sha256',
+  pdfData: 'id',
   thumbnails: 'scoreId',
   tags: 'id, name',
   scores: 'id, pdfId, title, composer, *tagIds, updatedAt, lastOpenedAt',
@@ -363,6 +368,13 @@ Ajustes acordados:
 - Miniaturas en tabla aparte, para no cargar 300 blobs en cada consulta de la biblioteca.
 - Tabla `tags` con color; `Score.tags: string[]` pasa a `tagIds`.
 - `startNotes[].label` opcional: cubre tanto notas por voz (S, A, T, B) como un acorde único.
+
+Cambios durante la implementación:
+
+- **PDFs y miniaturas como `ArrayBuffer`, no `Blob`, y los bytes en una tabla `pdfData` aparte.**
+  WebKit falla al guardar Blobs en IndexedDB en algunos contextos ("Error preparing Blob/File
+  data to be stored in object store"; reproducido en el WebKit de Playwright). Con la tabla
+  aparte, las consultas de metadatos y el dedupe por SHA-256 no cargan los PDFs en memoria.
 
 Alternativas descartadas:
 

@@ -42,8 +42,10 @@ export function deleteScore(id: string) {
     await db.annotations.where('scoreId').equals(id).delete();
     await db.bookmarks.where('scoreId').equals(id).delete();
     await db.links.where('scoreId').equals(id).delete();
-    if ((await db.scores.where('pdfId').equals(score.pdfId).count()) === 0)
+    if ((await db.scores.where('pdfId').equals(score.pdfId).count()) === 0) {
       await db.pdfs.delete(score.pdfId);
+      await db.pdfData.delete(score.pdfId);
+    }
     const now = Date.now();
     await db.setlists
       .filter((l) => l.items.some((i) => i.type === 'score' && i.scoreId === id))

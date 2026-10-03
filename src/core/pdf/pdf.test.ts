@@ -4,7 +4,7 @@ import { db } from '../db/db';
 import { importPdf, sha256, titleFromFilename } from './import';
 import { LRU } from './lru';
 
-const inspect = async () => ({ pageCount: 3, thumbnail: new Blob(['t']) });
+const inspect = async () => ({ pageCount: 3, thumbnail: new ArrayBuffer(1) });
 const pdf = (text: string) => new Blob([text]);
 
 beforeEach(async () => {
@@ -33,10 +33,12 @@ test('reimportar el mismo PDF no duplica', async () => {
 test('un PDF pendiente de un backup liviano se reengancha', async () => {
   await importPdf(pdf('uno'), 'uno.pdf', inspect);
   const row = (await db.pdfs.toArray())[0];
-  await db.pdfs.put({ ...row, blob: undefined });
+  await db.pdfs.put({ ...row, missing: true });
+  await db.pdfData.clear();
   expect(await importPdf(pdf('uno'), 'uno.pdf', inspect)).toBe('relinked');
   expect(await db.scores.count()).toBe(1);
-  expect((await db.pdfs.get(row.id))!.blob).toBeDefined();
+  expect((await db.pdfs.get(row.id))!.missing).toBeUndefined();
+  expect(await db.pdfData.count()).toBe(1);
 });
 
 test('LRU desaloja el menos usado', () => {

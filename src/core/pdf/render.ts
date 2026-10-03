@@ -17,9 +17,9 @@ export function openPdf(pdfId: string) {
   if (current?.id === pdfId) return current.doc;
   current?.doc.then((d) => d.loadingTask.destroy()).catch(() => {});
   pages.clear();
-  const doc = db.pdfs.get(pdfId).then(async (pdf) => {
-    if (!pdf?.blob) throw new MissingPdfError(pdfId);
-    return pdfjs.getDocument({ data: await pdf.blob.arrayBuffer() }).promise;
+  const doc = db.pdfData.get(pdfId).then((pdf) => {
+    if (!pdf) throw new MissingPdfError(pdfId);
+    return pdfjs.getDocument({ data: pdf.data }).promise;
   });
   current = { id: pdfId, doc };
   doc.catch(() => {
@@ -73,9 +73,9 @@ export async function inspectPdf(data: ArrayBuffer) {
   const doc = await pdfjs.getDocument({ data }).promise;
   try {
     const canvas = await draw(doc, 0, 300);
-    const thumbnail = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.8));
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.8));
     canvas.width = canvas.height = 1;
-    return { pageCount: doc.numPages, thumbnail };
+    return { pageCount: doc.numPages, thumbnail: (await blob?.arrayBuffer()) ?? null };
   } finally {
     await doc.loadingTask.destroy();
   }

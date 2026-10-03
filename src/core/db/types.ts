@@ -3,13 +3,19 @@ export type ID = string;
 export interface PdfFile {
   id: ID;
   sha256: string;
-  blob?: Blob; // ausente = viene de un backup liviano y hay que reimportar el PDF
   size: number;
   pageCount: number;
+  missing?: boolean; // viene de un backup liviano: hay que reimportar el PDF
+}
+// Los bytes van en tablas aparte y como ArrayBuffer: WebKit falla al guardar Blobs en
+// IndexedDB en algunos contextos, y así las consultas de metadatos no cargan los PDFs.
+export interface PdfData {
+  id: ID; // el mismo id que PdfFile
+  data: ArrayBuffer;
 }
 export interface Thumbnail {
   scoreId: ID;
-  blob: Blob;
+  data: ArrayBuffer; // JPEG
 }
 export interface Tag {
   id: ID;

@@ -3,6 +3,7 @@ import type {
   Bookmark,
   JumpLink,
   PageAnnotations,
+  PdfData,
   PdfFile,
   Score,
   SetList,
@@ -13,6 +14,7 @@ import type {
 
 export class AtrilDB extends Dexie {
   pdfs!: Table<PdfFile, string>;
+  pdfData!: Table<PdfData, string>;
   thumbnails!: Table<Thumbnail, string>;
   tags!: Table<Tag, string>;
   scores!: Table<Score, string>;
@@ -27,6 +29,7 @@ export class AtrilDB extends Dexie {
     // Un cambio de esquema es una nueva version(n) con migración. Nunca se borra la base.
     this.version(1).stores({
       pdfs: 'id, &sha256',
+      pdfData: 'id',
       thumbnails: 'scoreId',
       tags: 'id, name',
       scores: 'id, pdfId, title, composer, *tagIds, updatedAt, lastOpenedAt',
