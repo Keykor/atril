@@ -60,8 +60,9 @@ export function AnnotationToolbar(p: Props) {
       <button className="icon-btn" aria-label={a.redo} disabled={!p.canRedo} onClick={p.onRedo}>
         <Icon name="redo" size={22} />
       </button>
-      <button className="btn primary" onClick={p.onDone}>
-        {t.done}
+      <button className="btn primary at-done" aria-label={t.done} onClick={p.onDone}>
+        <Icon name="check" size={20} />
+        <span>{t.done}</span>
       </button>
 
       {styleOpen && (

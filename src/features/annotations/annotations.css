@@ -131,3 +131,25 @@
   margin-left: 2px;
   padding: 0 12px;
 }
+.at-done {
+  gap: 6px;
+}
+/* Celulares angostos (320–380px): controles más chicos y "Listo" solo con ícono, para que
+   la fila entera entre en pantalla. */
+@media (max-width: 380px) {
+  .annotation-toolbar {
+    gap: 0;
+    padding: 4px;
+  }
+  .annotation-toolbar .icon-btn,
+  .annotation-toolbar > .at-color {
+    width: 34px;
+  }
+  .at-done span {
+    display: none;
+  }
+  .annotation-toolbar .btn.at-done {
+    width: 40px;
+    padding: 0;
+  }
+}

@@ -123,3 +123,16 @@ test('las notas de inicio se graban con el teclado y aparece el botón para dar 
   await panel.getByRole('button', { name: 'Cerrar herramientas' }).click();
   await clickBar(page, 'Nota · Fa4');
 });
+
+test('la barra de anotar entra entera en un celular de 320px', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await openScore(page);
+  await clickBar(page, 'Anotar');
+  for (const name of ['Lápiz', 'Goma', 'Color y grosor', 'Deshacer', 'Rehacer', 'Listo']) {
+    const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(320);
+  }
+  await page.getByRole('button', { name: 'Listo' }).click();
+  await expect(page.getByRole('toolbar')).toHaveCount(0);
+});
