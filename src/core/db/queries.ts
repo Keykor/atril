@@ -77,7 +77,7 @@ export async function getSetting<T>(key: string, fallback: T): Promise<T> {
 }
 
 /** Pistas del tutorial ya vistas en este dispositivo (no viajan en el backup). */
-export const getHintsSeen = () => getSetting<string[]>('hintsSeen', []);
+export const getHintsSeen = () => getSetting<string[] | null>('hintsSeen', null);
 
 export const getGlobalReading = async (): Promise<ReadingPrefs> => ({
   ...defaultReading,

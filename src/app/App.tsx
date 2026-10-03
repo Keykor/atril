@@ -1,6 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getSetList } from '../core/db/queries';
+import { initHints } from '../core/db/repos';
+import { HelpCard, HelpScreen } from '../features/help/HelpScreen';
 import { LibraryScreen } from '../features/library/LibraryScreen';
 import { TagNav } from '../features/library/TagNav';
 import { ListsScreen } from '../features/setlists/ListsScreen';
@@ -10,9 +12,11 @@ import { InstallBanner, InstallCard } from '../features/settings/Install';
 import { VersionCard } from '../features/settings/Update';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { back, navigate, useRoute } from './router';
+import { helpHref, HINTS, useHint } from './hints';
 import { ScoreScreen } from './ScoreScreen';
 import { Shell } from './Shell';
 import { t } from './strings';
+import { Hint } from '../ui/Hint';
 
 export function App() {
   const [section, id, sub] = useRoute();
@@ -20,17 +24,26 @@ export function App() {
   const drive = useDriveState();
   const footer = <BackupStatus />;
 
+  useEffect(() => void initHints([...HINTS]), []);
+
   if (section === 'score' && id) return <ScoreScreen key={id} scoreId={id} />;
   if (section === 'show' && id) return <ShowRoute listId={id} index={Number(sub ?? 0)} />;
   if (section === 'settings')
     return (
       <Shell section="settings" footer={footer}>
         <SettingsScreen>
+          <HelpCard />
           <BackupCard />
           <DriveCard />
           <InstallCard />
           <VersionCard />
         </SettingsScreen>
+      </Shell>
+    );
+  if (section === 'help')
+    return (
+      <Shell section="settings" footer={footer}>
+        <HelpScreen section={id} />
       </Shell>
     );
   if (section === 'lists')
@@ -41,6 +54,7 @@ export function App() {
           onSelect={(listId) => navigate(listId ? `/lists/${listId}` : '/lists', !!id)}
           onShow={(listId, index) => navigate(`/show/${listId}/${index}`)}
         />
+        {id && <ListsHint />}
       </Shell>
     );
   return (
@@ -61,6 +75,21 @@ export function App() {
         }
       />
     </Shell>
+  );
+}
+
+/** Pista de las listas, al abrir una por primera vez. */
+function ListsHint() {
+  const hint = useHint('lists');
+  if (!hint.show) return null;
+  return (
+    <Hint
+      {...t.hints.lists}
+      doneLabel={t.hints.done}
+      moreLabel={t.hints.more}
+      moreHref={helpHref('lists')}
+      onDone={hint.done}
+    />
   );
 }
 

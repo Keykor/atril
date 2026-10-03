@@ -20,7 +20,10 @@ import { ReadingSheet } from '../features/reader/ReadingSheet';
 import { nextView, resolveOrder, type View } from '../features/reader/sequence';
 import { nextInShow, prevInShow, scoreNumber } from '../features/setlists/show';
 import { ShowIndex, ShowNext, ShowProgress } from '../features/setlists/ShowParts';
+import { Hint } from '../ui/Hint';
 import { Icon } from '../ui/Icon';
+import { TapZonesHint } from '../features/reader/TapZonesHint';
+import { helpHref, useHint } from './hints';
 import { PlayStartNotes } from './reader-tools';
 import { back, navigate } from './router';
 import { t } from './strings';
@@ -64,6 +67,9 @@ export function ScoreScreen({ scoreId, show }: Props) {
   const [target, setTarget] = useState<{ pos: number; y: number; nonce: number; id?: string }>();
   const [returnTo, setReturnTo] = useState<{ view: View; label: string }>();
   const history = useAnnotationHistory();
+  const readerHint = useHint('reader');
+  const annotateHint = useHint('annotate');
+  const markersHint = useHint('markers');
 
   const pdfId = score?.pdfId;
   useEffect(() => {
@@ -488,6 +494,34 @@ export function ScoreScreen({ scoreId, show }: Props) {
       )}
       {sheet === 'meta' && (
         <MetaSheet scoreId={score.id} onClose={() => setSheet(null)} onDeleted={back} />
+      )}
+
+      {/* Pistas de una sola vez. Nunca en modo show: en escena nada tapa la música. */}
+      {!show && readerHint.show && !annotating && !sheet && (
+        <TapZonesHint
+          zones={prefs.tapZones}
+          labels={{ ...t.hints.reader, done: t.hints.done, more: t.hints.more }}
+          moreHref={helpHref('reader')}
+          onDone={readerHint.done}
+        />
+      )}
+      {!show && annotating && annotateHint.show && (
+        <Hint
+          {...t.hints.annotate}
+          doneLabel={t.hints.done}
+          moreLabel={t.hints.more}
+          moreHref={helpHref('annotate')}
+          onDone={annotateHint.done}
+        />
+      )}
+      {!show && sheet === 'markers' && markersHint.show && (
+        <Hint
+          {...t.hints.markers}
+          doneLabel={t.hints.done}
+          moreLabel={t.hints.more}
+          moreHref={helpHref('markers')}
+          onDone={markersHint.done}
+        />
       )}
     </div>
   );
