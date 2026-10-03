@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import { db } from '../../core/db/db';
+import { listTags } from '../../core/db/queries';
 import { addTag, deleteTag, renameTag } from '../../core/db/repos';
 import { Icon } from '../../ui/Icon';
 import { Sheet } from '../../ui/Sheet';
@@ -17,7 +17,7 @@ interface Props {
 
 /** Filtro por etiqueta: lista en la barra lateral o chips en celular. */
 export function TagNav({ tagId, onSelect, variant }: Props) {
-  const tags = useLiveQuery(() => db.tags.orderBy('name').toArray(), []) ?? [];
+  const tags = useLiveQuery(listTags, []) ?? [];
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');

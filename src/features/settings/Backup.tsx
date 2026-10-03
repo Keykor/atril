@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useRef, useState } from 'react';
 import { BackupFormatError } from '../../core/backup/atril';
 import { backupDue, exportToFile, getLastBackupAt, importFromFile } from '../../core/backup/files';
-import { db } from '../../core/db/db';
+import { firstDataAt } from '../../core/db/queries';
 import { Icon } from '../../ui/Icon';
 import { ago } from '../../ui/time';
 import { t } from '../../app/strings';
@@ -13,7 +13,7 @@ const b = t.backup;
 function useBackupState() {
   return useLiveQuery(async () => {
     const last = await getLastBackupAt();
-    const first = (await db.scores.orderBy('updatedAt').first())?.createdAt;
+    const first = await firstDataAt();
     return { last, due: backupDue(Date.now(), last, first) };
   }, []);
 }

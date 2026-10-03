@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
-import { db } from '../core/db/db';
+import { getScore, getScoreMarkers } from '../core/db/queries';
 import {
   addBookmark,
   addLink,
@@ -43,13 +43,10 @@ interface Props {
 
 /** Pantalla de lectura: compone el lector con las barras y las hojas de cada feature. */
 export function ScoreScreen({ scoreId, show }: Props) {
-  const score = useLiveQuery(() => db.scores.get(scoreId).then((s) => s ?? null), [scoreId]);
+  const score = useLiveQuery(() => getScore(scoreId), [scoreId]);
   const global = useLiveQuery(getGlobalReading, []);
   const penOnly = useLiveQuery(() => getSetting('penOnlyDrawing', false), []) ?? false;
-  const bookmarks = useLiveQuery(
-    () => db.bookmarks.where('scoreId').equals(scoreId).toArray(),
-    [scoreId],
-  );
+  const bookmarks = useLiveQuery(() => getScoreMarkers(scoreId), [scoreId])?.bookmarks;
   const [sizes, setSizes] = useState<{ w: number; h: number }[] | 'missing'>();
   const [view, setView] = useState<View>();
   const [bars, setBars] = useState(false);

@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { formatStartNotes, parseStartNotes } from '../../core/audio/notes';
-import { db } from '../../core/db/db';
+import { getScore, listTags } from '../../core/db/queries';
 import { deleteScore, updateScore } from '../../core/db/repos';
 import type { Score } from '../../core/db/types';
 import { Sheet } from '../../ui/Sheet';
@@ -16,8 +16,8 @@ interface Props {
 
 /** Editor de metadatos. Se usa desde la biblioteca y desde el lector. */
 export function MetaSheet({ scoreId, onClose, onDeleted }: Props) {
-  const score = useLiveQuery(() => db.scores.get(scoreId), [scoreId]);
-  const tags = useLiveQuery(() => db.tags.orderBy('name').toArray(), []) ?? [];
+  const score = useLiveQuery(() => getScore(scoreId), [scoreId]);
+  const tags = useLiveQuery(listTags, []) ?? [];
   if (!score) return null;
   return (
     <Sheet title={t.meta.title} closeLabel={t.close} onClose={onClose}>

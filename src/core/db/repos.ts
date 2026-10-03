@@ -1,4 +1,6 @@
 import { db, newId } from './db';
+
+export { newId };
 import {
   defaultReading,
   type Bookmark,
@@ -107,6 +109,8 @@ export async function addSetList(name: string) {
 
 export const updateSetList = (id: string, patch: Partial<SetList>) =>
   db.setlists.update(id, { ...patch, updatedAt: Date.now() });
+
+export const deleteSetList = (id: string) => db.setlists.delete(id);
 
 export async function duplicateSetList(id: string, suffix: string) {
   const src = await db.setlists.get(id);
