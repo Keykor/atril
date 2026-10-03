@@ -70,3 +70,19 @@ export async function importFiles(
   onProgress?.(files.length, files.length);
   return counts;
 }
+
+/** Miniaturas que faltan (no viajan en el backup): se regeneran desde el PDF. */
+export async function regenerateThumbnails() {
+  const have = new Set(await db.thumbnails.toCollection().primaryKeys());
+  for (const score of await db.scores.toArray()) {
+    if (have.has(score.id)) continue;
+    const pdf = await db.pdfData.get(score.pdfId);
+    if (!pdf) continue;
+    try {
+      const { thumbnail } = await defaultInspect(pdf.data);
+      if (thumbnail) await db.thumbnails.put({ scoreId: score.id, data: thumbnail });
+    } catch (e) {
+      console.error('No se pudo generar la miniatura', score.title, String(e));
+    }
+  }
+}

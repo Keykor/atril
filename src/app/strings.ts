@@ -155,6 +155,30 @@ export const t = {
     halves: 'Mitades',
     halvesHint: 'barras con toque largo',
   },
+  backup: {
+    title: 'Backup',
+    intro:
+      'Tus partituras y anotaciones viven solo en este dispositivo. Guardá un backup para no perderlas y para pasarlas a otro dispositivo.',
+    last: (date: string) => `Último backup: ${date}`,
+    never: 'Todavía no hiciste ningún backup.',
+    exportAll: 'Exportar todo (.atril)',
+    exportLight: 'Exportar liviano',
+    lightHint:
+      'El liviano no lleva los PDFs: pesa poco y sirve para mandar por WhatsApp. Al importarlo, cada partitura se reengancha con su PDF cuando lo volvés a importar.',
+    import: 'Importar backup',
+    working: 'Trabajando…',
+    exported: 'Backup exportado.',
+    imported: (scores: number, pending: number) =>
+      `Backup importado: ${scores} ${scores === 1 ? 'partitura' : 'partituras'}` +
+      (pending ? `. A ${pending} les falta el PDF: importalos de nuevo.` : '.'),
+    badFile: 'Ese archivo no es un backup de Atril.',
+    failed: 'No se pudo completar. Probá de nuevo.',
+    reminder: 'Pasó más de una semana sin backup. Guardá uno para no perder tus anotaciones.',
+    sidebarTitle: 'Backup',
+    sidebarExport: 'Exportar archivo',
+    sidebarNever: 'Sin backup todavía',
+    sidebarLast: (date: string) => `Guardado el ${date}`,
+  },
   settings: {
     title: 'Ajustes',
     penOnly: 'Solo el lápiz dibuja',

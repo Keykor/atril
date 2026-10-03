@@ -4,6 +4,7 @@ import { db } from '../core/db/db';
 import { LibraryScreen } from '../features/library/LibraryScreen';
 import { TagNav } from '../features/library/TagNav';
 import { ListsScreen } from '../features/setlists/ListsScreen';
+import { BackupCard, BackupReminder } from '../features/settings/Backup';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { back, navigate, useRoute } from './router';
 import { ScoreScreen } from './ScoreScreen';
@@ -19,7 +20,9 @@ export function App() {
   if (section === 'settings')
     return (
       <Shell section="settings">
-        <SettingsScreen />
+        <SettingsScreen>
+          <BackupCard />
+        </SettingsScreen>
       </Shell>
     );
   if (section === 'lists')
@@ -37,7 +40,12 @@ export function App() {
       section="library"
       sidebar={<TagNav tagId={tagId} onSelect={setTagId} variant="sidebar" />}
     >
-      <LibraryScreen tagId={tagId} onTag={setTagId} onOpen={(sid) => navigate(`/score/${sid}`)} />
+      <LibraryScreen
+        tagId={tagId}
+        onTag={setTagId}
+        onOpen={(sid) => navigate(`/score/${sid}`)}
+        banner={<BackupReminder />}
+      />
     </Shell>
   );
 }
