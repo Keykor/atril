@@ -28,6 +28,32 @@ export function click(time: number, accent: boolean) {
   osc.stop(time + 0.06);
 }
 
+/**
+ * Nota del teclado: suena mientras la tecla está apretada y se apaga al soltarla. Devuelve la
+ * función que la suelta. Sostenida, se va apagando sola en unos segundos, como un piano.
+ */
+export function holdNote(midi: number) {
+  const c = audio();
+  const t = c.currentTime;
+  const osc = c.createOscillator();
+  const gain = c.createGain();
+  osc.type = 'triangle';
+  osc.frequency.value = midiToFreq(midi);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(0.5, t + 0.01);
+  gain.gain.setTargetAtTime(0.0001, t + 0.01, 2.5);
+  osc.connect(gain).connect(c.destination);
+  osc.start(t);
+  osc.stop(t + 15); // tope por si nunca llega el soltar
+  return () => {
+    const now = c.currentTime;
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+    osc.stop(now + 0.3);
+  };
+}
+
 /** Nota para dar el tono: ataque inmediato y caída suave. */
 export function playNote(midi: number, duration = 1.4, delay = 0) {
   const c = audio();

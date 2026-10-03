@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { playNote } from '../../core/audio/engine';
+import { holdNote, playNote } from '../../core/audio/engine';
 import { beatsOf, Metronome, tapTempo } from '../../core/audio/metronome';
 import { midiToLabel, midiToSci, parseNote } from '../../core/audio/notes';
 import type { Score, StartNotes } from '../../core/db/types';
@@ -172,10 +172,34 @@ function KeyboardBox({
   const [octave, setOctave] = useState(4);
   // Grabando: las teclas que se tocan pasan a ser las notas de inicio de la partitura.
   const [recording, setRecording] = useState<number[]>();
-  const press = (midi: number) => {
-    playNote(midi);
+  // Tecla apretada -> cómo soltarla, por dedo (se pueden tocar varias a la vez).
+  const held = useRef(new Map<number, () => void>());
+  useEffect(() => {
+    const keys = held.current;
+    return () => keys.forEach((stop) => stop());
+  }, []);
+  const press = (e: React.PointerEvent, midi: number) => {
+    // El soltar llega a esta tecla aunque el dedo se haya corrido.
+    try {
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Puntero sintético o ya suelto: sin captura, igual suena.
+    }
+    held.current.get(e.pointerId)?.();
+    held.current.set(e.pointerId, holdNote(midi));
     if (recording) setRecording([...recording, midi]);
   };
+  const release = (e: React.PointerEvent) => {
+    held.current.get(e.pointerId)?.();
+    held.current.delete(e.pointerId);
+  };
+  const keyProps = (midi: number) => ({
+    'aria-label': label(midi),
+    onPointerDown: (e: React.PointerEvent) => press(e, midi),
+    onPointerUp: release,
+    onPointerCancel: release,
+    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+  });
   const first = (octave + 1) * 12; // Do de la octava
   const keys = Array.from({ length: 24 }, (_, i) => first + i);
   const whites = keys.filter((m) => !BLACK.has(m % 12));
@@ -210,12 +234,7 @@ function KeyboardBox({
       </header>
       <div className="kb" role="group" aria-label={p.keyboardLabel}>
         {whites.map((midi) => (
-          <button
-            key={midi}
-            className="kb-white"
-            aria-label={label(midi)}
-            onPointerDown={() => press(midi)}
-          >
+          <button key={midi} className="kb-white" {...keyProps(midi)}>
             {midi % 12 === 0 && <span>{midiToLabel(midi)}</span>}
           </button>
         ))}
@@ -229,8 +248,7 @@ function KeyboardBox({
                 key={midi}
                 className="kb-black"
                 style={{ left: `${(whiteIndex / whites.length) * 100}%` }}
-                aria-label={label(midi)}
-                onPointerDown={() => press(midi)}
+                {...keyProps(midi)}
               />
             );
           })}
