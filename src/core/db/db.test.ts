@@ -7,6 +7,7 @@ import {
   addTag,
   deleteScore,
   deleteTag,
+  renameTag,
   duplicateSetList,
   emptyAnnotations,
   getGlobalReading,
@@ -49,6 +50,14 @@ test('borrar una partitura borra lo suyo y la saca de las listas', async () => {
 
   await deleteScore(other.id);
   expect(await db.pdfs.count()).toBe(0);
+});
+
+test('renombrar una etiqueta no la saca de las partituras', async () => {
+  const tag = await addTag('Sacro', '#15803D');
+  const s = await addScore({ pdfId: 'p', title: 'Ave verum', tagIds: [tag.id] });
+  await renameTag(tag.id, 'Repertorio sacro');
+  expect((await db.tags.get(tag.id))!.name).toBe('Repertorio sacro');
+  expect((await db.scores.get(s.id))!.tagIds).toEqual([tag.id]);
 });
 
 test('borrar una etiqueta la saca de las partituras', async () => {

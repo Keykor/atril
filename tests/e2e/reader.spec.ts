@@ -89,7 +89,7 @@ test('metrónomo y teclado: el panel abre, marca los tiempos y guarda el tempo',
   page,
 }) => {
   await openScore(page);
-  await clickBar(page, 'Metrónomo');
+  await clickBar(page, 'Ensayo');
   const panel = page.getByRole('region', { name: 'Herramientas de ensayo' });
   await expect(panel.getByRole('group', { name: 'Teclado de dos octavas' })).toBeVisible();
 
@@ -103,7 +103,36 @@ test('metrónomo y teclado: el panel abre, marca los tiempos y guarda el tempo',
   // El tempo quedó en la partitura.
   await page.waitForTimeout(700);
   await panel.getByRole('button', { name: 'Cerrar herramientas' }).click();
-  await clickBar(page, 'Más opciones');
-  await page.getByRole('button', { name: 'Datos de la partitura' }).click();
+  await clickBar(page, 'Datos de la partitura');
   await expect(page.getByRole('dialog').getByLabel('BPM')).toHaveValue('73');
+});
+
+test('las notas de inicio se graban con el teclado y aparece el botón para dar el tono', async ({
+  page,
+}) => {
+  await openScore(page);
+  await tapAt(page, 0.5);
+  // Sin notas guardadas, el botón "Nota" no está.
+  await expect(page.locator('.reader-tools')).not.toContainText('Nota');
+  await clickBar(page, 'Ensayo');
+  const panel = page.getByRole('region', { name: 'Herramientas de ensayo' });
+  await panel.getByRole('button', { name: 'Grabar con el teclado' }).click();
+  await panel.getByRole('button', { name: 'Fa4', exact: true }).dispatchEvent('pointerdown');
+  await panel.getByRole('button', { name: 'Do4', exact: true }).dispatchEvent('pointerdown');
+  await panel.getByRole('button', { name: 'Guardar' }).click();
+  await panel.getByRole('button', { name: 'Cerrar herramientas' }).click();
+  await clickBar(page, 'Nota · Fa4');
+});
+
+test('la barra de anotar entra entera en un celular de 320px', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await openScore(page);
+  await clickBar(page, 'Anotar');
+  for (const name of ['Lápiz', 'Goma', 'Color y grosor', 'Deshacer', 'Rehacer', 'Listo']) {
+    const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(320);
+  }
+  await page.getByRole('button', { name: 'Listo' }).click();
+  await expect(page.getByRole('toolbar')).toHaveCount(0);
 });

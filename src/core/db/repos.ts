@@ -64,6 +64,8 @@ export async function addTag(name: string, color: string) {
   return tag;
 }
 
+export const renameTag = (id: string, name: string) => db.tags.update(id, { name });
+
 export function deleteTag(id: string) {
   return db.transaction('rw', db.tags, db.scores, async () => {
     await db.tags.delete(id);
@@ -130,6 +132,8 @@ export async function addBookmark(data: Omit<Bookmark, 'id'>) {
 export async function addLink(data: Omit<JumpLink, 'id'>) {
   await db.links.add({ id: newId(), ...data });
 }
+export const deleteBookmark = (id: string) => db.bookmarks.delete(id);
+export const deleteLink = (id: string) => db.links.delete(id);
 
 // --- Ajustes ---
 

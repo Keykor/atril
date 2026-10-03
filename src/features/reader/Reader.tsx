@@ -19,6 +19,9 @@ interface Props {
   interceptTap?: () => boolean; // true = el toque ya se usó (p. ej. pausar el autoscroll)
   overlay?: (page: number) => ReactNode; // capas por página real (anotaciones, saltos)
   autoscroll?: number; // px por segundo; solo en modo vertical
+  // Ir a un punto de una página (marcador). `y` es 0..1 de la página real. En paginado la
+  // página ya se ve entera, así que solo se usa en modo vertical.
+  scrollTarget?: { pos: number; y: number; nonce: number };
 }
 
 const TURN_MS = 180;
@@ -308,6 +311,19 @@ export function Reader(p: Props) {
     scroller.current!.scrollTop = vertical.pages[p.view.pos].top * zoom;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vertical, p.view.pos]);
+
+  // Va después del efecto de view.pos, que deja el scroll al tope de la página.
+  const targetNonce = p.scrollTarget?.nonce;
+  useEffect(() => {
+    const target = p.scrollTarget;
+    const pg = target && vertical?.pages[target.pos];
+    if (!target || !pg) return;
+    const size = p.sizes[p.order[target.pos]];
+    const geo = pageGeometry(size, p.crop, pg.w);
+    const y = pg.top + Math.max(0, target.y * geo.fullH - geo.top) - box.h * 0.2;
+    scroller.current!.scrollTop = Math.max(0, y) * zoom;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetNonce, vertical]);
 
   const onScroll = () => {
     if (!vertical) return;

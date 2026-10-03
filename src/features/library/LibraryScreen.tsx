@@ -73,14 +73,15 @@ export function LibraryScreen({ tagId, onTag, onOpen, banner }: Props) {
             onChange={(e) => setQuery(e.target.value)}
           />
         </label>
-        <button
+        <select
           className="btn"
           aria-label={t.library.sort}
-          onClick={() => setSort(sort === 'recent' ? 'az' : 'recent')}
+          value={sort}
+          onChange={(e) => setSort(e.target.value as 'recent' | 'az')}
         >
-          {sort === 'recent' ? t.library.sortRecent : t.library.sortAz}
-          <Icon name="down" size={16} />
-        </button>
+          <option value="recent">{t.library.sortRecent}</option>
+          <option value="az">{t.library.sortAz}</option>
+        </select>
         <button className="btn primary" onClick={() => fileInput.current?.click()}>
           <Icon name="upload" size={18} />
           {t.library.import}
