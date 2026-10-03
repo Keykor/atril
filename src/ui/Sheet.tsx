@@ -1,0 +1,41 @@
+import { useEffect, type ReactNode } from 'react';
+import { Icon } from './Icon';
+import './ui.css';
+
+interface Props {
+  title: string;
+  closeLabel: string;
+  onClose: () => void;
+  children: ReactNode;
+}
+
+/** Hoja inferior modal (en pantallas anchas queda centrada abajo). */
+export function Sheet({ title, closeLabel, onClose, children }: Props) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <section
+        className="sheet"
+        role="dialog"
+        aria-label={title}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <div className="sheet-handle" />
+        <header className="sheet-header">
+          <h2>{title}</h2>
+          <button className="icon-btn round" aria-label={closeLabel} onClick={onClose}>
+            <Icon name="close" />
+          </button>
+        </header>
+        <div className="sheet-body">{children}</div>
+      </section>
+    </div>
+  );
+}

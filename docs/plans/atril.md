@@ -49,24 +49,24 @@ PWA en TypeScript, todo en el cliente, sin backend. Se mantiene el rumbo del pla
 
 ### Stack
 
-| Pieza | Elección |
-| --- | --- |
-| Build | Vite + TypeScript strict |
-| UI | React 19 |
-| PWA | vite-plugin-pwa (Workbox): manifest, service worker, offline, share_target |
-| Render PDF | pdfjs-dist en Web Worker |
-| Anotaciones | Capa SVG por página + canvas vivo para el trazo en curso + perfect-freehand |
-| Estado | `dexie-react-hooks` (`useLiveQuery`) + `useState`. Sin Zustand |
-| Persistencia | IndexedDB con Dexie, PDFs como Blob |
-| Rutas | Router mínimo propio sobre `history` (para el botón atrás de Android). Sin librería |
-| Estilos | CSS plano con variables (tokens sacados de los diseños). Sin framework |
-| Fuentes | Instrument Sans y Caveat self-hosteadas con `@fontsource` (Google Fonts no anda offline) |
-| Backup | fflate (zip), formato `.atril` |
-| Drive | Google Identity Services + Drive API v3, scope `drive.file`, `VITE_GOOGLE_CLIENT_ID` |
-| Audio | Web Audio API directa |
-| Reordenar | @dnd-kit |
-| Tests | Vitest + Playwright (Chromium y WebKit) |
-| Hosting | GitHub Pages |
+| Pieza        | Elección                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------- |
+| Build        | Vite + TypeScript strict                                                                 |
+| UI           | React 19                                                                                 |
+| PWA          | vite-plugin-pwa (Workbox): manifest, service worker, offline, share_target               |
+| Render PDF   | pdfjs-dist en Web Worker                                                                 |
+| Anotaciones  | Capa SVG por página + canvas vivo para el trazo en curso + perfect-freehand              |
+| Estado       | `dexie-react-hooks` (`useLiveQuery`) + `useState`. Sin Zustand                           |
+| Persistencia | IndexedDB con Dexie, PDFs como ArrayBuffer                                               |
+| Rutas        | Router mínimo propio sobre `history` (para el botón atrás de Android). Sin librería      |
+| Estilos      | CSS plano con variables (tokens sacados de los diseños). Sin framework                   |
+| Fuentes      | Instrument Sans y Caveat self-hosteadas con `@fontsource` (Google Fonts no anda offline) |
+| Backup       | fflate (zip), formato `.atril`                                                           |
+| Drive        | Google Identity Services + Drive API v3, scope `drive.file`, `VITE_GOOGLE_CLIENT_ID`     |
+| Audio        | Web Audio API directa                                                                    |
+| Reordenar    | @dnd-kit                                                                                 |
+| Tests        | Vitest + Playwright (Chromium y WebKit)                                                  |
+| Hosting      | GitHub Pages                                                                             |
 
 Se instala la última versión estable de cada paquete y se fija en el lockfile. No se suman
 dependencias fuera de esta tabla sin justificarlo en el PR.
@@ -89,22 +89,45 @@ dependencias fuera de esta tabla sin justificarlo en el PR.
 ```ts
 type ID = string; // crypto.randomUUID()
 
-interface PdfFile { id: ID; sha256: string; blob: Blob; size: number; pageCount: number }
-interface Thumbnail { scoreId: ID; blob: Blob }
-interface Tag { id: ID; name: string; color: string }
+interface PdfFile {
+  id: ID;
+  sha256: string;
+  size: number;
+  pageCount: number;
+  missing?: boolean; // viene de un backup liviano: hay que reimportar el PDF
+}
+interface PdfData {
+  id: ID; // el mismo id que PdfFile
+  data: ArrayBuffer;
+}
+interface Thumbnail {
+  scoreId: ID;
+  data: ArrayBuffer; // JPEG
+}
+interface Tag {
+  id: ID;
+  name: string;
+  color: string;
+}
 
 interface Score {
-  id: ID; pdfId: ID;
-  title: string; composer?: string; key?: string;
+  id: ID;
+  pdfId: ID;
+  title: string;
+  composer?: string;
+  key?: string;
   tagIds: ID[];
-  bpm?: number; timeSignature?: string;               // "4/4"
+  bpm?: number;
+  timeSignature?: string; // "4/4"
   startNotes?: { label?: string; notes: string[] }[]; // [{ label: "S", notes: ["E4"] }]
-  reading?: Partial<ReadingPrefs>;                    // override del ajuste global
+  reading?: Partial<ReadingPrefs>; // override del ajuste global
   crop?: { top: number; right: number; bottom: number; left: number }; // 0..1
-  pageOrder?: number[];                               // orden virtual
+  pageOrder?: number[]; // orden virtual
   autoscrollSpeed?: number;
   lastPage: number;
-  createdAt: number; updatedAt: number; lastOpenedAt?: number;
+  createdAt: number;
+  updatedAt: number;
+  lastOpenedAt?: number;
 }
 
 interface ReadingPrefs {
@@ -121,34 +144,59 @@ interface ReadingPrefs {
 // dispositivo, NO viaja en el backup), lastBackupAt, drive (estado de conexión)
 
 interface PageAnnotations {
-  id: string;                 // `${scoreId}:${page}`
-  scoreId: ID; page: number;  // página real del PDF, base 0
-  strokes: Stroke[]; texts: TextNote[]; updatedAt: number;
+  id: string; // `${scoreId}:${page}`
+  scoreId: ID;
+  page: number; // página real del PDF, base 0
+  strokes: Stroke[];
+  texts: TextNote[];
+  updatedAt: number;
 }
 interface Stroke {
-  id: ID; tool: 'pen' | 'highlighter'; color: string;
-  width: number;                                      // fracción del ancho de página
+  id: ID;
+  tool: 'pen' | 'highlighter';
+  color: string;
+  width: number; // fracción del ancho de página
   points: [x: number, y: number, pressure: number][]; // normalizados 0..1
 }
-interface TextNote { id: ID; x: number; y: number; text: string; color: string;
-  size: number }                                      // fracción del ancho de página
+interface TextNote {
+  id: ID;
+  x: number;
+  y: number;
+  text: string;
+  color: string;
+  size: number;
+} // fracción del ancho de página
 
 interface SetList {
-  id: ID; name: string; notes?: string;
-  items: SetListItem[]; createdAt: number; updatedAt: number;
+  id: ID;
+  name: string;
+  notes?: string;
+  items: SetListItem[];
+  createdAt: number;
+  updatedAt: number;
 }
 type SetListItem =
-  | { id: ID; type: 'score'; scoreId: ID; note?: string }
-  | { id: ID; type: 'break'; label: string };
+  { id: ID; type: 'score'; scoreId: ID; note?: string } | { id: ID; type: 'break'; label: string };
 
-interface Bookmark { id: ID; scoreId: ID; page: number; y: number; label: string }
-interface JumpLink { id: ID; scoreId: ID;
-  from: { page: number; x: number; y: number }; to: { page: number; y: number } }
+interface Bookmark {
+  id: ID;
+  scoreId: ID;
+  page: number;
+  y: number;
+  label: string;
+}
+interface JumpLink {
+  id: ID;
+  scoreId: ID;
+  from: { page: number; x: number; y: number };
+  to: { page: number; y: number };
+}
 ```
 
 ```ts
 db.version(1).stores({
   pdfs: 'id, &sha256',
+  pdfData: 'id',
   thumbnails: 'scoreId',
   tags: 'id, name',
   scores: 'id, pdfId, title, composer, *tagIds, updatedAt, lastOpenedAt',
@@ -213,16 +261,16 @@ texto en español centralizado en `strings.ts`.
 
 Gestos:
 
-| Gesto | Leyendo | Anotando |
-| --- | --- | --- |
-| Toque en tercio derecho/izquierdo | Avanza/retrocede | Dibuja, salvo con "solo lápiz" |
-| Toque al centro | Muestra/oculta barras (se van a los 3 s) | — |
-| Swipe horizontal | En paginado arrastra la hoja y la pasa al soltar | — |
-| Pellizco | Zoom | Zoom |
-| Doble toque | Alterna ajuste a ancho y a página | — |
-| Apoyar el lápiz | Entra a anotar con la última herramienta | Dibuja |
-| Toque con dos dedos | — | Deshacer |
-| Flechas, PageUp/Down, espacio | Pasan página (cubre pedales Bluetooth) | — |
+| Gesto                             | Leyendo                                          | Anotando                       |
+| --------------------------------- | ------------------------------------------------ | ------------------------------ |
+| Toque en tercio derecho/izquierdo | Avanza/retrocede                                 | Dibuja, salvo con "solo lápiz" |
+| Toque al centro                   | Muestra/oculta barras (se van a los 3 s)         | —                              |
+| Swipe horizontal                  | En paginado arrastra la hoja y la pasa al soltar | —                              |
+| Pellizco                          | Zoom                                             | Zoom                           |
+| Doble toque                       | Alterna ajuste a ancho y a página                | —                              |
+| Apoyar el lápiz                   | Entra a anotar con la última herramienta         | Dibuja                         |
+| Toque con dos dedos               | —                                                | Deshacer                       |
+| Flechas, PageUp/Down, espacio     | Pasan página (cubre pedales Bluetooth)           | —                              |
 
 ## Pasos
 
@@ -291,14 +339,14 @@ deja `npm run lint`, `npm run test` y `npm run build` en verde.
 
 ## Riesgos
 
-| Riesgo | Mitigación |
-| --- | --- |
-| iOS borra los datos del navegador | `storage.persist()`, backup con recordatorio, Drive |
-| Lápiz lento en web | Canvas vivo y eventos coalescidos. Se decidió no hacer spike previo: si no alcanza, se descubre al probar en dispositivo con todo ya construido |
-| PDFs escaneados de 50 MB o más | Render a resolución de pantalla en worker, LRU chica, liberar canvases |
-| Diferencias de Safari | Playwright con WebKit en CI y prueba manual |
-| Un PR único muy grande | Commits por paso, cada uno en verde, para poder revisar de a uno |
-| Drive sin probar de punta a punta | Queda detrás de `VITE_GOOGLE_CLIENT_ID`; se prueba cuando exista el cliente OAuth |
+| Riesgo                            | Mitigación                                                                                                                                      |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| iOS borra los datos del navegador | `storage.persist()`, backup con recordatorio, Drive                                                                                             |
+| Lápiz lento en web                | Canvas vivo y eventos coalescidos. Se decidió no hacer spike previo: si no alcanza, se descubre al probar en dispositivo con todo ya construido |
+| PDFs escaneados de 50 MB o más    | Render a resolución de pantalla en worker, LRU chica, liberar canvases                                                                          |
+| Diferencias de Safari             | Playwright con WebKit en CI y prueba manual                                                                                                     |
+| Un PR único muy grande            | Commits por paso, cada uno en verde, para poder revisar de a uno                                                                                |
+| Drive sin probar de punta a punta | Queda detrás de `VITE_GOOGLE_CLIENT_ID`; se prueba cuando exista el cliente OAuth                                                               |
 
 ## Qué cambió respecto del plan original
 
@@ -320,6 +368,13 @@ Ajustes acordados:
 - Miniaturas en tabla aparte, para no cargar 300 blobs en cada consulta de la biblioteca.
 - Tabla `tags` con color; `Score.tags: string[]` pasa a `tagIds`.
 - `startNotes[].label` opcional: cubre tanto notas por voz (S, A, T, B) como un acorde único.
+
+Cambios durante la implementación:
+
+- **PDFs y miniaturas como `ArrayBuffer`, no `Blob`, y los bytes en una tabla `pdfData` aparte.**
+  WebKit falla al guardar Blobs en IndexedDB en algunos contextos ("Error preparing Blob/File
+  data to be stored in object store"; reproducido en el WebKit de Playwright). Con la tabla
+  aparte, las consultas de metadatos y el dedupe por SHA-256 no cargan los PDFs en memoria.
 
 Alternativas descartadas:
 
