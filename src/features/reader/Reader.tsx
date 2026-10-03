@@ -23,7 +23,7 @@ interface Props {
   // página ya se ve entera, así que solo se usa en modo vertical.
   scrollTarget?: { pos: number; y: number; nonce: number };
   // Anotando: el navegador no desplaza la página con el dedo (así el dedo dibuja). Dos dedos
-  // la mueven y hacen zoom; con "solo el lápiz dibuja", un dedo también la mueve.
+  // la mueven y hacen zoom.
   manualPan?: boolean;
 }
 

@@ -8,8 +8,6 @@ import './annotations.css';
 interface Props {
   tool: ToolState;
   onTool: (tool: ToolState) => void;
-  penOnly: boolean;
-  onPenOnly: (value: boolean) => void;
   canUndo: boolean;
   canRedo: boolean;
   onUndo: () => void;
@@ -25,7 +23,7 @@ const TOOLS: { id: Exclude<Tool, 'stamp'>; icon: IconName }[] = [
 ];
 
 /**
- * Una sola fila, para tapar lo menos posible. Color, grosor y "solo lápiz" van en un desplegable;
+ * Una sola fila, para tapar lo menos posible. Color y grosor van en un desplegable;
  * los símbolos musicales, en otro.
  */
 export function AnnotationToolbar(p: Props) {
@@ -117,15 +115,6 @@ export function AnnotationToolbar(p: Props) {
               </button>
             ))}
           </div>
-          <button
-            className="at-penonly"
-            role="switch"
-            aria-checked={p.penOnly}
-            onClick={() => p.onPenOnly(!p.penOnly)}
-          >
-            <Icon name={p.penOnly ? 'check' : 'pen'} size={16} />
-            {t.settings.penOnly}
-          </button>
         </div>
       )}
 

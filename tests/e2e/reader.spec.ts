@@ -212,15 +212,6 @@ test('anotando en el celular: un dedo dibuja y dos dedos mueven la página', asy
   );
   await expect.poll(scrollTop).toBeGreaterThan(100);
   await expect(strokes).toHaveCount(1);
-
-  // Con "solo el lápiz dibuja", un dedo mueve la página.
-  await page.getByRole('button', { name: 'Color y grosor' }).click();
-  await page.getByRole('switch', { name: 'Solo el lápiz dibuja' }).click();
-  await page.getByRole('button', { name: 'Color y grosor' }).click();
-  const before = await scrollTop();
-  await drag([{ x: 400, y: 300 }], 0, -120);
-  await expect.poll(scrollTop).toBeGreaterThan(before + 60);
-  await expect(strokes).toHaveCount(1);
 });
 
 test('en el celular, metrónomo y teclado van en pestañas; en tablet se ven los dos', async ({

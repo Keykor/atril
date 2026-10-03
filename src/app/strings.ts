@@ -343,7 +343,5 @@ export const t = {
   },
   settings: {
     title: 'Ajustes',
-    penOnly: 'Solo el lápiz dibuja',
-    penOnlyHint: 'El dedo sigue pasando páginas mientras anotás',
   },
 };

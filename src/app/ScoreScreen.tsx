@@ -1,12 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  getGlobalReading,
-  getScore,
-  getScoreMarkers,
-  getSetting,
-  resolveReading,
-} from '../core/db/queries';
+import { getGlobalReading, getScore, getScoreMarkers, resolveReading } from '../core/db/queries';
 import { addBookmark, addLink, setSetting, touchScore, updateScore } from '../core/db/repos';
 import type { JumpLink, ReadingPrefs, SetList } from '../core/db/types';
 import { pageSizes } from '../core/pdf/render';
@@ -42,7 +36,6 @@ interface Props {
 export function ScoreScreen({ scoreId, show }: Props) {
   const score = useLiveQuery(() => getScore(scoreId), [scoreId]);
   const global = useLiveQuery(getGlobalReading, []);
-  const penOnly = useLiveQuery(() => getSetting('penOnlyDrawing', false), []) ?? false;
   const bookmarks = useLiveQuery(() => getScoreMarkers(scoreId), [scoreId])?.bookmarks;
   const [sizes, setSizes] = useState<{ w: number; h: number }[] | 'missing'>();
   const [view, setView] = useState<View>();
@@ -232,7 +225,6 @@ export function ScoreScreen({ scoreId, show }: Props) {
               aspect={sizes[page].h / sizes[page].w}
               active={annotating}
               locked={locked}
-              penOnly={penOnly}
               tool={tool}
               label={t.annotate.layer}
               textPlaceholder={t.annotate.textPlaceholder}
@@ -263,8 +255,6 @@ export function ScoreScreen({ scoreId, show }: Props) {
         <AnnotationToolbar
           tool={tool}
           onTool={setTool}
-          penOnly={penOnly}
-          onPenOnly={(v) => void setSetting('penOnlyDrawing', v)}
           canUndo={history.canUndo}
           canRedo={history.canRedo}
           onUndo={history.undo}
@@ -414,9 +404,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
       {sheet === 'reading' && (
         <ReadingSheet
           prefs={prefs}
-          penOnly={penOnly}
           onChange={changePrefs}
-          onPenOnly={(v) => void setSetting('penOnlyDrawing', v)}
           autoscrollSpeed={score.autoscrollSpeed ?? 30}
           onAutoscrollSpeed={(autoscrollSpeed) => patch({ autoscrollSpeed })}
           onClose={() => setSheet(null)}
