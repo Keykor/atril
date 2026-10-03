@@ -128,7 +128,15 @@ test('la barra de anotar entra entera en un celular de 320px', async ({ page }) 
   await page.setViewportSize({ width: 320, height: 640 });
   await openScore(page);
   await clickBar(page, 'Anotar');
-  for (const name of ['Lápiz', 'Goma', 'Color y grosor', 'Deshacer', 'Rehacer', 'Listo']) {
+  for (const name of [
+    'Lápiz',
+    'Goma',
+    'Símbolos',
+    'Color y grosor',
+    'Deshacer',
+    'Rehacer',
+    'Listo',
+  ]) {
     const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(320);
@@ -262,4 +270,57 @@ test('en el celular las hojas ocupan toda la altura y avisan si hay más abajo',
   await clickBar(page, 'Página');
   await page.getByRole('button', { name: 'Automático' }).click();
   await expect(page.getByRole('dialog').locator('output').first()).toHaveText(/^\d+ %$/);
+});
+
+test('símbolos: se pegan con un toque, se mueven, se borran y quedan guardados', async ({
+  page,
+}) => {
+  await openScore(page);
+  await clickBar(page, 'Anotar');
+  const box = (await page.locator('.reader-slot[data-where="0"] .page').boundingBox())!;
+  const at = (fx: number, fy: number) => [box.x + box.width * fx, box.y + box.height * fy] as const;
+  const stamps = page.locator('.reader-slot[data-where="0"] text.stamp');
+
+  await page.getByRole('button', { name: 'Símbolos', exact: true }).click();
+  const palette = page.getByRole('dialog', { name: 'Símbolos musicales' });
+  await palette.getByRole('button', { name: 'Negra', exact: true }).click();
+  await expect(palette).toBeHidden();
+  await page.mouse.click(...at(0.4, 0.3));
+  await expect(stamps).toHaveCount(1);
+  await expect(stamps).toHaveAttribute('data-symbol', 'noteQuarterUp');
+  // Se dibuja con la fuente Bravura, que viene con la app (sirve sin conexión).
+  expect(await page.evaluate(() => document.fonts.check('20px Bravura', ''))).toBe(true);
+
+  // Arrastrarlo lo mueve (no pega otro).
+  const x0 = Number(await stamps.getAttribute('x'));
+  await page.mouse.move(...at(0.4, 0.3));
+  await page.mouse.down();
+  await page.mouse.move(...at(0.6, 0.3), { steps: 6 });
+  await page.mouse.up();
+  await expect(stamps).toHaveCount(1);
+  expect(Number(await stamps.getAttribute('x'))).toBeGreaterThan(x0 + 100);
+
+  // Grosor grueso = símbolo más grande.
+  await page.getByRole('button', { name: 'Color y grosor' }).click();
+  await page.getByRole('button', { name: 'Grueso' }).click();
+  await page.getByRole('button', { name: 'Símbolos', exact: true }).click();
+  await palette.getByRole('button', { name: 'Forte (f)' }).click();
+  await page.mouse.click(...at(0.3, 0.6));
+  await expect(stamps).toHaveCount(2);
+  const sizes = await stamps.evaluateAll((els) =>
+    els.map((e) => Number(e.getAttribute('font-size'))),
+  );
+  expect(sizes[1]).toBeGreaterThan(sizes[0]);
+
+  await page.getByRole('button', { name: 'Listo' }).click();
+  await page.reload();
+  await expect(stamps).toHaveCount(2);
+
+  // La goma los borra y deshacer los vuelve a traer.
+  await clickBar(page, 'Anotar');
+  await page.getByRole('button', { name: 'Goma' }).click();
+  await page.mouse.click(...at(0.6, 0.3));
+  await expect(stamps).toHaveCount(1);
+  await page.getByRole('button', { name: 'Deshacer' }).click();
+  await expect(stamps).toHaveCount(2);
 });

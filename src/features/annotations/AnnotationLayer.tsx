@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useRef, useState } from 'react';
 import { getPageAnnotations } from '../../core/db/queries';
 import { emptyAnnotations, newId } from '../../core/db/repos';
-import type { PageAnnotations, Stroke, TextNote } from '../../core/db/types';
+import type { PageAnnotations, Stamp, Stroke, TextNote } from '../../core/db/types';
 import {
   eraseAt,
   HIGHLIGHTER_FACTOR,
@@ -12,6 +12,7 @@ import {
   WIDTHS,
   type ToolState,
 } from './strokes';
+import { hitsStamp, STAMP_SIZES, stampGeometry } from './symbols';
 import './annotations.css';
 
 interface Props {
@@ -38,7 +39,7 @@ export function AnnotationLayer(p: Props) {
   const saved =
     useLiveQuery(() => getPageAnnotations(p.scoreId, p.page), [p.scoreId, p.page]) ??
     emptyAnnotations(p.scoreId, p.page);
-  const [draft, setDraft] = useState<PageAnnotations>(); // mientras se usa la goma
+  const [draft, setDraft] = useState<PageAnnotations>(); // mientras se borra o se mueve un símbolo
   const [editing, setEditing] = useState<TextNote>();
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -46,6 +47,9 @@ export function AnnotationLayer(p: Props) {
 
   const g = useRef({
     id: -1,
+    mode: 'stroke' as 'stroke' | 'erase' | 'stamp',
+    stampAt: null as [number, number] | null, // símbolo nuevo: dónde se apoyó
+    stampDrag: null as { id: string; dx: number; dy: number } | null, // símbolo que se arrastra
     points: [] as Stroke['points'],
     before: saved,
     erased: saved,
@@ -64,6 +68,7 @@ export function AnnotationLayer(p: Props) {
 
   const cancel = () => {
     g.id = -1;
+    g.stampAt = g.stampDrag = null;
     setDraft(undefined);
     const c = canvas.current;
     c?.getContext('2d')?.clearRect(0, 0, c.width, c.height);
@@ -86,7 +91,9 @@ export function AnnotationLayer(p: Props) {
       !p.locked && (p.active ? e.pointerType !== 'touch' || !p.penOnly : e.pointerType === 'pen');
     if (!draws || g.id !== -1 || (e.pointerType === 'mouse' && e.button !== 0)) return;
     e.stopPropagation();
-    const tool = p.active ? p.tool.tool : p.tool.tool === 'text' ? 'pen' : p.tool.tool;
+    // Con el lápiz apoyado mientras se lee, texto y símbolos no tienen sentido: dibuja.
+    const tool =
+      p.active || (p.tool.tool !== 'text' && p.tool.tool !== 'stamp') ? p.tool.tool : 'pen';
     if (!p.active) p.onPenStart();
 
     const [x, y] = norm(e);
@@ -98,11 +105,24 @@ export function AnnotationLayer(p: Props) {
     root.current!.setPointerCapture(e.pointerId);
     g.id = e.pointerId;
     g.before = saved;
+    g.erased = saved;
+    if (tool === 'stamp') {
+      // Tocar un símbolo lo agarra para moverlo; tocar en otro lado pega uno nuevo al soltar.
+      g.mode = 'stamp';
+      const hit = [...(saved.stamps ?? [])]
+        .reverse()
+        .find((s) => hitsStamp(s, x, y, p.aspect, STAMP_HIT));
+      g.stampDrag = hit ? { id: hit.id, dx: hit.x - x, dy: hit.y - y } : null;
+      g.stampAt = hit ? null : [x, y];
+      return;
+    }
     if (tool === 'eraser') {
+      g.mode = 'erase';
       g.erased = eraseAt(saved, x, y, p.aspect);
       setDraft(g.erased);
       return;
     }
+    g.mode = 'stroke';
     g.points = [[x, y, e.pressure || 0.5]];
     const c = canvas.current!;
     const r = root.current!.getBoundingClientRect();
@@ -121,7 +141,17 @@ export function AnnotationLayer(p: Props) {
     if (touch && Math.hypot(e.clientX - touch.x, e.clientY - touch.y) > 12) g.twoFingerMoved = true;
     if (e.pointerId !== g.id) return;
     e.stopPropagation();
-    if (draft) {
+    if (g.mode === 'stamp') {
+      const drag = g.stampDrag;
+      if (!drag) return;
+      const [x, y] = norm(e);
+      const stamps = (g.before.stamps ?? []).map((s) =>
+        s.id === drag.id ? { ...s, x: clamp01(x + drag.dx), y: clamp01(y + drag.dy) } : s,
+      );
+      setDraft((g.erased = { ...g.before, stamps }));
+      return;
+    }
+    if (g.mode === 'erase') {
       const [x, y] = norm(e);
       const next = eraseAt(g.erased, x, y, p.aspect);
       if (next !== g.erased) setDraft((g.erased = next));
@@ -154,7 +184,23 @@ export function AnnotationLayer(p: Props) {
     }
     if (e.pointerId !== g.id) return;
     e.stopPropagation();
-    if (draft) {
+    if (g.mode === 'stamp') {
+      if (g.stampDrag) {
+        if (g.erased !== g.before) p.onCommit(g.before, roundStamps(g.erased));
+      } else if (g.stampAt && e.type === 'pointerup') {
+        const [x, y] = g.stampAt;
+        const stamp: Stamp = {
+          id: newId(),
+          symbol: p.tool.symbol,
+          x: round(x),
+          y: round(y),
+          size: STAMP_SIZES[p.tool.width],
+          color: p.tool.color,
+        };
+        p.onCommit(g.before, { ...g.before, stamps: [...(g.before.stamps ?? []), stamp] });
+      }
+      g.stampAt = g.stampDrag = null;
+    } else if (g.mode === 'erase') {
       if (g.erased !== g.before) p.onCommit(g.before, g.erased);
     } else if (e.type === 'pointerup') {
       const tool = p.tool.tool === 'highlighter' ? 'highlighter' : 'pen';
@@ -217,6 +263,22 @@ export function AnnotationLayer(p: Props) {
               {n.text}
             </text>
           ))}
+        {shown.stamps?.map((s) => {
+          const geo = stampGeometry(s, p.aspect);
+          return (
+            <text
+              key={s.id}
+              className="stamp"
+              data-symbol={s.symbol}
+              x={geo.originX * VB}
+              y={geo.originY * VB}
+              fontSize={s.size * VB}
+              fill={s.color}
+            >
+              {geo.char}
+            </text>
+          );
+        })}
       </svg>
       <canvas ref={canvas} />
       {editing && (
@@ -245,3 +307,10 @@ export function AnnotationLayer(p: Props) {
 }
 
 const round = (n: number) => Math.round(n * 10000) / 10000;
+const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+const roundStamps = (a: PageAnnotations): PageAnnotations => ({
+  ...a,
+  stamps: a.stamps?.map((s) => ({ ...s, x: round(s.x), y: round(s.y) })),
+});
+// Margen para agarrar un símbolo con el dedo, como fracción del ancho de página.
+const STAMP_HIT = 0.012;

@@ -87,12 +87,22 @@ export interface TextNote {
   color: string;
   size: number; // fracción del ancho de página
 }
+/** Símbolo musical pegado sobre la página (figura, silencio, dinámica...). */
+export interface Stamp {
+  id: ID;
+  symbol: string; // nombre SMuFL del glifo: "noteQuarterUp", "dynamicMF"...
+  x: number; // punto donde se pegó, 0..1 (la cabeza de la nota, o el centro del símbolo)
+  y: number;
+  size: number; // tamaño de la fuente como fracción del ancho de página (~ alto del pentagrama)
+  color: string;
+}
 export interface PageAnnotations {
   id: string; // `${scoreId}:${page}`
   scoreId: ID;
   page: number; // página real del PDF, base 0
   strokes: Stroke[];
   texts: TextNote[];
+  stamps?: Stamp[]; // opcional: las anotaciones de antes de 0.5.0 no lo tienen
   updatedAt: number;
 }
 
