@@ -4,6 +4,7 @@ import { BackupFormatError } from '../../core/backup/atril';
 import { backupDue, exportToFile, getLastBackupAt, importFromFile } from '../../core/backup/files';
 import { db } from '../../core/db/db';
 import { Icon } from '../../ui/Icon';
+import { ago } from '../../ui/time';
 import { t } from '../../app/strings';
 import './settings.css';
 
@@ -40,7 +41,7 @@ export function BackupCard() {
     <section className="card pad">
       <h2>{b.title}</h2>
       <p>{b.intro}</p>
-      <p>{state?.last ? b.last(new Date(state.last).toLocaleDateString('es')) : b.never}</p>
+      <p>{state?.last ? b.last(ago(state.last)) : b.never}</p>
       <div className="row">
         <button
           className="btn"

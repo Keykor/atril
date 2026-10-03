@@ -5,6 +5,7 @@ import { LibraryScreen } from '../features/library/LibraryScreen';
 import { TagNav } from '../features/library/TagNav';
 import { ListsScreen } from '../features/setlists/ListsScreen';
 import { BackupCard, BackupReminder } from '../features/settings/Backup';
+import { BackupStatus, DriveCard, useDriveState } from '../features/settings/Drive';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { back, navigate, useRoute } from './router';
 import { ScoreScreen } from './ScoreScreen';
@@ -14,20 +15,23 @@ import { t } from './strings';
 export function App() {
   const [section, id, sub] = useRoute();
   const [tagId, setTagId] = useState<string>();
+  const drive = useDriveState();
+  const footer = <BackupStatus />;
 
   if (section === 'score' && id) return <ScoreScreen key={id} scoreId={id} />;
   if (section === 'show' && id) return <ShowRoute listId={id} index={Number(sub ?? 0)} />;
   if (section === 'settings')
     return (
-      <Shell section="settings">
+      <Shell section="settings" footer={footer}>
         <SettingsScreen>
           <BackupCard />
+          <DriveCard />
         </SettingsScreen>
       </Shell>
     );
   if (section === 'lists')
     return (
-      <Shell section="lists">
+      <Shell section="lists" footer={footer}>
         <ListsScreen
           listId={id}
           onSelect={(listId) => navigate(listId ? `/lists/${listId}` : '/lists', !!id)}
@@ -38,13 +42,14 @@ export function App() {
   return (
     <Shell
       section="library"
+      footer={footer}
       sidebar={<TagNav tagId={tagId} onSelect={setTagId} variant="sidebar" />}
     >
       <LibraryScreen
         tagId={tagId}
         onTag={setTagId}
         onOpen={(sid) => navigate(`/score/${sid}`)}
-        banner={<BackupReminder />}
+        banner={<BackupReminder suppressed={drive?.connected && !drive.error} />}
       />
     </Shell>
   );

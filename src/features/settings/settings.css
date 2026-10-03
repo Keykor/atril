@@ -86,3 +86,27 @@
 .backup-status[data-state='error'] svg {
   color: var(--danger);
 }
+.card[aria-disabled='true'] {
+  opacity: 0.6;
+}
+.drive-backups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.drive-backups li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+.drive-backups span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.drive-backups small {
+  color: var(--text-3);
+}
