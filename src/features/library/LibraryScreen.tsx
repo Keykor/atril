@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { db } from '../../core/db/db';
 import { filterScores } from '../../core/db/search';
 import { importFiles } from '../../core/pdf/import';
+import { takeSharedFiles } from '../../core/pdf/shared';
 import { Icon } from '../../ui/Icon';
 import { t } from '../../app/strings';
 import { MetaSheet } from './MetaSheet';
@@ -42,8 +43,7 @@ export function LibraryScreen({ tagId, onTag, onOpen, banner }: Props) {
     return () => clearTimeout(id);
   }, [status]);
 
-  const onFiles = async (list: FileList | null) => {
-    const files = Array.from(list ?? []).map((f) => ({ blob: f, name: f.name }));
+  const importAll = async (files: { blob: Blob; name: string }[]) => {
     if (!files.length) return;
     const c = await importFiles(files, (done, total) =>
       setStatus(t.library.importing(done, total)),
@@ -51,6 +51,13 @@ export function LibraryScreen({ tagId, onTag, onOpen, banner }: Props) {
     setStatus(t.library.imported(c.added, c.duplicate, c.relinked, c.error));
     if (fileInput.current) fileInput.current.value = '';
   };
+  const onFiles = (list: FileList | null) =>
+    importAll(Array.from(list ?? []).map((f) => ({ blob: f, name: f.name })));
+
+  // PDFs que llegaron por "Compartir" en Android (los dejó el service worker).
+  useEffect(() => {
+    void takeSharedFiles().then(importAll);
+  }, []);
 
   return (
     <>

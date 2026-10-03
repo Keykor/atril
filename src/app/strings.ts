@@ -260,6 +260,20 @@ export const t = {
     uploadFailed: 'La última subida falló. Se reintenta con el próximo cambio.',
     failed: 'No se pudo completar. Revisá la conexión y probá de nuevo.',
   },
+  install: {
+    title: 'Instalar Atril',
+    installed: 'Atril está instalada en este dispositivo y funciona sin conexión.',
+    why: 'Instalada, Atril abre a pantalla completa, funciona sin conexión y guarda mejor tus partituras.',
+    install: 'Instalar',
+    iosSteps: [
+      'Abrí Atril en Safari.',
+      'Tocá el botón Compartir (el cuadrado con la flecha hacia arriba).',
+      'Elegí "Agregar a inicio" y confirmá.',
+      'Abrí Atril desde el ícono nuevo e importá ahí tus partituras: la app instalada no comparte lo guardado con Safari.',
+    ],
+    other: 'En el menú del navegador elegí "Instalar app" o "Agregar a la pantalla de inicio".',
+    banner: 'Instalá Atril antes de importar partituras: así quedan guardadas en la app.',
+  },
   settings: {
     title: 'Ajustes',
     penOnly: 'Solo el lápiz dibuja',

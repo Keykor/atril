@@ -110,3 +110,15 @@
 .drive-backups small {
   color: var(--text-3);
 }
+.install-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+.reminder.info {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}

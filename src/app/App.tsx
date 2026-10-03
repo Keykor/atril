@@ -6,6 +6,7 @@ import { TagNav } from '../features/library/TagNav';
 import { ListsScreen } from '../features/setlists/ListsScreen';
 import { BackupCard, BackupReminder } from '../features/settings/Backup';
 import { BackupStatus, DriveCard, useDriveState } from '../features/settings/Drive';
+import { InstallBanner, InstallCard } from '../features/settings/Install';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { back, navigate, useRoute } from './router';
 import { ScoreScreen } from './ScoreScreen';
@@ -26,6 +27,7 @@ export function App() {
         <SettingsScreen>
           <BackupCard />
           <DriveCard />
+          <InstallCard />
         </SettingsScreen>
       </Shell>
     );
@@ -49,7 +51,12 @@ export function App() {
         tagId={tagId}
         onTag={setTagId}
         onOpen={(sid) => navigate(`/score/${sid}`)}
-        banner={<BackupReminder suppressed={drive?.connected && !drive.error} />}
+        banner={
+          <>
+            <InstallBanner />
+            <BackupReminder suppressed={drive?.connected && !drive.error} />
+          </>
+        }
       />
     </Shell>
   );

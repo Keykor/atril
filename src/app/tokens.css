@@ -68,3 +68,7 @@ p {
   overflow: hidden;
   clip: rect(0 0 0 0);
 }
+:focus-visible {
+  outline: 3px solid #6e8bea;
+  outline-offset: 2px;
+}

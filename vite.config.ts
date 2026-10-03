@@ -14,8 +14,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // SW propio (src/sw.ts): precache + Web Share Target.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
-      workbox: {
+      injectManifest: {
         globPatterns: ['**/*.{js,mjs,css,html,svg,png,woff2}'],
         maximumFileSizeToCacheInBytes: 5_000_000,
       },
@@ -30,6 +34,12 @@ export default defineConfig({
         scope: '.',
         theme_color: '#2950C7',
         background_color: '#F4F4F1',
+        share_target: {
+          action: 'share',
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: { files: [{ name: 'pdfs', accept: ['application/pdf', '.pdf'] }] },
+        },
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
