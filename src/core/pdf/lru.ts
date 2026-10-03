@@ -25,6 +25,10 @@ export class LRU<V> {
     }
   }
 
+  delete(key: string) {
+    this.map.delete(key);
+  }
+
   clear() {
     for (const v of this.map.values()) this.onEvict?.(v);
     this.map.clear();

@@ -67,6 +67,8 @@ export const t = {
     loading: 'Abriendo…',
     missingPdf: 'Falta el PDF de esta partitura. Importalo de nuevo desde la biblioteca.',
     notFound: 'Esta partitura ya no existe.',
+    openFailed: 'No se pudo abrir la partitura.',
+    retry: 'Reintentar',
     settings: 'Ajustes de lectura',
     pages: 'Páginas',
     annotate: 'Anotar',

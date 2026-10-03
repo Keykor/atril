@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getGlobalReading, getScore, getScoreMarkers, resolveReading } from '../core/db/queries';
 import { addBookmark, addLink, setSetting, touchScore, updateScore } from '../core/db/repos';
 import type { JumpLink, ReadingPrefs, SetList } from '../core/db/types';
-import { pageSizes } from '../core/pdf/render';
+import { MissingPdfError, pageSizes } from '../core/pdf/render';
 import { keepAwake } from '../core/wakeLock';
 import { AnnotationLayer } from '../features/annotations/AnnotationLayer';
 import { AnnotationToolbar } from '../features/annotations/AnnotationToolbar';
@@ -37,7 +37,8 @@ export function ScoreScreen({ scoreId, show }: Props) {
   const score = useLiveQuery(() => getScore(scoreId), [scoreId]);
   const global = useLiveQuery(getGlobalReading, []);
   const bookmarks = useLiveQuery(() => getScoreMarkers(scoreId), [scoreId])?.bookmarks;
-  const [sizes, setSizes] = useState<{ w: number; h: number }[] | 'missing'>();
+  const [sizes, setSizes] = useState<{ w: number; h: number }[] | 'missing' | 'failed'>();
+  const [attempt, setAttempt] = useState(0);
   const [view, setView] = useState<View>();
   const [bars, setBars] = useState(false);
   const [barsTick, setBarsTick] = useState(0);
@@ -68,13 +69,14 @@ export function ScoreScreen({ scoreId, show }: Props) {
   useEffect(() => {
     if (!pdfId) return;
     let alive = true;
+    setSizes(undefined);
     pageSizes(pdfId)
       .then((s) => alive && setSizes(s))
-      .catch(() => alive && setSizes('missing'));
+      .catch((e) => alive && setSizes(e instanceof MissingPdfError ? 'missing' : 'failed'));
     return () => {
       alive = false;
     };
-  }, [pdfId]);
+  }, [pdfId, attempt]);
 
   useEffect(() => keepAwake(), []);
 
@@ -117,10 +119,21 @@ export function ScoreScreen({ scoreId, show }: Props) {
     return () => clearTimeout(id);
   }, [target?.id, target?.nonce]);
 
-  if (score === null || sizes === 'missing')
+  if (score === null || sizes === 'missing' || sizes === 'failed')
     return (
       <div className="score-screen reader-message">
-        <p>{score === null ? t.reader.notFound : t.reader.missingPdf}</p>
+        <p>
+          {score === null
+            ? t.reader.notFound
+            : sizes === 'missing'
+              ? t.reader.missingPdf
+              : t.reader.openFailed}
+        </p>
+        {sizes === 'failed' && (
+          <button className="btn primary" onClick={() => setAttempt((n) => n + 1)}>
+            {t.reader.retry}
+          </button>
+        )}
         <button className="btn" onClick={back}>
           <Icon name="back" />
           {t.reader.back}
