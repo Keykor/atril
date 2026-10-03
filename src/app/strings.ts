@@ -77,6 +77,8 @@ export const t = {
     all: 'Todas las listas',
     new: 'Nueva',
     newName: 'Lista nueva',
+    newTitle: 'Nueva lista',
+    create: 'Crear',
     empty: 'Todavía no hay listas. Creá una para armar un concierto o un ensayo.',
     count: (scores: number, breaks: number) =>
       `${scores} ${scores === 1 ? 'obra' : 'obras'}` +

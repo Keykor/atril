@@ -42,6 +42,7 @@ interface Props {
 export function ListsScreen({ listId, onSelect, onShow }: Props) {
   const lists = useLiveQuery(listSetLists, []);
   const selected = lists?.find((l) => l.id === listId);
+  const [naming, setNaming] = useState(false);
   const s = t.lists;
 
   return (
@@ -49,10 +50,7 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
       <section className="lists-index">
         <header className="screen-header">
           <h1>{s.title}</h1>
-          <button
-            className="btn primary"
-            onClick={async () => onSelect((await addSetList(s.newName)).id)}
-          >
+          <button className="btn primary" onClick={() => setNaming(true)}>
             <Icon name="plus" size={18} />
             {s.new}
           </button>
@@ -69,6 +67,15 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
           ))}
         </ul>
       </section>
+      {naming && (
+        <NewList
+          onCancel={() => setNaming(false)}
+          onCreate={async (name) => {
+            setNaming(false);
+            onSelect((await addSetList(name)).id);
+          }}
+        />
+      )}
       {selected && (
         <Editor
           key={selected.id}
@@ -79,6 +86,55 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
         />
       )}
     </div>
+  );
+}
+
+/** La lista se crea recién al confirmar el nombre: cancelar no deja una lista vacía. */
+function NewList({
+  onCancel,
+  onCreate,
+}: {
+  onCancel: () => void;
+  onCreate: (name: string) => void;
+}) {
+  const s = t.lists;
+  const [name, setName] = useState('');
+  return (
+    <Sheet
+      title={s.newTitle}
+      closeLabel={t.close}
+      onClose={onCancel}
+      footer={
+        <>
+          <span className="spacer" />
+          <button type="button" className="btn" onClick={onCancel}>
+            {t.cancel}
+          </button>
+          <button type="submit" form="new-list" className="btn primary">
+            {s.create}
+          </button>
+        </>
+      }
+    >
+      <form
+        id="new-list"
+        onSubmit={(e) => {
+          e.preventDefault();
+          onCreate(name.trim() || s.newName);
+        }}
+      >
+        <label className="field">
+          <span className="field-label">{s.name}</span>
+          <input
+            className="input"
+            autoFocus
+            value={name}
+            placeholder={s.newName}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+      </form>
+    </Sheet>
   );
 }
 

@@ -4,9 +4,21 @@ import { importFixtures } from './helpers';
 test('armar una lista, reordenarla y recorrerla en modo show solo con toques', async ({ page }) => {
   await importFixtures(page);
   await page.getByRole('link', { name: 'Listas' }).click();
+  // Cancelar no deja una lista vacía.
   await page.getByRole('button', { name: 'Nueva' }).click();
-  await page.getByLabel('Nombre de la lista').fill('Concierto de primavera');
-  await page.getByLabel('Nombre de la lista').blur();
+  await page
+    .getByRole('dialog', { name: 'Nueva lista' })
+    .getByRole('button', { name: 'Cancelar' })
+    .click();
+  await expect(
+    page.getByRole('list', { name: 'Todas las listas' }).getByRole('listitem'),
+  ).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Nueva' }).click();
+  const naming = page.getByRole('dialog', { name: 'Nueva lista' });
+  await naming.getByLabel('Nombre de la lista').fill('Concierto de primavera');
+  await naming.getByRole('button', { name: 'Crear' }).click();
+  await expect(page.getByLabel('Nombre de la lista')).toHaveValue('Concierto de primavera');
 
   await page.getByRole('button', { name: 'Agregar partituras' }).click();
   await page.getByRole('button', { name: 'Agregar Ave verum corpus' }).click();
