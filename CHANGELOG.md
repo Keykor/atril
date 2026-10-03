@@ -4,6 +4,26 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.6.0
+
+Arreglos de la prueba en tablet.
+
+- Las opciones del lector (lectura, página, marcadores, índice de la lista) se abren en un panel
+  a la derecha y dejan ver la partitura. Fuera del lector, los datos de la partitura, agregar
+  partituras y las etiquetas son una ventana centrada.
+- Datos de la partitura: ahora tienen Guardar, Cancelar y Eliminar partitura. Si cancelás o
+  cerrás, no se guarda nada.
+- Con zoom se sigue pasando de hoja: tocando el costado, o arrastrando más allá del borde de la
+  página. La hoja nueva mantiene el zoom.
+- Botón nuevo de ajuste de página en la barra de arriba: alterna al ancho y página entera y saca
+  el zoom.
+- "Nueva lista" pide el nombre primero; si cancelás, no queda una lista vacía.
+- En "Agregar partituras", los botones ya no quedan debajo de la barra de desplazamiento, y las
+  partituras que ya están en la lista se marcan.
+- El teclado: la nota suena mientras mantenés la tecla y no aparece el menú de copiar.
+- Si una partitura no termina de abrir, en vez de quedar en "Abriendo…" aparece "Reintentar".
+- Se sacó "solo el lápiz dibuja".
+
 ## 0.5.0
 
 - Símbolos musicales: en Anotar hay una herramienta nueva con figuras (redonda a semicorchea),
