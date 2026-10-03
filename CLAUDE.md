@@ -31,6 +31,10 @@ fuera del sandbox. Si `npm install` falla por la cache, usá `npm_config_cache=$
 - PR: secciones "Qué hace", "Plan", "Cómo probarlo", "Notas para quien revisa". Decir siempre
   qué no se pudo verificar (ver "Contexto").
 - El merge siempre lo hace una persona.
+- **Versión:** cada PR sube `version` en `package.json` y agrega su entrada arriba de todo en
+  `CHANGELOG.md`, escrita para quien usa la app (qué cambia para el usuario, no cómo). Semver;
+  mientras sea 0.x: funcionalidad nueva sube el del medio (0.4.0), arreglos o cambios internos
+  el último (0.4.1). La versión se ve en Ajustes → Versión.
 
 ## Convenciones de código
 
