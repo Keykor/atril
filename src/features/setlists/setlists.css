@@ -151,8 +151,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 0 8px;
   min-height: 60px;
   border-top: 1px solid var(--border);
+}
+.picker li.added {
+  background: var(--accent-soft);
 }
 .picker li span {
   flex: 1;

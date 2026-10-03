@@ -7,14 +7,26 @@ interface Props {
   closeLabel: string;
   onClose: () => void;
   children: ReactNode;
-  modal?: boolean; // false: sin fondo oscuro y más baja, para ver la partitura mientras se ajusta
+  footer?: ReactNode; // acciones fijas abajo, fuera de lo que se desplaza
+  // side: panel lateral, para lo que se abre dentro del lector (la partitura sigue a la vista).
+  // center: diálogo centrado, para el resto.
+  variant?: 'side' | 'center';
+  modal?: boolean; // false: sin fondo oscuro, para ver la partitura mientras se ajusta
 }
 
 /**
- * Hoja inferior. En pantallas anchas queda centrada abajo; en el celular, si es modal, ocupa
- * toda la altura. Cuando hay más contenido abajo lo avisa con un degradé y una flecha.
+ * Panel lateral o diálogo centrado. En el celular el panel lateral modal ocupa toda la
+ * pantalla. Cuando hay más contenido abajo lo avisa con un degradé y una flecha.
  */
-export function Sheet({ title, closeLabel, onClose, children, modal = true }: Props) {
+export function Sheet({
+  title,
+  closeLabel,
+  onClose,
+  children,
+  footer,
+  variant = 'center',
+  modal = true,
+}: Props) {
   const body = useRef<HTMLDivElement>(null);
   const [more, setMore] = useState(false);
 
@@ -40,7 +52,7 @@ export function Sheet({ title, closeLabel, onClose, children, modal = true }: Pr
 
   return (
     <div
-      className={`sheet-backdrop${modal ? '' : ' passive'}`}
+      className={`sheet-backdrop ${variant}${modal ? '' : ' passive'}`}
       onClick={modal ? onClose : undefined}
     >
       <section
@@ -51,21 +63,23 @@ export function Sheet({ title, closeLabel, onClose, children, modal = true }: Pr
         onPointerDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <div className="sheet-handle" />
         <header className="sheet-header">
           <h2>{title}</h2>
           <button className="icon-btn round" aria-label={closeLabel} onClick={onClose}>
             <Icon name="close" />
           </button>
         </header>
-        <div className="sheet-body" ref={body}>
-          {children}
-        </div>
-        {more && (
-          <div className="sheet-more" aria-hidden="true">
-            <Icon name="down" size={18} />
+        <div className="sheet-scroll">
+          <div className="sheet-body" ref={body}>
+            {children}
           </div>
-        )}
+          {more && (
+            <div className="sheet-more" aria-hidden="true">
+              <Icon name="down" size={18} />
+            </div>
+          )}
+        </div>
+        {footer && <footer className="sheet-footer">{footer}</footer>}
       </section>
     </div>
   );

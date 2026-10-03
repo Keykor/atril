@@ -144,41 +144,71 @@
   z-index: 50;
   background: rgba(23, 24, 28, 0.42);
   display: flex;
-  align-items: flex-end;
+}
+.sheet-backdrop.center {
+  align-items: center;
   justify-content: center;
+  padding: 16px;
+}
+.sheet-backdrop.side {
+  justify-content: flex-end;
 }
 .sheet {
   position: relative;
-  width: min(100%, 800px);
-  max-height: 92dvh;
   display: flex;
   flex-direction: column;
-  padding: 12px 28px calc(28px + env(safe-area-inset-bottom));
-  border-radius: 24px 24px 0 0;
   background: var(--surface);
   color: var(--text);
+  box-shadow: 0 8px 32px rgba(23, 24, 28, 0.2);
 }
-.sheet-handle {
-  align-self: center;
-  width: 40px;
-  height: 5px;
-  border-radius: 999px;
-  background: var(--border-strong);
+.center .sheet {
+  width: min(100%, 600px);
+  max-height: 100%;
+  padding: 16px 24px 24px;
+  border-radius: 20px;
+}
+.side .sheet {
+  width: min(100%, clamp(340px, 50vw, 440px));
+  height: 100%;
+  padding: calc(12px + env(safe-area-inset-top)) 24px calc(16px + env(safe-area-inset-bottom));
+  border-radius: 20px 0 0 20px;
 }
 .sheet-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0 16px;
+  padding: 0 0 16px;
 }
 .sheet-header h2 {
   font-size: 22px;
 }
+.sheet-scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* El margen derecho deja lugar a la barra de desplazamiento: que no tape los botones. */
 .sheet-body {
   overflow-y: auto;
+  scrollbar-gutter: stable;
+  margin-right: -12px;
+  padding-right: 12px;
   display: flex;
   flex-direction: column;
   gap: 22px;
+}
+.sheet-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.sheet-footer .spacer {
+  flex: 1;
 }
 .toast {
   position: fixed;
@@ -194,20 +224,12 @@
   font-size: 14px;
   font-weight: 500;
 }
-@media (max-width: 600px) {
-  .sheet {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-}
 .sheet-backdrop.passive {
   background: none;
   pointer-events: none;
 }
 .sheet-backdrop.passive .sheet {
   pointer-events: auto;
-  max-height: 46dvh;
-  box-shadow: 0 -6px 24px rgba(23, 24, 28, 0.18);
 }
 .popover {
   position: absolute;
@@ -224,7 +246,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(28px + env(safe-area-inset-bottom));
+  bottom: 0;
   height: 56px;
   display: flex;
   align-items: flex-end;
@@ -234,25 +256,30 @@
   color: var(--text-3);
   pointer-events: none;
 }
-.sheet-backdrop.passive .sheet-more {
-  bottom: 12px;
-}
 @media (max-width: 600px) {
-  /* En el celular las hojas modales ocupan toda la altura: nada queda escondido abajo. */
-  .sheet-backdrop:not(.passive) .sheet {
-    height: 100dvh;
-    max-height: 100dvh;
+  .center .sheet,
+  .side .sheet {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .sheet-backdrop.center {
+    padding: 12px;
+  }
+  /* En el celular el panel lateral modal ocupa toda la pantalla: nada queda escondido. */
+  .sheet-backdrop.side:not(.passive) .sheet {
+    width: 100%;
     border-radius: 0;
-    padding-top: calc(8px + env(safe-area-inset-top));
   }
-  .sheet-backdrop:not(.passive) .sheet-handle {
-    display: none;
+  /* El panel sin fondo (recorte) va abajo y a media altura, para ver la página arriba. */
+  .sheet-backdrop.side.passive {
+    align-items: flex-end;
   }
-  .sheet-backdrop.passive .sheet {
+  .sheet-backdrop.side.passive .sheet {
+    width: 100%;
+    height: auto;
     max-height: 52dvh;
-  }
-  .sheet-more {
-    bottom: calc(16px + env(safe-area-inset-bottom));
+    padding-top: 16px;
+    border-radius: 20px 20px 0 0;
   }
 }
 .range-value {

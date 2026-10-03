@@ -24,7 +24,7 @@ export function ReadingSheet({
   const set = (patch: Partial<ReadingPrefs>) => onChange(patch, scope);
 
   return (
-    <Sheet title={r.title} closeLabel={t.close} onClose={onClose}>
+    <Sheet variant="side" title={r.title} closeLabel={t.close} onClose={onClose}>
       <Segmented
         label={r.applyTo}
         value={scope}

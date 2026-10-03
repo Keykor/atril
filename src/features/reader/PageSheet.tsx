@@ -30,7 +30,7 @@ export function PageSheet(p: Props) {
   const crop = p.score.crop ?? NO_CROP;
 
   return (
-    <Sheet title={m.title} closeLabel={t.close} onClose={p.onClose} modal={false}>
+    <Sheet variant="side" title={m.title} closeLabel={t.close} onClose={p.onClose} modal={false}>
       <div className="field">
         <span className="field-label">{m.crop}</span>
         <span className="field-hint">{m.cropHint}</span>

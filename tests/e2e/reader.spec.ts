@@ -33,6 +33,11 @@ test('el toque al centro muestra las barras y los ajustes cambian el modo', asyn
   await openScore(page);
   await clickBar(page, 'Ajustes de lectura');
   const sheet = page.getByRole('dialog', { name: 'Ajustes de lectura' });
+  // En tablet es un panel lateral a la derecha: la partitura sigue a la vista.
+  const box = (await sheet.boundingBox())!;
+  const viewport = page.viewportSize()!;
+  expect(box.x + box.width).toBeGreaterThanOrEqual(viewport.width - 1);
+  expect(box.width).toBeLessThanOrEqual(viewport.width / 2 + 1);
   await sheet.getByRole('button', { name: 'Vertical' }).click();
   await expect(page.locator('.reader-scroll')).toBeVisible();
   await sheet.getByRole('button', { name: 'Dos páginas' }).first().click();

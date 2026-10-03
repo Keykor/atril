@@ -298,7 +298,7 @@ function Picker({
       />
       <ul className="picker">
         {shown.map((sc) => (
-          <li key={sc.id}>
+          <li key={sc.id} className={inList.has(sc.id) ? 'added' : undefined}>
             <span>
               <strong>{sc.title}</strong>
               <small>{sc.composer}</small>
