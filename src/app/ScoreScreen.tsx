@@ -17,6 +17,7 @@ import { AnnotationToolbar } from '../features/annotations/AnnotationToolbar';
 import { COLORS, type ToolState } from '../features/annotations/strokes';
 import { useAnnotationHistory } from '../features/annotations/useHistory';
 import { MetaSheet } from '../features/library/MetaSheet';
+import { PracticePanel } from '../features/practice/PracticePanel';
 import { PageStrip } from '../features/reader/PageStrip';
 import { Reader } from '../features/reader/Reader';
 import { ReadingSheet } from '../features/reader/ReadingSheet';
@@ -24,6 +25,7 @@ import { nextView, resolveOrder, type View } from '../features/reader/sequence';
 import { nextInShow, prevInShow, scoreNumber } from '../features/setlists/show';
 import { ShowIndex, ShowNext, ShowProgress } from '../features/setlists/ShowParts';
 import { Icon } from '../ui/Icon';
+import { PlayStartNotes } from './reader-tools';
 import { back, navigate } from './router';
 import { t } from './strings';
 
@@ -46,6 +48,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
   const [sheet, setSheet] = useState<SheetName>(null);
   const [annotating, setAnnotating] = useState(false);
   const [locked, setLocked] = useState(!!show); // en modo show no se raya en escena
+  const [practice, setPractice] = useState(false);
   const [annotationsVisible, setAnnotationsVisible] = useState(true);
   const [tool, setTool] = useState<ToolState>({ tool: 'pen', color: COLORS[1], width: 1 });
   const history = useAnnotationHistory();
@@ -186,7 +189,15 @@ export function ScoreScreen({ scoreId, show }: Props) {
       )}
 
       {show && <ShowProgress list={show.list} index={show.index} />}
-      {show && atEnd && !bars && !annotating && (
+      {practice && (
+        <PracticePanel
+          score={score}
+          onChange={(patch) => void updateScore(score.id, patch)}
+          onClose={() => setPractice(false)}
+        />
+      )}
+
+      {show && atEnd && !bars && !annotating && !practice && (
         <ShowNext list={show.list} index={show.index} onNext={goShow} />
       )}
 
@@ -245,6 +256,25 @@ export function ScoreScreen({ scoreId, show }: Props) {
             />
             <div className="reader-divider" />
             <div className="reader-tools">
+              <button
+                onClick={() => {
+                  setPractice(true);
+                  setBars(false);
+                }}
+              >
+                <Icon name="metronome" size={26} />
+                {t.reader.metronome}
+              </button>
+              <button
+                onClick={() => {
+                  setPractice(true);
+                  setBars(false);
+                }}
+              >
+                <Icon name="keyboard" size={26} />
+                {t.reader.keyboard}
+              </button>
+              <PlayStartNotes startNotes={score.startNotes} />
               {locked ? (
                 <button onClick={() => setLocked(false)}>
                   <Icon name="lock" size={26} />

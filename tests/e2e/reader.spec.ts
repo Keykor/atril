@@ -87,3 +87,27 @@ test('anotar: el trazo queda guardado, se deshace y se rehace', async ({ page })
   await page.mouse.up();
   await expect(strokes).toHaveCount(0);
 });
+
+test('metrónomo y teclado: el panel abre, marca los tiempos y guarda el tempo', async ({
+  page,
+}) => {
+  await openScore(page);
+  await tapAt(page, 0.5);
+  await page.getByRole('button', { name: 'Metrónomo' }).click();
+  const panel = page.getByRole('region', { name: 'Herramientas de ensayo' });
+  await expect(panel.getByRole('group', { name: 'Teclado de dos octavas' })).toBeVisible();
+
+  await panel.getByRole('button', { name: 'Subir tempo' }).click();
+  await expect(panel.locator('.metro-bpm strong')).toHaveText('73');
+  await panel.getByRole('button', { name: 'Iniciar' }).click();
+  await expect(panel.locator('.metro-beats span[data-on]')).toHaveCount(1);
+  await panel.getByRole('button', { name: 'Detener' }).click();
+  await panel.getByRole('button', { name: 'Do4', exact: true }).dispatchEvent('pointerdown');
+
+  // El tempo quedó en la partitura.
+  await page.waitForTimeout(700);
+  await panel.getByRole('button', { name: 'Cerrar herramientas' }).click();
+  await tapAt(page, 0.5);
+  await page.getByRole('button', { name: 'Más opciones' }).click();
+  await expect(page.getByRole('dialog').getByLabel('BPM')).toHaveValue('73');
+});
