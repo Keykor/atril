@@ -99,8 +99,19 @@
   align-items: center;
   pointer-events: none;
 }
-.score-screen:has(.reader-bottom, .show-next, .practice) .page-indicator {
-  display: none;
+/* El número de página solo aparece con las barras: leyendo no tapa nada de la partitura.
+   Se ubica justo encima de la barra de abajo. */
+.page-indicator {
+  visibility: hidden;
+}
+.score-screen:has(.reader-bottom) .page-indicator {
+  visibility: visible;
+  bottom: calc(140px + env(safe-area-inset-bottom));
+}
+@media (max-width: 600px) {
+  .score-screen:has(.reader-bottom) .page-indicator {
+    bottom: calc(96px + env(safe-area-inset-bottom));
+  }
 }
 
 .score-screen {
