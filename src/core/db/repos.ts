@@ -140,3 +140,21 @@ export const deleteLink = (id: string) => db.links.delete(id);
 // --- Ajustes ---
 
 export const setSetting = (key: string, value: unknown) => db.settings.put({ key, value });
+
+/**
+ * Primer arranque con pistas: solo las ve quien empieza de cero. Si ya hay partituras, la app
+ * ya se venía usando y todas se dan por vistas.
+ */
+export const initHints = (all: string[]) =>
+  db.transaction('rw', db.settings, db.scores, async () => {
+    if (await db.settings.get('hintsSeen')) return;
+    await setSetting('hintsSeen', (await db.scores.count()) ? all : []);
+  });
+
+export const markHintSeen = (id: string) =>
+  db.transaction('rw', db.settings, async () => {
+    const seen = ((await db.settings.get('hintsSeen'))?.value as string[] | undefined) ?? [];
+    if (!seen.includes(id)) await setSetting('hintsSeen', [...seen, id]);
+  });
+
+export const resetHints = () => setSetting('hintsSeen', []);
