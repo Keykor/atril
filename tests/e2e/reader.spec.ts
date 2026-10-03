@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { importFixtures } from './helpers';
+import { clickBar, importFixtures } from './helpers';
 
 async function openScore(page: Page) {
   await importFixtures(page);
@@ -31,8 +31,7 @@ test('pasar página con toque y con teclado, y recordar la última', async ({ pa
 
 test('el toque al centro muestra las barras y los ajustes cambian el modo', async ({ page }) => {
   await openScore(page);
-  await tapAt(page, 0.5);
-  await page.getByRole('button', { name: 'Ajustes de lectura' }).click();
+  await clickBar(page, 'Ajustes de lectura');
   const sheet = page.getByRole('dialog', { name: 'Ajustes de lectura' });
   await sheet.getByRole('button', { name: 'Vertical' }).click();
   await expect(page.locator('.reader-scroll')).toBeVisible();
@@ -44,8 +43,7 @@ test('el toque al centro muestra las barras y los ajustes cambian el modo', asyn
 
 test('anotar: el trazo queda guardado, se deshace y se rehace', async ({ page }) => {
   await openScore(page);
-  await tapAt(page, 0.5);
-  await page.getByRole('button', { name: 'Anotar' }).click();
+  await clickBar(page, 'Anotar');
   const strokes = page.locator('.page[data-page="0"] .annotation-layer path');
 
   const box = (await page.locator('.page[data-page="0"]').boundingBox())!;
@@ -76,8 +74,7 @@ test('anotar: el trazo queda guardado, se deshace y se rehace', async ({ page })
   await expect(page.locator('.annotation-layer text')).toHaveText('respirar acá');
 
   // La goma borra por trazo.
-  await tapAt(page, 0.5);
-  await page.getByRole('button', { name: 'Anotar' }).click();
+  await clickBar(page, 'Anotar');
   await page.getByRole('button', { name: 'Goma' }).click();
   const small = (await page.locator('.page[data-page="0"]').boundingBox())!;
   // Se arranca abajo: en pantallas angostas la barra de herramientas tapa el borde superior.
@@ -92,8 +89,7 @@ test('metrónomo y teclado: el panel abre, marca los tiempos y guarda el tempo',
   page,
 }) => {
   await openScore(page);
-  await tapAt(page, 0.5);
-  await page.getByRole('button', { name: 'Metrónomo' }).click();
+  await clickBar(page, 'Metrónomo');
   const panel = page.getByRole('region', { name: 'Herramientas de ensayo' });
   await expect(panel.getByRole('group', { name: 'Teclado de dos octavas' })).toBeVisible();
 
@@ -107,8 +103,7 @@ test('metrónomo y teclado: el panel abre, marca los tiempos y guarda el tempo',
   // El tempo quedó en la partitura.
   await page.waitForTimeout(700);
   await panel.getByRole('button', { name: 'Cerrar herramientas' }).click();
-  await tapAt(page, 0.5);
-  await page.getByRole('button', { name: 'Más opciones' }).click();
+  await clickBar(page, 'Más opciones');
   await page.getByRole('button', { name: 'Datos de la partitura' }).click();
   await expect(page.getByRole('dialog').getByLabel('BPM')).toHaveValue('73');
 });

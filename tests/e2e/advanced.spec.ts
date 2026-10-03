@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { importFixtures } from './helpers';
+import { clickBar, importFixtures } from './helpers';
 
 const indicator = (page: Page) => page.locator('.page-indicator');
 
@@ -12,17 +12,12 @@ async function tapAt(page: Page, fx: number) {
   const box = (await page.locator('.reader-stage').boundingBox())!;
   await page.mouse.click(box.x + box.width * fx, box.y + box.height / 2);
 }
-async function openBars(page: Page) {
-  await tapAt(page, 0.5);
-  await expect(page.locator('.reader-top')).toBeVisible();
-}
 const closeSheet = (page: Page) =>
   page.getByRole('dialog').getByRole('button', { name: 'Cerrar' }).click();
 
 test('orden virtual de páginas y marcadores', async ({ page }) => {
   await openScore(page);
-  await openBars(page);
-  await page.getByRole('button', { name: 'Más opciones' }).click();
+  await clickBar(page, 'Más opciones');
   await page.getByLabel('Orden de páginas').fill('1, 2, 3, 2, 3');
   await page.getByLabel('Orden de páginas').blur();
   await closeSheet(page);
@@ -36,24 +31,21 @@ test('orden virtual de páginas y marcadores', async ({ page }) => {
     '1',
   );
 
-  await openBars(page);
-  await page.getByRole('button', { name: 'Marcadores' }).click();
+  await clickBar(page, 'Marcadores');
   await page.getByLabel('Nombre del marcador').fill('Letra B');
   await page.getByRole('button', { name: 'En la página 2' }).click();
   await closeSheet(page);
   await page.keyboard.press('ArrowRight');
   await expect(indicator(page)).toHaveText('5 / 5');
 
-  await openBars(page);
-  await page.getByRole('button', { name: 'Marcadores' }).click();
+  await clickBar(page, 'Marcadores');
   await page.locator('.bookmark-go', { hasText: 'Letra B' }).click();
   await expect(indicator(page)).toHaveText('2 / 5'); // primera aparición de la página 2
 });
 
 test('saltos: tocar el origen lleva al destino y se puede volver', async ({ page }) => {
   await openScore(page);
-  await openBars(page);
-  await page.getByRole('button', { name: 'Más opciones' }).click();
+  await clickBar(page, 'Más opciones');
   await page.getByRole('button', { name: 'Agregar salto' }).click();
   await page
     .locator('.reader-slot[data-where="0"]')
@@ -75,8 +67,7 @@ test('recorte de márgenes: la página se agranda y las anotaciones siguen aline
   const full = page.locator('.reader-slot[data-where="0"] .page-full');
   const before = (await full.boundingBox())!;
 
-  await openBars(page);
-  await page.getByRole('button', { name: 'Más opciones' }).click();
+  await clickBar(page, 'Más opciones');
   await page.getByRole('button', { name: 'Automático' }).click();
   await closeSheet(page);
   await expect.poll(async () => (await full.boundingBox())!.width).toBeGreaterThan(before.width);
@@ -91,8 +82,7 @@ test('recorte de márgenes: la página se agranda y las anotaciones siguen aline
 
 test('media página y autoscroll', async ({ page }) => {
   await openScore(page);
-  await openBars(page);
-  await page.getByRole('button', { name: 'Ajustes de lectura' }).click();
+  await clickBar(page, 'Ajustes de lectura');
   await page.getByRole('switch', { name: 'Media página' }).click();
   await closeSheet(page);
   await tapAt(page, 0.9);
@@ -101,14 +91,12 @@ test('media página y autoscroll', async ({ page }) => {
   await tapAt(page, 0.9);
   await expect(indicator(page)).toHaveText('2 / 3');
 
-  await openBars(page);
-  await page.getByRole('button', { name: 'Ajustes de lectura' }).click();
+  await clickBar(page, 'Ajustes de lectura');
   await page.getByRole('button', { name: 'Vertical' }).click();
   await closeSheet(page);
   const scroller = page.locator('.reader-scroll');
   const start = await scroller.evaluate((el) => el.scrollTop);
-  await openBars(page);
-  await page.getByRole('button', { name: 'Autoscroll' }).click();
+  await clickBar(page, 'Autoscroll');
   await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBeGreaterThan(start + 10);
   await tapAt(page, 0.5); // un toque pausa
   const paused = await scroller.evaluate((el) => el.scrollTop);

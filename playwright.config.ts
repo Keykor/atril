@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: 'tests/e2e',
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 1 : undefined, // el runner tiene 2 núcleos y pdf.js los usa
   use: { baseURL: 'http://localhost:4173' },
   webServer: {
     command: 'npm run build && npm run preview',
