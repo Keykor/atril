@@ -214,3 +214,29 @@ test('anotando en el celular: un dedo dibuja y dos dedos mueven la página', asy
   await expect.poll(scrollTop).toBeGreaterThan(before + 60);
   await expect(strokes).toHaveCount(1);
 });
+
+test('en el celular, metrónomo y teclado van en pestañas; en tablet se ven los dos', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openScore(page);
+  await clickBar(page, 'Ensayo');
+  const panel = page.getByRole('region', { name: 'Herramientas de ensayo' });
+  const keyboard = panel.getByRole('group', { name: 'Teclado de dos octavas' });
+  const bpm = panel.locator('.metro-bpm');
+  await expect(bpm).toBeVisible();
+  await expect(keyboard).toBeHidden();
+
+  // El metrónomo sigue andando al pasar a la pestaña del teclado.
+  await panel.getByRole('button', { name: 'Iniciar' }).click();
+  await panel.getByRole('tab', { name: 'Teclado' }).click();
+  await expect(keyboard).toBeVisible();
+  await expect(bpm).toBeHidden();
+  await panel.getByRole('tab', { name: 'Metrónomo' }).click();
+  await expect(panel.getByRole('button', { name: 'Detener' })).toBeVisible();
+
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await expect(keyboard).toBeVisible();
+  await expect(bpm).toBeVisible();
+  await expect(panel.getByRole('tab', { name: 'Teclado' })).toBeHidden();
+});
