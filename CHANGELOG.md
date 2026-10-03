@@ -4,6 +4,18 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.4.0
+
+Pensada para usar Atril en el celular.
+
+- Marcadores y saltos más chicos: ya no tapan el pentagrama. El salto muestra el destino
+  abreviado ("p. 3" o el nombre del marcador).
+- Anotar con zoom: mientras anotás, un dedo dibuja y dos dedos mueven la página o hacen zoom.
+  Con "solo el lápiz dibuja", un dedo también mueve la página.
+- En el celular, el metrónomo y el teclado van en pestañas.
+- En el celular, las hojas de ajustes ocupan toda la pantalla, y en cualquier pantalla una
+  flecha avisa si hay más opciones abajo. El recorte muestra cuánto recorta cada lado.
+
 ## 0.3.1
 
 - El número de página ya no tapa la partitura mientras leés: aparece solo al tocar el centro,
