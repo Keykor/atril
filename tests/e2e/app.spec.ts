@@ -51,3 +51,28 @@ test('ajustes muestra instalación, backup y versión', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Backup en Google Drive' })).toBeVisible();
   await expect(page.getByText(/^Atril \d+\.\d+\.\d+$/)).toBeVisible();
 });
+
+test('etiquetas: crear, renombrar y borrar; el aviso de instalar se puede cerrar', async ({
+  page,
+}) => {
+  await importFixtures(page);
+  const banner = page.getByRole('button', { name: 'Cerrar aviso de instalación' });
+  await banner.click();
+  await expect(banner).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Biblioteca' })).toBeVisible();
+  await expect(banner).toHaveCount(0);
+
+  const chips = page.locator('.tagnav.chips');
+  await chips.getByRole('button', { name: 'Nueva etiqueta' }).click();
+  await chips.getByLabel('Nombre de la etiqueta').fill('Sacro');
+  await page.keyboard.press('Enter');
+  await chips.getByRole('button', { name: 'Editar etiquetas' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Editar etiquetas' });
+  await sheet.getByLabel('Nombre de la etiqueta Sacro').fill('Navidad');
+  await sheet.getByLabel('Nombre de la etiqueta Sacro').blur();
+  await expect(chips.getByRole('button', { name: 'Navidad', exact: true })).toBeVisible();
+  page.on('dialog', (d) => d.accept());
+  await sheet.getByRole('button', { name: 'Eliminar etiqueta Navidad' }).click();
+  await expect(chips.getByRole('button', { name: 'Navidad', exact: true })).toHaveCount(0);
+});

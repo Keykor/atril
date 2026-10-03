@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { db } from '../../core/db/db';
 import { addTag, deleteTag } from '../../core/db/repos';
 import { Icon } from '../../ui/Icon';
+import { Sheet } from '../../ui/Sheet';
 import { t } from '../../app/strings';
 import './library.css';
 
@@ -14,10 +15,11 @@ interface Props {
   variant: 'sidebar' | 'chips';
 }
 
-/** Filtro por etiqueta: lista en la barra lateral (con alta y baja) o chips en celular. */
+/** Filtro por etiqueta: lista en la barra lateral o chips en celular. */
 export function TagNav({ tagId, onSelect, variant }: Props) {
   const tags = useLiveQuery(() => db.tags.orderBy('name').toArray(), []) ?? [];
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
 
   const create = async () => {
@@ -34,29 +36,15 @@ export function TagNav({ tagId, onSelect, variant }: Props) {
         {t.tags.all}
       </button>
       {tags.map((tag) => (
-        <div key={tag.id} className="tag-row">
-          <button
-            className="tag-item"
-            aria-pressed={tag.id === tagId}
-            onClick={() => onSelect(tag.id)}
-          >
-            <span className="tag-dot" style={{ background: tag.color }} />
-            {tag.name}
-          </button>
-          {variant === 'sidebar' && tag.id === tagId && (
-            <button
-              className="icon-btn tag-delete"
-              aria-label={t.tags.delete(tag.name)}
-              onClick={async () => {
-                if (!confirm(t.tags.confirmDelete(tag.name))) return;
-                await deleteTag(tag.id);
-                onSelect(undefined);
-              }}
-            >
-              <Icon name="trash" size={16} />
-            </button>
-          )}
-        </div>
+        <button
+          key={tag.id}
+          className="tag-item"
+          aria-pressed={tag.id === tagId}
+          onClick={() => onSelect(tag.id)}
+        >
+          <span className="tag-dot" style={{ background: tag.color }} />
+          {tag.name}
+        </button>
       ))}
       {adding ? (
         <form
@@ -81,6 +69,44 @@ export function TagNav({ tagId, onSelect, variant }: Props) {
           <Icon name="plus" size={14} />
           {t.tags.new}
         </button>
+      )}
+      {tags.length > 0 && (
+        <button className="tag-item tag-new" onClick={() => setEditing(true)}>
+          <Icon name="edit" size={14} />
+          {t.tags.edit}
+        </button>
+      )}
+
+      {editing && (
+        <Sheet title={t.tags.edit} closeLabel={t.close} onClose={() => setEditing(false)}>
+          <ul className="plain-list">
+            {tags.map((tag) => (
+              <li key={tag.id}>
+                <span className="tag-dot" style={{ background: tag.color }} />
+                <input
+                  className="input"
+                  aria-label={t.tags.rename(tag.name)}
+                  defaultValue={tag.name}
+                  onBlur={(e) => {
+                    const next = e.target.value.trim();
+                    if (next && next !== tag.name) void db.tags.update(tag.id, { name: next });
+                  }}
+                />
+                <button
+                  className="icon-btn"
+                  aria-label={t.tags.delete(tag.name)}
+                  onClick={async () => {
+                    if (!confirm(t.tags.confirmDelete(tag.name))) return;
+                    await deleteTag(tag.id);
+                    if (tag.id === tagId) onSelect(undefined);
+                  }}
+                >
+                  <Icon name="trash" size={18} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Sheet>
       )}
     </div>
   );

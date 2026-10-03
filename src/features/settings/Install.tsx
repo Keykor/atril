@@ -1,3 +1,4 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useSyncExternalStore } from 'react';
 import {
   canPromptInstall,
@@ -6,6 +7,7 @@ import {
   onInstallChange,
   promptInstall,
 } from '../../core/install';
+import { getSetting, setSetting } from '../../core/db/repos';
 import { Icon } from '../../ui/Icon';
 import { t } from '../../app/strings';
 import './settings.css';
@@ -48,12 +50,21 @@ export function InstallCard() {
 
 /** En la biblioteca: conviene instalar antes de importar (en iOS el storage no se comparte). */
 export function InstallBanner() {
-  if (isStandalone()) return null;
+  const dismissed = useLiveQuery(() => getSetting('installBannerDismissed', false), []);
+  if (isStandalone() || dismissed !== false) return null;
   return (
-    <a className="reminder info" href="#/settings">
-      <Icon name="download" />
-      <span>{i.banner}</span>
-      <Icon name="right" size={18} />
-    </a>
+    <div className="reminder info">
+      <a href="#/settings">
+        <Icon name="download" />
+        <span>{i.banner}</span>
+      </a>
+      <button
+        className="icon-btn"
+        aria-label={i.dismiss}
+        onClick={() => void setSetting('installBannerDismissed', true)}
+      >
+        <Icon name="close" size={18} />
+      </button>
+    </div>
   );
 }
