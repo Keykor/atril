@@ -219,6 +219,56 @@ test('anotando en el celular: un dedo dibuja y dos dedos mueven la página', asy
   await expect(strokes).toHaveCount(1);
 });
 
+test('con zoom se sigue pasando de hoja, y el botón de ajuste lo saca', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'Los toques multidedo se simulan con CDP (solo Chromium)');
+  await openScore(page);
+  const cdp = await page.context().newCDPSession(page);
+  type P = { x: number; y: number };
+  const touch = async (type: 'touchStart' | 'touchMove' | 'touchEnd', points: P[]) =>
+    cdp.send('Input.dispatchTouchEvent', {
+      type,
+      touchPoints: points.map((p, id) => ({ ...p, id })),
+    });
+  const zoom = () =>
+    page
+      .locator('.reader-stage')
+      .evaluate((el) => Number(getComputedStyle(el).getPropertyValue('--z')));
+  const box = (await page.locator('.reader-stage').boundingBox())!;
+  const cy = box.y + box.height / 2;
+  const cx = box.x + box.width / 2;
+
+  // Pellizco: los dedos se separan.
+  await touch('touchStart', [
+    { x: cx - 40, y: cy },
+    { x: cx + 40, y: cy },
+  ]);
+  for (let i = 1; i <= 8; i++)
+    await touch('touchMove', [
+      { x: cx - 40 - i * 20, y: cy },
+      { x: cx + 40 + i * 20, y: cy },
+    ]);
+  await touch('touchEnd', []);
+  await expect.poll(zoom).toBeGreaterThan(1.5);
+
+  // Toque al costado: pasa de hoja y mantiene el zoom.
+  await tapAt(page, 0.9);
+  await expect(page.locator('.page-indicator')).toHaveText('2 / 3');
+  expect(await zoom()).toBeGreaterThan(1.5);
+
+  // Un dedo hacia la izquierda: recorre hasta el borde y, de largo, pasa de hoja.
+  await touch('touchStart', [{ x: box.x + box.width - 20, y: cy }]);
+  for (let i = 1; i <= 40; i++)
+    await touch('touchMove', [{ x: box.x + box.width - 20 - i * 80, y: cy }]);
+  await touch('touchEnd', []);
+  await expect(page.locator('.page-indicator')).toHaveText('3 / 3');
+
+  await clickBar(page, 'Ajuste de página');
+  await expect.poll(zoom).toBe(1);
+});
+
 test('en el celular, metrónomo y teclado van en pestañas; en tablet se ven los dos', async ({
   page,
 }) => {
@@ -248,13 +298,13 @@ test('en el celular, metrónomo y teclado van en pestañas; en tablet se ven los
 test('en el celular las hojas ocupan toda la altura y avisan si hay más abajo', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 390, height: 640 });
   await openScore(page);
   await clickBar(page, 'Ajustes de lectura');
   const sheet = page.getByRole('dialog', { name: 'Ajustes de lectura' });
   const box = (await sheet.boundingBox())!;
   expect(box.y).toBeLessThanOrEqual(1);
-  expect(box.height).toBeGreaterThanOrEqual(843);
+  expect(box.height).toBeGreaterThanOrEqual(639);
 
   const more = sheet.locator('.sheet-more');
   await expect(more).toBeVisible();

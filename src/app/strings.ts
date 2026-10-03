@@ -62,6 +62,7 @@ export const t = {
     back: 'Biblioteca',
     backToList: 'Lista',
     page: 'Página',
+    fit: 'Ajuste de página',
     practice: 'Ensayo',
     loading: 'Abriendo…',
     missingPdf: 'Falta el PDF de esta partitura. Importalo de nuevo desde la biblioteca.',

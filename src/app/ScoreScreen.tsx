@@ -53,6 +53,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
     symbol: 'noteQuarterUp',
   });
   const [practice, setPractice] = useState(false);
+  const [fitToggle, setFitToggle] = useState(0);
   const [autoscrolling, setAutoscrolling] = useState(false);
   const [nextShown, setNextShown] = useState(false); // aviso de obra siguiente (modo show)
   // Marcador o salto nuevo: primero se toca el punto en la página, después se completa.
@@ -210,6 +211,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
         onCenterTap={() => !annotating && !placing && setBars((b) => !b)}
         onEdge={onEdge}
         manualPan={annotating}
+        fitToggle={fitToggle}
         scrollTarget={target}
         autoscroll={autoscrolling && vertical ? (score.autoscrollSpeed ?? 30) : undefined}
         interceptTap={() => {
@@ -322,6 +324,13 @@ export function ScoreScreen({ scoreId, show }: Props) {
                 </>
               )}
             </div>
+            <button
+              className="icon-btn"
+              aria-label={t.reader.fit}
+              onClick={() => setFitToggle((n) => n + 1)}
+            >
+              <Icon name="fit" size={22} />
+            </button>
             <button
               className="icon-btn"
               aria-label={t.reader.settings}
