@@ -3,7 +3,7 @@ export type ID = string;
 export interface PdfFile {
   id: ID;
   sha256: string;
-  blob: Blob;
+  blob?: Blob; // ausente = viene de un backup liviano y hay que reimportar el PDF
   size: number;
   pageCount: number;
 }
