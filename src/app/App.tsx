@@ -3,12 +3,14 @@ import { LibraryScreen } from '../features/library/LibraryScreen';
 import { TagNav } from '../features/library/TagNav';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { navigate, useRoute } from './router';
+import { ScoreScreen } from './ScoreScreen';
 import { Shell } from './Shell';
 
 export function App() {
-  const [section] = useRoute();
+  const [section, id] = useRoute();
   const [tagId, setTagId] = useState<string>();
 
+  if (section === 'score' && id) return <ScoreScreen key={id} scoreId={id} />;
   if (section === 'settings')
     return (
       <Shell section="settings">

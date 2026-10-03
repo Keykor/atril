@@ -17,6 +17,7 @@ export function openPdf(pdfId: string) {
   if (current?.id === pdfId) return current.doc;
   current?.doc.then((d) => d.loadingTask.destroy()).catch(() => {});
   pages.clear();
+  thumbs.clear();
   const doc = db.pdfData.get(pdfId).then((pdf) => {
     if (!pdf) throw new MissingPdfError(pdfId);
     return pdfjs.getDocument({ data: pdf.data }).promise;
@@ -53,6 +54,24 @@ export function renderPage(pdfId: string, page: number, cssWidth: number) {
   if (!hit) {
     hit = openPdf(pdfId).then((doc) => draw(doc, page, pixelWidth));
     pages.set(key, hit);
+  }
+  return hit;
+}
+
+const thumbs = new Map<string, Promise<string>>();
+
+/** Miniatura chica de una página como data URL. No pasa por la LRU del lector. */
+export function renderThumb(pdfId: string, page: number, pixelWidth = 112) {
+  const key = `${pdfId}:${page}`;
+  let hit = thumbs.get(key);
+  if (!hit) {
+    hit = openPdf(pdfId).then(async (doc) => {
+      const canvas = await draw(doc, page, pixelWidth);
+      const url = canvas.toDataURL('image/jpeg', 0.7);
+      canvas.width = canvas.height = 1;
+      return url;
+    });
+    thumbs.set(key, hit);
   }
   return hit;
 }
