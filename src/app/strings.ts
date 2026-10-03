@@ -185,6 +185,7 @@ export const t = {
       'Marcá un lugar de la partitura (por ejemplo, donde arranca la letra B) para saltar ahí.',
     page: (page: number) => `pág. ${page}`,
     pageLong: (page: number) => `página ${page}`,
+    pageShort: (page: number) => `p. ${page}`,
     delete: (label: string) => `Eliminar marcador ${label}`,
     jumps: 'Saltos',
     jumpsHint: 'Para D.S., coda o repeticiones: tocar el origen en la partitura salta al destino.',

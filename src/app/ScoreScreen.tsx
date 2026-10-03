@@ -241,6 +241,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
               highlight={target?.id}
               jumpLabel={t.bookmarks.jumpTo}
               pageLabel={t.bookmarks.pageLong}
+              pageShort={t.bookmarks.pageShort}
               placeLabel={t.bookmarks.placeLabel}
               onJump={jump}
               onPlace={(point) => {

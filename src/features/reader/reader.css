@@ -65,6 +65,7 @@
 }
 .page-full {
   position: absolute;
+  container-type: inline-size; /* marcadores y saltos se miden contra el ancho de la página */
 }
 .page-canvas,
 .page-canvas canvas {
@@ -327,49 +328,68 @@
 .jump-marker {
   position: absolute;
   transform: translate(-50%, -50%);
-  min-width: var(--tap);
-  height: var(--tap);
-  padding: 0 10px;
-  border: 2px solid var(--accent);
-  border-radius: 999px;
-  background: rgba(232, 237, 250, 0.9);
-  color: var(--accent-dark);
-  font-weight: 700;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
   pointer-events: auto;
+}
+/* Marcadores y saltos escalan con el ancho de la página (cqw): en el celular quedan chicos y no
+   tapan el pentagrama; en la tablet, un poco más grandes. */
+.jump-dot,
+.bookmark-flag {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+.jump-dot {
+  height: clamp(16px, 2.6cqw, 24px);
+  padding: 0 clamp(4px, 0.8cqw, 8px) 0 clamp(2px, 0.5cqw, 5px);
+  background: rgba(41, 80, 199, 0.75);
+  font-size: clamp(9px, 1.5cqw, 12px);
+  box-shadow: 0 1px 2px rgba(23, 24, 28, 0.2);
+}
+.jump-dot svg,
+.bookmark-flag svg {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
 }
 .bookmark-flag {
   position: absolute;
-  transform: translate(-6px, -100%);
-  max-width: 40%;
-  height: 24px;
-  padding: 0 8px 0 4px;
-  border-radius: 6px 6px 6px 0;
-  background: rgba(21, 128, 61, 0.9);
-  color: #fff;
-  font-size: 12px;
+  transform: translate(-3px, -100%);
+  max-width: 28%;
+  height: clamp(13px, 2.1cqw, 20px);
+  padding: 0 clamp(3px, 0.6cqw, 6px) 0 clamp(2px, 0.3cqw, 3px);
+  border-radius: 4px 4px 4px 0;
+  background: rgba(21, 128, 61, 0.7);
+  font-size: clamp(8px, 1.3cqw, 11px);
   font-weight: 600;
-  white-space: nowrap;
+}
+.bookmark-flag > span {
   overflow: hidden;
   text-overflow: ellipsis;
-  display: flex;
-  align-items: center;
-  gap: 2px;
 }
 .bookmark-flag[data-below] {
-  transform: translate(-6px, 0);
-  border-radius: 0 6px 6px 6px;
+  transform: translate(-3px, 0);
+  border-radius: 0 4px 4px 4px;
 }
 .bookmark-flag[data-highlight] {
   animation: flag-pulse 0.5s ease-in-out 4;
 }
 @keyframes flag-pulse {
   50% {
-    transform: translate(-6px, -100%) scale(1.5);
     background: var(--danger);
+    box-shadow: 0 0 0 4px rgba(215, 53, 43, 0.35);
   }
 }
 .place-point {
