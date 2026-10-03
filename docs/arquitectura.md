@@ -102,8 +102,8 @@ render cuando la memoria total de canvas pasa los ~384 MB.
 | Orden de páginas como texto ("1, 2, 3, 2")      | Las miniaturas de partituras casi no se distinguen y el texto deja repetir páginas fácil                               | Arrastrar miniaturas                                                 |
 | Drive sin backend                               | Sin servidor que mantener; el scope `drive.file` solo ve los archivos que crea Atril                                   | Backend con refresh tokens (el token dura ~1 h y hay que reconectar) |
 
-Los planes de cada cambio grande, con el contexto completo de lo que se discutió, están en
-[`docs/plans/`](plans/).
+Una decisión de arquitectura nueva se agrega a esta tabla en el mismo PR que la introduce. La
+discusión completa queda en la descripción de ese PR.
 
 ## Particularidades de iOS que el código cubre
 

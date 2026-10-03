@@ -10,3 +10,7 @@ playwright-report
 *.local
 .DS_Store
 *.tsbuildinfo
+
+# Planes de trabajo (flujo plan -> ship): locales, no se commitean.
+# Lo vigente está en docs/arquitectura.md y el código; el porqué de cada cambio, en su PR.
+docs/plans/

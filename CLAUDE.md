@@ -82,7 +82,9 @@ Agregá la etiqueta `needs-human` al PR si toca:
 ## Cómo trabajamos
 
 - Cambios no triviales: plan primero (`docs/plans/{slug}.md`), se discute, y recién ahí se
-  implementa, un commit por paso del plan.
+  implementa, un commit por paso del plan. `docs/plans/` está en `.gitignore`: el plan es un
+  archivo de trabajo local. Lo que tiene que sobrevivir va al PR (el porqué, lo descartado) y,
+  si es una decisión de arquitectura, a la tabla de decisiones de `docs/arquitectura.md`.
 - No refactorices fuera del alcance del pedido; anotalo en el PR.
 - Si el plan resulta equivocado durante la implementación, frená, actualizá el plan con el
   motivo y avisá.
@@ -106,5 +108,5 @@ Agregá la etiqueta `needs-human` al PR si toca:
 - **Modo show:** en escena la barra de abajo arranca bloqueada (un toque la habilita) y el aviso
   de obra siguiente aparece recién al tocar para avanzar en la última página, para no tapar
   música. Son pedidos explícitos del usuario; no los "simplifiques".
-- `docs/plans/` es un registro histórico: cada plan refleja lo decidido en su momento. La
-  documentación vigente es `docs/arquitectura.md` y el código.
+- La documentación vigente es `docs/arquitectura.md` y el código. Si un cambio la contradice,
+  actualizala en el mismo PR.
