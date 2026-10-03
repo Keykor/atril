@@ -1,0 +1,11 @@
+node_modules
+dist
+dev-dist
+.env
+.env.*
+!.env.example
+.claude/
+test-results
+playwright-report
+*.local
+.DS_Store
