@@ -1,16 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
-import { db } from '../core/db/db';
 import {
-  addBookmark,
-  addLink,
   getGlobalReading,
+  getScore,
+  getScoreMarkers,
   getSetting,
   resolveReading,
-  setSetting,
-  touchScore,
-  updateScore,
-} from '../core/db/repos';
+} from '../core/db/queries';
+import { addBookmark, addLink, setSetting, touchScore, updateScore } from '../core/db/repos';
 import type { JumpLink, ReadingPrefs, SetList } from '../core/db/types';
 import { pageSizes } from '../core/pdf/render';
 import { keepAwake } from '../core/wakeLock';
@@ -43,13 +40,10 @@ interface Props {
 
 /** Pantalla de lectura: compone el lector con las barras y las hojas de cada feature. */
 export function ScoreScreen({ scoreId, show }: Props) {
-  const score = useLiveQuery(() => db.scores.get(scoreId).then((s) => s ?? null), [scoreId]);
+  const score = useLiveQuery(() => getScore(scoreId), [scoreId]);
   const global = useLiveQuery(getGlobalReading, []);
   const penOnly = useLiveQuery(() => getSetting('penOnlyDrawing', false), []) ?? false;
-  const bookmarks = useLiveQuery(
-    () => db.bookmarks.where('scoreId').equals(scoreId).toArray(),
-    [scoreId],
-  );
+  const bookmarks = useLiveQuery(() => getScoreMarkers(scoreId), [scoreId])?.bookmarks;
   const [sizes, setSizes] = useState<{ w: number; h: number }[] | 'missing'>();
   const [view, setView] = useState<View>();
   const [bars, setBars] = useState(false);

@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { db } from '../../core/db/db';
+import { listScores, listTags, missingPdfIds } from '../../core/db/queries';
 import { filterScores } from '../../core/db/search';
 import { importFiles } from '../../core/pdf/import';
 import { takeSharedFiles } from '../../core/pdf/shared';
@@ -19,12 +19,9 @@ interface Props {
 }
 
 export function LibraryScreen({ tagId, onTag, onOpen, banner }: Props) {
-  const scores = useLiveQuery(() => db.scores.toArray(), []);
-  const tags = useLiveQuery(() => db.tags.toArray(), []);
-  const missing = useLiveQuery(
-    async () => new Set(await db.pdfs.filter((p) => !!p.missing).primaryKeys()),
-    [],
-  );
+  const scores = useLiveQuery(listScores, []);
+  const tags = useLiveQuery(listTags, []);
+  const missing = useLiveQuery(missingPdfIds, []);
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<'recent' | 'az'>('recent');
   const [editing, setEditing] = useState<string>();

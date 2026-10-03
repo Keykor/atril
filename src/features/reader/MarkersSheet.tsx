@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import { db } from '../../core/db/db';
+import { getScoreMarkers } from '../../core/db/queries';
 import { deleteBookmark, deleteLink } from '../../core/db/repos';
 import type { Bookmark, JumpLink } from '../../core/db/types';
 import { Icon } from '../../ui/Icon';
@@ -10,16 +10,7 @@ import { bookmarkAt } from './PageMarkers';
 
 const b = t.bookmarks;
 
-const useMarkers = (scoreId: string) =>
-  useLiveQuery(
-    async () => ({
-      bookmarks: (await db.bookmarks.where('scoreId').equals(scoreId).toArray()).sort(
-        (x, y) => x.page - y.page || x.y - y.y,
-      ),
-      links: await db.links.where('scoreId').equals(scoreId).toArray(),
-    }),
-    [scoreId],
-  );
+const useMarkers = (scoreId: string) => useLiveQuery(() => getScoreMarkers(scoreId), [scoreId]);
 
 interface Props {
   scoreId: string;

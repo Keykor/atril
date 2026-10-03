@@ -17,8 +17,14 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
-import { db, newId } from '../../core/db/db';
-import { addSetList, duplicateSetList, updateSetList } from '../../core/db/repos';
+import { listScores, listSetLists } from '../../core/db/queries';
+import {
+  addSetList,
+  deleteSetList,
+  duplicateSetList,
+  newId,
+  updateSetList,
+} from '../../core/db/repos';
 import { filterScores } from '../../core/db/search';
 import type { Score, SetList, SetListItem } from '../../core/db/types';
 import { Icon } from '../../ui/Icon';
@@ -34,7 +40,7 @@ interface Props {
 }
 
 export function ListsScreen({ listId, onSelect, onShow }: Props) {
-  const lists = useLiveQuery(() => db.setlists.orderBy('name').toArray(), []);
+  const lists = useLiveQuery(listSetLists, []);
   const selected = lists?.find((l) => l.id === listId);
   const s = t.lists;
 
@@ -88,7 +94,7 @@ function Editor({
   onShow: Props['onShow'];
 }) {
   const s = t.lists;
-  const scores = useLiveQuery(() => db.scores.toArray(), []);
+  const scores = useLiveQuery(listScores, []);
   const byId = useMemo(() => new Map((scores ?? []).map((sc) => [sc.id, sc])), [scores]);
   const [picking, setPicking] = useState(false);
   const sensors = useSensors(
@@ -188,7 +194,7 @@ function Editor({
         onClick={async () => {
           if (!confirm(s.confirmDelete(list.name))) return;
           onSelect(undefined);
-          await db.setlists.delete(list.id);
+          await deleteSetList(list.id);
         }}
       >
         {s.delete}

@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { ReactNode } from 'react';
-import { getSetting, setSetting } from '../../core/db/repos';
+import { getSetting } from '../../core/db/queries';
+import { setSetting } from '../../core/db/repos';
 import { Switch } from '../../ui/controls';
 import { t } from '../../app/strings';
 import './settings.css';

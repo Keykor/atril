@@ -10,12 +10,20 @@ import {
   renameTag,
   duplicateSetList,
   emptyAnnotations,
-  getGlobalReading,
-  resolveReading,
   saveAnnotations,
   setSetting,
   updateSetList,
 } from './repos';
+import {
+  firstDataAt,
+  getPageAnnotations,
+  getScore,
+  getGlobalReading,
+  getScoreMarkers,
+  listTags,
+  resolveReading,
+  missingPdfIds,
+} from './queries';
 import { filterScores } from './search';
 import type { Score } from './types';
 
@@ -100,4 +108,32 @@ test('buscar entre 300 partituras responde en menos de 100 ms', () => {
   expect(found.map((s) => s.id)).toEqual(['42']);
   expect(filterScores(scores, { tagId: 't' })).toHaveLength(150);
   expect(filterScores(scores, { sort: 'az' })[0].title).toBe('Cantique de Jean Racine');
+});
+
+test('consultas: valores por defecto, orden y PDFs pendientes', async () => {
+  expect(await getScore('no-existe')).toBeNull();
+  expect(await firstDataAt()).toBeUndefined();
+  const empty = await getPageAnnotations('s', 2);
+  expect(empty).toMatchObject({ id: 's:2', strokes: [], texts: [] });
+
+  await addTag('sacro', '#000');
+  await addTag('Navidad', '#000');
+  expect((await listTags()).map((t) => t.name)).toEqual(['Navidad', 'sacro']);
+
+  const a = await addScore({ pdfId: 'p1', title: 'A', createdAt: 200 });
+  await addScore({ pdfId: 'p2', title: 'B', createdAt: 100 });
+  expect(await firstDataAt()).toBe(100);
+
+  await db.pdfs.bulkAdd([{ ...pdf('p1'), missing: true }, { ...pdf('p2') }]);
+  expect([...(await missingPdfIds())]).toEqual(['p1']);
+
+  await db.bookmarks.bulkAdd([
+    { id: '1', scoreId: a.id, page: 1, y: 0.5, label: 'C' },
+    { id: '2', scoreId: a.id, page: 0, y: 0.8, label: 'B' },
+    { id: '3', scoreId: a.id, page: 0, y: 0.2, label: 'A' },
+    { id: '4', scoreId: 'otra', page: 0, y: 0, label: 'X' },
+  ]);
+  const markers = await getScoreMarkers(a.id);
+  expect(markers.bookmarks.map((b) => b.label)).toEqual(['A', 'B', 'C']);
+  expect(markers.links).toEqual([]);
 });

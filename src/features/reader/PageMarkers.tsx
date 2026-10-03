@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../../core/db/db';
+import { getScoreMarkers } from '../../core/db/queries';
 import type { Bookmark, JumpLink } from '../../core/db/types';
 import { Icon } from '../../ui/Icon';
 
@@ -29,13 +29,7 @@ interface Props {
 
 /** Banderitas de marcadores y botones de salto sobre la página. */
 export function PageMarkers(p: Props) {
-  const data = useLiveQuery(
-    async () => ({
-      bookmarks: await db.bookmarks.where('scoreId').equals(p.scoreId).toArray(),
-      links: await db.links.where('scoreId').equals(p.scoreId).toArray(),
-    }),
-    [p.scoreId],
-  );
+  const data = useLiveQuery(() => getScoreMarkers(p.scoreId), [p.scoreId]);
   const bookmarks = data?.bookmarks ?? [];
 
   return (
