@@ -136,3 +136,19 @@ test('la barra de anotar entra entera en un celular de 320px', async ({ page }) 
   await page.getByRole('button', { name: 'Listo' }).click();
   await expect(page.getByRole('toolbar')).toHaveCount(0);
 });
+
+test('el número de página no tapa la lectura: aparece solo con las barras', async ({ page }) => {
+  await openScore(page);
+  const indicator = page.locator('.page-indicator');
+  await expect(indicator).toBeHidden();
+  await tapAt(page, 0.9);
+  await expect(indicator).toBeHidden();
+  await expect(indicator).toHaveText('2 / 3');
+
+  await tapAt(page, 0.5);
+  await expect(indicator).toBeVisible();
+  // Queda por encima de la barra de abajo, no debajo de ella.
+  const bar = (await page.locator('.reader-bottom').boundingBox())!;
+  const box = (await indicator.boundingBox())!;
+  expect(box.y + box.height).toBeLessThanOrEqual(bar.y);
+});
