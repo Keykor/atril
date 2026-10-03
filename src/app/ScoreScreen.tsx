@@ -211,6 +211,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
         onView={setView}
         onCenterTap={() => !annotating && !placing && setBars((b) => !b)}
         onEdge={onEdge}
+        manualPan={annotating}
         scrollTarget={target}
         autoscroll={autoscrolling && vertical ? (score.autoscrollSpeed ?? 30) : undefined}
         interceptTap={() => {

@@ -22,6 +22,9 @@ interface Props {
   // Ir a un punto de una página (marcador). `y` es 0..1 de la página real. En paginado la
   // página ya se ve entera, así que solo se usa en modo vertical.
   scrollTarget?: { pos: number; y: number; nonce: number };
+  // Anotando: el navegador no desplaza la página con el dedo (así el dedo dibuja). Dos dedos
+  // la mueven y hacen zoom; con "solo el lápiz dibuja", un dedo también la mueve.
+  manualPan?: boolean;
 }
 
 const TURN_MS = 180;
@@ -164,11 +167,13 @@ export function Reader(p: Props) {
 
   const g = useRef({
     pointers: new Map<number, { x: number; y: number }>(),
-    start: null as { x: number; y: number; t: number } | null,
+    start: null as { id: number; x: number; y: number; t: number } | null,
+    last: { x: 0, y: 0 },
     moved: false,
     swiping: false,
+    panning: false,
     dx: 0,
-    pinch: null as { dist: number; zoom: number } | null,
+    pinch: null as { dist: number; zoom: number; mid: { x: number; y: number } } | null,
     z: 1,
     longTimer: 0,
     tapTimer: 0,
@@ -179,23 +184,68 @@ export function Reader(p: Props) {
     const [a, b] = [...g.pointers.values()];
     return Math.hypot(a.x - b.x, a.y - b.y);
   };
+  const pinchMid = () => {
+    const [a, b] = [...g.pointers.values()];
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  };
+  /** Lo que se desplaza: la columna en vertical, la página actual en los otros modos. */
+  const panTarget = () =>
+    mode === 'vertical'
+      ? scroller.current
+      : (track.current?.querySelector<HTMLElement>('[data-where="0"]') ?? null);
+  const canPan = (el: HTMLElement | null) =>
+    !!el && (el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2);
+  const endPinch = () => {
+    g.pinch = null;
+    setZoom(g.z < 1.05 ? 1 : Math.round(g.z * 100) / 100);
+  };
 
-  const onPointerDown = (e: React.PointerEvent) => {
+  // Fase de captura: lleva la cuenta de todos los dedos, aunque la capa de anotaciones corte el
+  // evento para dibujar, y maneja los gestos de dos dedos (pellizco y arrastre).
+  const onPointerDownCapture = (e: React.PointerEvent) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (g.pointers.size !== 2) return;
     clearTimeout(g.longTimer);
-    if (g.pointers.size === 2) {
-      g.pinch = { dist: pinchDist(), zoom };
-      g.z = zoom;
-      g.start = null;
-      if (g.swiping) setTrack(0, true);
-      g.swiping = false;
-      return;
+    g.pinch = { dist: pinchDist(), zoom, mid: pinchMid() };
+    g.z = zoom;
+    g.start = null;
+    if (g.swiping) setTrack(0, true);
+    g.swiping = g.panning = false;
+  };
+
+  const onPointerMoveCapture = (e: React.PointerEvent) => {
+    if (!g.pointers.has(e.pointerId)) return;
+    g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (!g.pinch || g.pointers.size < 2) return;
+    g.z = Math.min(4, Math.max(1, (g.pinch.zoom * pinchDist()) / g.pinch.dist));
+    stage.current!.style.setProperty('--z', String(g.z));
+    // Con touch-action normal el navegador ya mueve la página con dos dedos; acá solo hace
+    // falta cuando lo tenemos desactivado (anotando).
+    const mid = pinchMid();
+    const el = panTarget();
+    if (p.manualPan && el) {
+      el.scrollLeft -= mid.x - g.pinch.mid.x;
+      el.scrollTop -= mid.y - g.pinch.mid.y;
     }
-    if (g.pointers.size > 2) return;
+    g.pinch.mid = mid;
+  };
+
+  const onPointerEndCapture = (e: React.PointerEvent) => {
+    if (!g.pointers.delete(e.pointerId)) return;
+    if (g.pinch && g.pointers.size < 2) endPinch();
+  };
+
+  // Fase de burbuja: gestos de un dedo (toque, deslizar la hoja, mover la página). No llegan acá
+  // los trazos, porque la capa de anotaciones corta el evento.
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (g.pointers.size !== 1) return;
+    clearTimeout(g.longTimer);
     finishAnim();
-    g.start = { x: e.clientX, y: e.clientY, t: performance.now() };
-    g.moved = g.swiping = false;
+    g.start = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now() };
+    g.last = { x: e.clientX, y: e.clientY };
+    g.moved = g.swiping = g.panning = false;
     if (p.prefs.tapZones === 'halves')
       g.longTimer = window.setTimeout(() => {
         g.start = null;
@@ -204,42 +254,37 @@ export function Reader(p: Props) {
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!g.pointers.has(e.pointerId)) return;
-    g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (g.pinch && g.pointers.size >= 2) {
-      g.z = Math.min(4, Math.max(1, (g.pinch.zoom * pinchDist()) / g.pinch.dist));
-      stage.current!.style.setProperty('--z', String(g.z));
-      return;
-    }
-    if (!g.start) return;
+    if (g.pinch || !g.start || g.start.id !== e.pointerId) return;
     const dx = e.clientX - g.start.x;
     const dy = e.clientY - g.start.y;
     if (!g.moved && Math.hypot(dx, dy) > 10) {
       g.moved = true;
       clearTimeout(g.longTimer);
-      g.swiping = sliding && Math.abs(dx) > Math.abs(dy);
+      g.panning = !!p.manualPan && e.pointerType !== 'mouse' && canPan(panTarget());
+      g.swiping = !g.panning && sliding && Math.abs(dx) > Math.abs(dy);
     }
-    if (g.swiping) {
+    if (g.panning) {
+      const el = panTarget()!;
+      el.scrollLeft -= e.clientX - g.last.x;
+      el.scrollTop -= e.clientY - g.last.y;
+    } else if (g.swiping) {
       const view = latest.current.view;
       const hasTarget = dx < 0 ? nextView(view, seq) : prevView(view, seq);
       g.dx = hasTarget ? dx : dx * 0.25; // sin página de ese lado, la hoja se resiste
       setTrack(g.dx, false);
     }
+    g.last = { x: e.clientX, y: e.clientY };
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
-    if (!g.pointers.delete(e.pointerId)) return;
     clearTimeout(g.longTimer);
-    if (g.pinch) {
-      if (g.pointers.size < 2) {
-        g.pinch = null;
-        setZoom(g.z < 1.05 ? 1 : Math.round(g.z * 100) / 100);
-      }
+    const start = g.start;
+    if (!start || start.id !== e.pointerId) return;
+    g.start = null;
+    if (g.panning) {
+      g.panning = false;
       return;
     }
-    const start = g.start;
-    g.start = null;
-    if (!start) return;
     if (g.swiping) {
       g.swiping = false;
       const dir = g.dx < 0 ? 1 : -1;
@@ -256,16 +301,11 @@ export function Reader(p: Props) {
     tap(e.clientX);
   };
 
-  const onPointerCancel = (e: React.PointerEvent) => {
-    g.pointers.delete(e.pointerId);
+  const onPointerCancel = () => {
     clearTimeout(g.longTimer);
     g.start = null;
-    if (g.pointers.size < 2 && g.pinch) {
-      g.pinch = null;
-      setZoom(g.z < 1.05 ? 1 : Math.round(g.z * 100) / 100);
-    }
     if (g.swiping) setTrack(0, true);
-    g.swiping = false;
+    g.swiping = g.panning = false;
   };
 
   const tap = (x: number) => {
@@ -371,7 +411,13 @@ export function Reader(p: Props) {
         data-where={where}
         style={{
           left: `${where * 100}%`,
-          touchAction: zoom > 1 ? 'pan-x pan-y' : fit === 'width' ? 'pan-y' : 'none',
+          touchAction: p.manualPan
+            ? 'none'
+            : zoom > 1
+              ? 'pan-x pan-y'
+              : fit === 'width'
+                ? 'pan-y'
+                : 'none',
         }}
       >
         <div className="zoom-sizer" style={zoomVars(w, h)}>
@@ -396,6 +442,10 @@ export function Reader(p: Props) {
       ref={stage}
       className={`reader-stage theme-${p.prefs.theme}`}
       style={{ '--z': zoom } as CSSProperties}
+      onPointerDownCapture={onPointerDownCapture}
+      onPointerMoveCapture={onPointerMoveCapture}
+      onPointerUpCapture={onPointerEndCapture}
+      onPointerCancelCapture={onPointerEndCapture}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -407,7 +457,7 @@ export function Reader(p: Props) {
             ref={scroller}
             className="reader-scroll"
             onScroll={onScroll}
-            style={{ touchAction: zoom > 1 ? 'pan-x pan-y' : 'pan-y' }}
+            style={{ touchAction: p.manualPan ? 'none' : zoom > 1 ? 'pan-x pan-y' : 'pan-y' }}
           >
             <div className="zoom-sizer" style={zoomVars(box.w, vertical.total)}>
               <div className="zoom-inner vertical">
