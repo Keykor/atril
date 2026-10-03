@@ -295,8 +295,7 @@
 }
 .sheet-cols {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  gap: 22px;
 }
 @media (max-width: 600px) {
   .reader-top .back span {
@@ -314,9 +313,6 @@
     min-width: 0;
     flex: 1;
     height: 64px;
-  }
-  .sheet-cols {
-    grid-template-columns: 1fr;
   }
 }
 

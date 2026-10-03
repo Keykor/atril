@@ -3,7 +3,7 @@ import { db } from '../db/db';
 import type { PdfFile } from '../db/types';
 
 export const BACKUP_VERSION = 1;
-// Ajustes que viajan en el backup. El resto (solo lápiz, estado de Drive) es de cada dispositivo.
+// Ajustes que viajan en el backup. El resto (estado de Drive) es de cada dispositivo.
 const SHARED_SETTINGS = ['reading'];
 
 const json = (value: unknown) => strToU8(JSON.stringify(value));

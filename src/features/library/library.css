@@ -285,3 +285,8 @@
 select.btn {
   padding-right: 10px;
 }
+.meta-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}

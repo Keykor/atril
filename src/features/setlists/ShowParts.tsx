@@ -74,7 +74,7 @@ export function ShowIndex({
   const byId = new Map((scores ?? []).map((sc) => [sc.id, sc]));
   let n = 0;
   return (
-    <Sheet title={list.name} closeLabel={t.close} onClose={onClose}>
+    <Sheet variant="side" title={list.name} closeLabel={t.close} onClose={onClose}>
       <ol className="show-index">
         {list.items.map((item, i) =>
           item.type === 'break' ? (

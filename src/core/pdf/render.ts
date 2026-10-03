@@ -6,27 +6,56 @@ import { LRU } from './lru';
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
 const MAX_PIXEL_WIDTH = 2400; // techo para PDFs escaneados enormes y zoom alto
+// Si pdf.js no contesta en este tiempo (p. ej. el sistema cortó el worker con la app en segundo
+// plano), se descarta el documento y se puede reintentar, en vez de quedar "Abriendo…" para
+// siempre. ponytail: tiempo fijo; un PDF escaneado enorme en un equipo lento podría pasarlo.
+const TIMEOUT_MS = 20_000;
 
 // Un documento abierto por vez alcanza (el lector muestra una partitura); el anterior se destruye.
 // ponytail: las miniaturas de importación también pasan por acá, de a una.
-let current: { id: string; doc: Promise<pdfjs.PDFDocumentProxy> } | undefined;
+let current:
+  | { id: string; doc: Promise<pdfjs.PDFDocumentProxy>; task?: pdfjs.PDFDocumentLoadingTask }
+  | undefined;
 
 export class MissingPdfError extends Error {}
+export class PdfTimeoutError extends Error {}
+
+/** Rechaza si `promise` no termina a tiempo; ahí descarta el documento abierto y sus caches. */
+export function withTimeout<T>(promise: Promise<T>, ms = TIMEOUT_MS): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, fail) => {
+    timer = setTimeout(() => {
+      closePdf();
+      fail(new PdfTimeoutError());
+    }, ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+function closePdf() {
+  current?.task?.destroy().catch(() => {});
+  current = undefined;
+  pages.clear();
+  thumbs.clear();
+}
 
 export function openPdf(pdfId: string) {
   if (current?.id === pdfId) return current.doc;
-  current?.doc.then((d) => d.loadingTask.destroy()).catch(() => {});
-  pages.clear();
-  thumbs.clear();
-  const doc = db.pdfData.get(pdfId).then((pdf) => {
-    if (!pdf) throw new MissingPdfError(pdfId);
-    return pdfjs.getDocument({ data: pdf.data }).promise;
+  closePdf();
+  const entry: NonNullable<typeof current> = { id: pdfId, doc: undefined! };
+  entry.doc = withTimeout(
+    db.pdfData.get(pdfId).then((pdf) => {
+      if (!pdf) throw new MissingPdfError(pdfId);
+      if (current !== entry) throw new PdfTimeoutError(); // ya se descartó
+      entry.task = pdfjs.getDocument({ data: pdf.data });
+      return entry.task.promise;
+    }),
+  );
+  current = entry;
+  entry.doc.catch(() => {
+    if (current === entry) current = undefined;
   });
-  current = { id: pdfId, doc };
-  doc.catch(() => {
-    if (current?.doc === doc) current = undefined;
-  });
-  return doc;
+  return entry.doc;
 }
 
 // La cache guarda ImageBitmaps, no elementos canvas: cada vista dibuja su propia copia, así
@@ -55,13 +84,18 @@ export function renderPage(pdfId: string, page: number, cssWidth: number) {
   const key = `${pdfId}:${page}:${pixelWidth}`;
   let hit = pages.get(key);
   if (!hit) {
-    hit = openPdf(pdfId).then(async (doc) => {
-      const canvas = await draw(doc, page, pixelWidth);
-      const bitmap = await createImageBitmap(canvas);
-      canvas.width = canvas.height = 1;
-      return bitmap;
-    });
-    pages.set(key, hit);
+    const p = withTimeout(
+      openPdf(pdfId).then(async (doc) => {
+        const canvas = await draw(doc, page, pixelWidth);
+        const bitmap = await createImageBitmap(canvas);
+        canvas.width = canvas.height = 1;
+        return bitmap;
+      }),
+    );
+    // Un render fallido no queda en la cache: el próximo pedido lo vuelve a intentar.
+    p.catch(() => pages.get(key) === p && pages.delete(key));
+    pages.set(key, p);
+    hit = p;
   }
   return hit;
 }
@@ -85,14 +119,17 @@ export function renderThumb(pdfId: string, page: number, pixelWidth = 112) {
 }
 
 /** Tamaño de cada página a escala 1 (para reservar el espacio antes de renderizar). */
-export async function pageSizes(pdfId: string) {
-  const doc = await openPdf(pdfId);
-  const out: { w: number; h: number }[] = [];
-  for (let i = 1; i <= doc.numPages; i++) {
-    const v = (await doc.getPage(i)).getViewport({ scale: 1 });
-    out.push({ w: v.width, h: v.height });
-  }
-  return out;
+export function pageSizes(pdfId: string) {
+  return withTimeout(
+    openPdf(pdfId).then(async (doc) => {
+      const out: { w: number; h: number }[] = [];
+      for (let i = 1; i <= doc.numPages; i++) {
+        const v = (await doc.getPage(i)).getViewport({ scale: 1 });
+        out.push({ w: v.width, h: v.height });
+      }
+      return out;
+    }),
+  );
 }
 
 /** Cantidad de páginas y miniatura de la primera, sin pasar por la cache del lector. */

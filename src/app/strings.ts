@@ -62,10 +62,13 @@ export const t = {
     back: 'Biblioteca',
     backToList: 'Lista',
     page: 'Página',
+    fit: 'Ajuste de página',
     practice: 'Ensayo',
     loading: 'Abriendo…',
     missingPdf: 'Falta el PDF de esta partitura. Importalo de nuevo desde la biblioteca.',
     notFound: 'Esta partitura ya no existe.',
+    openFailed: 'No se pudo abrir la partitura.',
+    retry: 'Reintentar',
     settings: 'Ajustes de lectura',
     pages: 'Páginas',
     annotate: 'Anotar',
@@ -77,6 +80,8 @@ export const t = {
     all: 'Todas las listas',
     new: 'Nueva',
     newName: 'Lista nueva',
+    newTitle: 'Nueva lista',
+    create: 'Crear',
     empty: 'Todavía no hay listas. Creá una para armar un concierto o un ensayo.',
     count: (scores: number, breaks: number) =>
       `${scores} ${scores === 1 ? 'obra' : 'obras'}` +
@@ -343,7 +348,5 @@ export const t = {
   },
   settings: {
     title: 'Ajustes',
-    penOnly: 'Solo el lápiz dibuja',
-    penOnlyHint: 'El dedo sigue pasando páginas mientras anotás',
   },
 };

@@ -1,15 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  getGlobalReading,
-  getScore,
-  getScoreMarkers,
-  getSetting,
-  resolveReading,
-} from '../core/db/queries';
+import { getGlobalReading, getScore, getScoreMarkers, resolveReading } from '../core/db/queries';
 import { addBookmark, addLink, setSetting, touchScore, updateScore } from '../core/db/repos';
 import type { JumpLink, ReadingPrefs, SetList } from '../core/db/types';
-import { pageSizes } from '../core/pdf/render';
+import { MissingPdfError, pageSizes } from '../core/pdf/render';
 import { keepAwake } from '../core/wakeLock';
 import { AnnotationLayer } from '../features/annotations/AnnotationLayer';
 import { AnnotationToolbar } from '../features/annotations/AnnotationToolbar';
@@ -42,9 +36,9 @@ interface Props {
 export function ScoreScreen({ scoreId, show }: Props) {
   const score = useLiveQuery(() => getScore(scoreId), [scoreId]);
   const global = useLiveQuery(getGlobalReading, []);
-  const penOnly = useLiveQuery(() => getSetting('penOnlyDrawing', false), []) ?? false;
   const bookmarks = useLiveQuery(() => getScoreMarkers(scoreId), [scoreId])?.bookmarks;
-  const [sizes, setSizes] = useState<{ w: number; h: number }[] | 'missing'>();
+  const [sizes, setSizes] = useState<{ w: number; h: number }[] | 'missing' | 'failed'>();
+  const [attempt, setAttempt] = useState(0);
   const [view, setView] = useState<View>();
   const [bars, setBars] = useState(false);
   const [barsTick, setBarsTick] = useState(0);
@@ -60,6 +54,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
     symbol: 'noteQuarterUp',
   });
   const [practice, setPractice] = useState(false);
+  const [fitToggle, setFitToggle] = useState(0);
   const [autoscrolling, setAutoscrolling] = useState(false);
   const [nextShown, setNextShown] = useState(false); // aviso de obra siguiente (modo show)
   // Marcador o salto nuevo: primero se toca el punto en la página, después se completa.
@@ -74,13 +69,14 @@ export function ScoreScreen({ scoreId, show }: Props) {
   useEffect(() => {
     if (!pdfId) return;
     let alive = true;
+    setSizes(undefined);
     pageSizes(pdfId)
       .then((s) => alive && setSizes(s))
-      .catch(() => alive && setSizes('missing'));
+      .catch((e) => alive && setSizes(e instanceof MissingPdfError ? 'missing' : 'failed'));
     return () => {
       alive = false;
     };
-  }, [pdfId]);
+  }, [pdfId, attempt]);
 
   useEffect(() => keepAwake(), []);
 
@@ -123,10 +119,21 @@ export function ScoreScreen({ scoreId, show }: Props) {
     return () => clearTimeout(id);
   }, [target?.id, target?.nonce]);
 
-  if (score === null || sizes === 'missing')
+  if (score === null || sizes === 'missing' || sizes === 'failed')
     return (
       <div className="score-screen reader-message">
-        <p>{score === null ? t.reader.notFound : t.reader.missingPdf}</p>
+        <p>
+          {score === null
+            ? t.reader.notFound
+            : sizes === 'missing'
+              ? t.reader.missingPdf
+              : t.reader.openFailed}
+        </p>
+        {sizes === 'failed' && (
+          <button className="btn primary" onClick={() => setAttempt((n) => n + 1)}>
+            {t.reader.retry}
+          </button>
+        )}
         <button className="btn" onClick={back}>
           <Icon name="back" />
           {t.reader.back}
@@ -217,6 +224,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
         onCenterTap={() => !annotating && !placing && setBars((b) => !b)}
         onEdge={onEdge}
         manualPan={annotating}
+        fitToggle={fitToggle}
         scrollTarget={target}
         autoscroll={autoscrolling && vertical ? (score.autoscrollSpeed ?? 30) : undefined}
         interceptTap={() => {
@@ -232,7 +240,6 @@ export function ScoreScreen({ scoreId, show }: Props) {
               aspect={sizes[page].h / sizes[page].w}
               active={annotating}
               locked={locked}
-              penOnly={penOnly}
               tool={tool}
               label={t.annotate.layer}
               textPlaceholder={t.annotate.textPlaceholder}
@@ -263,8 +270,6 @@ export function ScoreScreen({ scoreId, show }: Props) {
         <AnnotationToolbar
           tool={tool}
           onTool={setTool}
-          penOnly={penOnly}
-          onPenOnly={(v) => void setSetting('penOnlyDrawing', v)}
           canUndo={history.canUndo}
           canRedo={history.canRedo}
           onUndo={history.undo}
@@ -332,6 +337,13 @@ export function ScoreScreen({ scoreId, show }: Props) {
                 </>
               )}
             </div>
+            <button
+              className="icon-btn"
+              aria-label={t.reader.fit}
+              onClick={() => setFitToggle((n) => n + 1)}
+            >
+              <Icon name="fit" size={22} />
+            </button>
             <button
               className="icon-btn"
               aria-label={t.reader.settings}
@@ -414,9 +426,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
       {sheet === 'reading' && (
         <ReadingSheet
           prefs={prefs}
-          penOnly={penOnly}
           onChange={changePrefs}
-          onPenOnly={(v) => void setSetting('penOnlyDrawing', v)}
           autoscrollSpeed={score.autoscrollSpeed ?? 30}
           onAutoscrollSpeed={(autoscrollSpeed) => patch({ autoscrollSpeed })}
           onClose={() => setSheet(null)}
