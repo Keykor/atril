@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { flushSync } from 'react-dom';
 import type { Crop, ReadingPrefs } from '../../core/db/types';
 import { renderPage } from '../../core/pdf/render';
@@ -156,7 +164,8 @@ export function Reader(p: Props) {
   goRef.current = go;
 
   // Teclado: flechas, PageUp/PageDown y espacio. Los pedales Bluetooth mandan estas teclas.
-  useEffect(() => {
+  // useLayoutEffect: escucha desde que la página se ve, no un instante después.
+  useLayoutEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).closest?.('input, textarea, [role="dialog"]')) return;
       const dir = FORWARD.includes(e.key) ? 1 : BACK.includes(e.key) ? -1 : 0;
