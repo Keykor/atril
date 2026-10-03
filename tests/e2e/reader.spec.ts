@@ -152,3 +152,114 @@ test('el número de página no tapa la lectura: aparece solo con las barras', as
   const box = (await indicator.boundingBox())!;
   expect(box.y + box.height).toBeLessThanOrEqual(bar.y);
 });
+
+test('anotando en el celular: un dedo dibuja y dos dedos mueven la página', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'Los toques multidedo se simulan con CDP (solo Chromium)');
+  // Celular apaisado con la página al ancho: la página es más alta que la pantalla.
+  await page.setViewportSize({ width: 844, height: 390 });
+  await openScore(page);
+  await clickBar(page, 'Ajustes de lectura');
+  await page.getByRole('button', { name: 'Al ancho' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Cerrar' }).click();
+  await clickBar(page, 'Anotar');
+
+  const cdp = await page.context().newCDPSession(page);
+  type P = { x: number; y: number };
+  const touch = async (type: 'touchStart' | 'touchMove' | 'touchEnd', points: P[]) =>
+    cdp.send('Input.dispatchTouchEvent', {
+      type,
+      touchPoints: points.map((p, id) => ({ ...p, id })),
+    });
+  /** Arrastra los dedos desde `from` desplazándolos (dx, dy) en varios pasos. */
+  const drag = async (from: P[], dx: number, dy: number) => {
+    await touch('touchStart', from);
+    for (let i = 1; i <= 8; i++)
+      await touch(
+        'touchMove',
+        from.map((p) => ({ x: p.x + (dx * i) / 8, y: p.y + (dy * i) / 8 })),
+      );
+    await touch('touchEnd', []);
+  };
+
+  const slot = page.locator('.reader-slot[data-where="0"]');
+  const scrollTop = () => slot.evaluate((el) => el.scrollTop);
+  const strokes = page.locator('.reader-slot[data-where="0"] .annotation-layer path');
+
+  // Un dedo: dibuja y la página no se mueve.
+  await drag([{ x: 300, y: 200 }], 150, 30);
+  await expect(strokes).toHaveCount(1);
+  expect(await scrollTop()).toBe(0);
+
+  // Dos dedos: mueven la página, no dibujan ni deshacen.
+  await drag(
+    [
+      { x: 350, y: 300 },
+      { x: 500, y: 300 },
+    ],
+    0,
+    -180,
+  );
+  await expect.poll(scrollTop).toBeGreaterThan(100);
+  await expect(strokes).toHaveCount(1);
+
+  // Con "solo el lápiz dibuja", un dedo mueve la página.
+  await page.getByRole('button', { name: 'Color y grosor' }).click();
+  await page.getByRole('switch', { name: 'Solo el lápiz dibuja' }).click();
+  await page.getByRole('button', { name: 'Color y grosor' }).click();
+  const before = await scrollTop();
+  await drag([{ x: 400, y: 300 }], 0, -120);
+  await expect.poll(scrollTop).toBeGreaterThan(before + 60);
+  await expect(strokes).toHaveCount(1);
+});
+
+test('en el celular, metrónomo y teclado van en pestañas; en tablet se ven los dos', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openScore(page);
+  await clickBar(page, 'Ensayo');
+  const panel = page.getByRole('region', { name: 'Herramientas de ensayo' });
+  const keyboard = panel.getByRole('group', { name: 'Teclado de dos octavas' });
+  const bpm = panel.locator('.metro-bpm');
+  await expect(bpm).toBeVisible();
+  await expect(keyboard).toBeHidden();
+
+  // El metrónomo sigue andando al pasar a la pestaña del teclado.
+  await panel.getByRole('button', { name: 'Iniciar' }).click();
+  await panel.getByRole('tab', { name: 'Teclado' }).click();
+  await expect(keyboard).toBeVisible();
+  await expect(bpm).toBeHidden();
+  await panel.getByRole('tab', { name: 'Metrónomo' }).click();
+  await expect(panel.getByRole('button', { name: 'Detener' })).toBeVisible();
+
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await expect(keyboard).toBeVisible();
+  await expect(bpm).toBeVisible();
+  await expect(panel.getByRole('tab', { name: 'Teclado' })).toBeHidden();
+});
+
+test('en el celular las hojas ocupan toda la altura y avisan si hay más abajo', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openScore(page);
+  await clickBar(page, 'Ajustes de lectura');
+  const sheet = page.getByRole('dialog', { name: 'Ajustes de lectura' });
+  const box = (await sheet.boundingBox())!;
+  expect(box.y).toBeLessThanOrEqual(1);
+  expect(box.height).toBeGreaterThanOrEqual(843);
+
+  const more = sheet.locator('.sheet-more');
+  await expect(more).toBeVisible();
+  await sheet.locator('.sheet-body').evaluate((el) => (el.scrollTop = el.scrollHeight));
+  await expect(more).toHaveCount(0);
+  await sheet.getByRole('button', { name: 'Cerrar' }).click();
+
+  // La hoja de página muestra el valor de cada recorte.
+  await clickBar(page, 'Página');
+  await page.getByRole('button', { name: 'Automático' }).click();
+  await expect(page.getByRole('dialog').locator('output').first()).toHaveText(/^\d+ %$/);
+});

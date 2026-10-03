@@ -33,6 +33,7 @@ export function PageSheet(p: Props) {
     <Sheet title={m.title} closeLabel={t.close} onClose={p.onClose} modal={false}>
       <div className="field">
         <span className="field-label">{m.crop}</span>
+        <span className="field-hint">{m.cropHint}</span>
         <div className="row">
           <button
             className="btn"
@@ -63,6 +64,7 @@ export function PageSheet(p: Props) {
                   p.onPatch({ crop: { ...crop, [side]: Number(e.target.value) / 100 } })
                 }
               />
+              <output className="range-value">{m.percent(Math.round(crop[side] * 100))}</output>
             </label>
           ))}
         </div>

@@ -165,6 +165,8 @@ export const t = {
     pageOrderHint: (n: number) =>
       `Repetí o reordená páginas sin tocar el PDF, por ejemplo 1, 2, 3, 2, 3, 4. El PDF tiene ${n}.`,
     crop: 'Recorte de márgenes',
+    cropHint: 'Saca el blanco de los bordes para que la música se vea más grande.',
+    percent: (n: number) => `${n} %`,
     cropAuto: 'Automático',
     cropReset: 'Quitar recorte',
     cropSides: { top: 'Arriba', bottom: 'Abajo', left: 'Izquierda', right: 'Derecha' },
@@ -185,6 +187,7 @@ export const t = {
       'Marcá un lugar de la partitura (por ejemplo, donde arranca la letra B) para saltar ahí.',
     page: (page: number) => `pág. ${page}`,
     pageLong: (page: number) => `página ${page}`,
+    pageShort: (page: number) => `p. ${page}`,
     delete: (label: string) => `Eliminar marcador ${label}`,
     jumps: 'Saltos',
     jumpsHint: 'Para D.S., coda o repeticiones: tocar el origen en la partitura salta al destino.',
