@@ -169,7 +169,7 @@ export function Reader(p: Props) {
     z: 1,
     longTimer: 0,
     tapTimer: 0,
-    lastCenterTap: 0,
+    lastCenterTap: -Infinity,
   }).current;
 
   const pinchDist = () => {
@@ -277,7 +277,7 @@ export function Reader(p: Props) {
     const now = performance.now();
     clearTimeout(g.tapTimer);
     if (now - g.lastCenterTap < 300) {
-      g.lastCenterTap = 0;
+      g.lastCenterTap = -Infinity;
       setFitOverride(fit === 'page' ? 'width' : 'page');
       setZoom(1);
     } else {

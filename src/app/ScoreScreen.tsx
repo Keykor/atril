@@ -12,6 +12,10 @@ import {
 import type { ReadingPrefs } from '../core/db/types';
 import { pageSizes } from '../core/pdf/render';
 import { keepAwake } from '../core/wakeLock';
+import { AnnotationLayer } from '../features/annotations/AnnotationLayer';
+import { AnnotationToolbar } from '../features/annotations/AnnotationToolbar';
+import { COLORS, type ToolState } from '../features/annotations/strokes';
+import { useAnnotationHistory } from '../features/annotations/useHistory';
 import { MetaSheet } from '../features/library/MetaSheet';
 import { PageStrip } from '../features/reader/PageStrip';
 import { Reader } from '../features/reader/Reader';
@@ -33,6 +37,10 @@ export function ScoreScreen({ scoreId }: { scoreId: string }) {
   const [bars, setBars] = useState(false);
   const [barsTick, setBarsTick] = useState(0);
   const [sheet, setSheet] = useState<SheetName>(null);
+  const [annotating, setAnnotating] = useState(false);
+  const [annotationsVisible, setAnnotationsVisible] = useState(true);
+  const [tool, setTool] = useState<ToolState>({ tool: 'pen', color: COLORS[1], width: 1 });
+  const history = useAnnotationHistory();
 
   const pdfId = score?.pdfId;
   useEffect(() => {
@@ -103,8 +111,14 @@ export function ScoreScreen({ scoreId }: { scoreId: string }) {
     void updateScore(score.id, { reading });
   };
 
+  const startAnnotating = () => {
+    setAnnotating(true);
+    setAnnotationsVisible(true);
+    setBars(false);
+  };
+
   return (
-    <div className="score-screen">
+    <div className={`score-screen${annotationsVisible ? '' : ' annotations-hidden'}`}>
       <Reader
         pdfId={score.pdfId}
         sizes={sizes}
@@ -113,8 +127,37 @@ export function ScoreScreen({ scoreId }: { scoreId: string }) {
         prefs={prefs}
         view={view}
         onView={setView}
-        onCenterTap={() => setBars((b) => !b)}
+        onCenterTap={() => !annotating && setBars((b) => !b)}
+        overlay={(page) => (
+          <AnnotationLayer
+            scoreId={score.id}
+            page={page}
+            aspect={sizes[page].h / sizes[page].w}
+            active={annotating}
+            penOnly={penOnly}
+            tool={tool}
+            label={t.annotate.layer}
+            textPlaceholder={t.annotate.textPlaceholder}
+            onPenStart={startAnnotating}
+            onCommit={history.commit}
+            onUndo={history.undo}
+          />
+        )}
       />
+
+      {annotating && (
+        <AnnotationToolbar
+          tool={tool}
+          onTool={setTool}
+          penOnly={penOnly}
+          onPenOnly={(v) => void setSetting('penOnlyDrawing', v)}
+          canUndo={history.canUndo}
+          canRedo={history.canRedo}
+          onUndo={history.undo}
+          onRedo={history.redo}
+          onDone={() => setAnnotating(false)}
+        />
+      )}
 
       {bars && (
         <>
@@ -136,6 +179,14 @@ export function ScoreScreen({ scoreId }: { scoreId: string }) {
             </button>
             <button
               className="icon-btn"
+              aria-label={annotationsVisible ? t.annotate.hide : t.annotate.show}
+              aria-pressed={!annotationsVisible}
+              onClick={() => setAnnotationsVisible((v) => !v)}
+            >
+              <Icon name="eye" size={22} />
+            </button>
+            <button
+              className="icon-btn"
               aria-label={t.reader.more}
               onClick={() => setSheet('meta')}
             >
@@ -150,6 +201,13 @@ export function ScoreScreen({ scoreId }: { scoreId: string }) {
               label={t.reader.pages}
               onPick={(p) => setView({ pos: p, half: false })}
             />
+            <div className="reader-divider" />
+            <div className="reader-tools">
+              <button onClick={startAnnotating}>
+                <Icon name="pen" size={26} />
+                {t.reader.annotate}
+              </button>
+            </div>
           </footer>
         </>
       )}

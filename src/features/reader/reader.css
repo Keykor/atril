@@ -99,6 +99,9 @@
   align-items: center;
   pointer-events: none;
 }
+.score-screen:has(.reader-bottom) .page-indicator {
+  display: none;
+}
 
 .score-screen {
   position: fixed;

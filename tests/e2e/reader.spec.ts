@@ -41,3 +41,49 @@ test('el toque al centro muestra las barras y los ajustes cambian el modo', asyn
   await sheet.getByRole('button', { name: 'Oscuro' }).click();
   await expect(page.locator('.reader-stage')).toHaveClass(/theme-dark/);
 });
+
+test('anotar: el trazo queda guardado, se deshace y se rehace', async ({ page }) => {
+  await openScore(page);
+  await tapAt(page, 0.5);
+  await page.getByRole('button', { name: 'Anotar' }).click();
+  const strokes = page.locator('.page[data-page="0"] .annotation-layer path');
+
+  const box = (await page.locator('.page[data-page="0"]').boundingBox())!;
+  const at = (fx: number, fy: number) => [box.x + box.width * fx, box.y + box.height * fy] as const;
+  await page.mouse.move(...at(0.3, 0.3));
+  await page.mouse.down();
+  await page.mouse.move(...at(0.5, 0.35), { steps: 5 });
+  await page.mouse.move(...at(0.6, 0.3), { steps: 5 });
+  await page.mouse.up();
+  await expect(strokes).toHaveCount(1);
+
+  await page.getByRole('button', { name: 'Deshacer' }).click();
+  await expect(strokes).toHaveCount(0);
+  await page.getByRole('button', { name: 'Rehacer' }).click();
+  await expect(strokes).toHaveCount(1);
+
+  await page.getByRole('button', { name: 'Texto' }).click();
+  await page.mouse.click(...at(0.4, 0.6));
+  await page.getByLabel('Escribí una nota').fill('respirar acá');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.annotation-layer text')).toHaveText('respirar acá');
+
+  // Sobrevive a recargar y a otro tamaño de pantalla.
+  await page.getByRole('button', { name: 'Listo' }).click();
+  await page.setViewportSize({ width: 500, height: 700 });
+  await page.reload();
+  await expect(strokes).toHaveCount(1);
+  await expect(page.locator('.annotation-layer text')).toHaveText('respirar acá');
+
+  // La goma borra por trazo.
+  await tapAt(page, 0.5);
+  await page.getByRole('button', { name: 'Anotar' }).click();
+  await page.getByRole('button', { name: 'Goma' }).click();
+  const small = (await page.locator('.page[data-page="0"]').boundingBox())!;
+  // Se arranca abajo: en pantallas angostas la barra de herramientas tapa el borde superior.
+  await page.mouse.move(small.x + small.width * 0.45, small.y + small.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(small.x + small.width * 0.45, small.y + small.height * 0.25, { steps: 12 });
+  await page.mouse.up();
+  await expect(strokes).toHaveCount(0);
+});
