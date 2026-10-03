@@ -43,8 +43,8 @@ export function Reader(p: Props) {
     halfPage: p.prefs.halfPage && mode === 'paged',
     twoUpStep: p.prefs.twoUpStep,
   };
-  // ponytail: la hoja solo sigue al dedo en paginado de una página. Con media página o dos
-  // páginas, los vecinos compartirían canvas con la vista actual; ahí el cambio es instantáneo.
+  // ponytail: la hoja solo sigue al dedo en paginado de una página; con media página o dos
+  // páginas el cambio es instantáneo (montar vecinos ahí pasaría de los 5 bitmaps de la cache).
   const sliding = mode === 'paged' && p.prefs.pageTurn === 'slide' && !seq.halfPage && zoom === 1;
 
   useEffect(() => {

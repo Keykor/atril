@@ -15,22 +15,39 @@ interface Props {
 
 /** Una página del PDF. El recorte se hace con CSS: las capas siguen alineadas a la página real. */
 export function PageView({ pdfId, page, size, crop, width, quality = 1, children }: Props) {
-  const host = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
   const g = pageGeometry(size, crop, width);
   const renderWidth = Math.round(g.fullW * quality);
 
   useEffect(() => {
     let alive = true;
-    renderPage(pdfId, page, renderWidth)
-      .then((canvas) => {
-        // El canvas viejo queda a la vista hasta que llega el nuevo: sin parpadeo al cambiar de zoom.
-        if (alive) host.current?.replaceChildren(canvas);
-      })
-      .catch(() => {});
+    const paint = (retry: boolean) =>
+      renderPage(pdfId, page, renderWidth)
+        .then((bitmap) => {
+          const c = canvas.current;
+          if (!alive || !c) return;
+          // Lo anterior queda a la vista hasta acá: sin parpadeo al cambiar de zoom.
+          c.width = bitmap.width;
+          c.height = bitmap.height;
+          c.getContext('2d')!.drawImage(bitmap, 0, 0);
+        })
+        .catch(() => {
+          // El bitmap se desalojó de la cache justo antes de copiarlo: se pide de nuevo una vez.
+          if (alive && retry) void paint(false);
+        });
+    void paint(true);
     return () => {
       alive = false;
     };
   }, [pdfId, page, renderWidth]);
+
+  // Al desmontar se libera la memoria del canvas ya (límite de Safari).
+  useEffect(() => {
+    const c = canvas.current;
+    return () => {
+      if (c) c.width = c.height = 1;
+    };
+  }, []);
 
   return (
     <div className="page" style={{ width, height: g.h }} data-page={page}>
@@ -38,7 +55,9 @@ export function PageView({ pdfId, page, size, crop, width, quality = 1, children
         className="page-full"
         style={{ left: -g.left, top: -g.top, width: g.fullW, height: g.fullH }}
       >
-        <div className="page-canvas" ref={host} />
+        <div className="page-canvas">
+          <canvas ref={canvas} />
+        </div>
         {children}
       </div>
     </div>

@@ -29,11 +29,11 @@ export function openPdf(pdfId: string) {
   return doc;
 }
 
-// Safari corta el render si la memoria total de canvas pasa ~384 MB: cache chica y los
-// canvas desalojados se achican a 1×1 para liberar la memoria ya.
-const pages = new LRU<Promise<HTMLCanvasElement>>(5, (p) =>
-  p.then((c) => (c.width = c.height = 1)).catch(() => {}),
-);
+// La cache guarda ImageBitmaps, no elementos canvas: cada vista dibuja su propia copia, así
+// la misma página puede estar en dos lugares a la vez (orden virtual con repeticiones).
+// Safari corta el render si la memoria total de canvas pasa ~384 MB: cache chica, y el canvas
+// de render se achica a 1×1 apenas se saca el bitmap.
+const pages = new LRU<Promise<ImageBitmap>>(5, (p) => p.then((b) => b.close()).catch(() => {}));
 
 async function draw(doc: pdfjs.PDFDocumentProxy, page: number, pixelWidth: number) {
   const p = await doc.getPage(page + 1);
@@ -46,13 +46,21 @@ async function draw(doc: pdfjs.PDFDocumentProxy, page: number, pixelWidth: numbe
   return canvas;
 }
 
-/** Página renderizada al ancho CSS pedido (por devicePixelRatio). Cacheada. */
+/**
+ * Página renderizada al ancho CSS pedido (por devicePixelRatio). Cacheada.
+ * El bitmap es de la cache: hay que copiarlo (drawImage) enseguida, puede cerrarse al desalojar.
+ */
 export function renderPage(pdfId: string, page: number, cssWidth: number) {
   const pixelWidth = Math.round(cssWidth * Math.min(window.devicePixelRatio || 1, 2));
   const key = `${pdfId}:${page}:${pixelWidth}`;
   let hit = pages.get(key);
   if (!hit) {
-    hit = openPdf(pdfId).then((doc) => draw(doc, page, pixelWidth));
+    hit = openPdf(pdfId).then(async (doc) => {
+      const canvas = await draw(doc, page, pixelWidth);
+      const bitmap = await createImageBitmap(canvas);
+      canvas.width = canvas.height = 1;
+      return bitmap;
+    });
     pages.set(key, hit);
   }
   return hit;

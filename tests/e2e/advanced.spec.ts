@@ -103,3 +103,24 @@ test('media página y autoscroll', async ({ page }) => {
   await page.waitForTimeout(400);
   expect(await scroller.evaluate((el) => el.scrollTop)).toBe(paused);
 });
+
+test('una página repetida en el orden virtual se ve en todos los lugares a la vez', async ({
+  page,
+}) => {
+  await openScore(page);
+  await clickBar(page, 'Más opciones');
+  await page.getByLabel('Orden de páginas').fill('1, 2, 1');
+  await page.getByLabel('Orden de páginas').blur();
+  await closeSheet(page);
+  await page.keyboard.press('ArrowRight');
+  await expect(indicator(page)).toHaveText('2 / 3');
+
+  // En la posición 2, el slot anterior y el siguiente muestran la misma página real (la 1).
+  for (const where of ['-1', '1']) {
+    const slot = page.locator(`.reader-slot[data-where="${where}"]`);
+    await expect(slot.locator('.page')).toHaveAttribute('data-page', '0');
+    await expect
+      .poll(() => slot.locator('.page-canvas canvas').evaluate((c: HTMLCanvasElement) => c.width))
+      .toBeGreaterThan(300);
+  }
+});
