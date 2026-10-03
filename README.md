@@ -19,7 +19,8 @@ servidor. Tus partituras y anotaciones quedan solo en tu dispositivo.
   compositor y los organizás con etiquetas.
 - **Lector:** una página por pantalla, scroll vertical o dos páginas lado a lado; media página
   para pasar sin cortar; temas claro, sepia y oscuro; la pantalla no se apaga mientras leés.
-- **Anotaciones:** lápiz, resaltador, texto y goma encima del PDF, que nunca se modifica.
+- **Anotaciones:** lápiz, resaltador, texto, goma y símbolos musicales (figuras, silencios,
+  alteraciones, dinámicas y articulaciones) que se pegan con un toque. El PDF nunca se modifica.
 - **Marcadores y saltos:** marcás un lugar ("Letra B") y saltás ahí; los saltos sirven para
   D.S., coda y repeticiones.
 - **Listas y modo show:** armás el orden de un concierto con separadores y lo recorrés de una
@@ -89,3 +90,8 @@ de publicación están en Ajustes.
    and variables → Actions → Variables). En local va en `.env.local`.
 
 Sin esa variable la sección de Drive aparece deshabilitada y el resto funciona igual.
+
+## Créditos
+
+Los símbolos musicales usan la fuente [Bravura](https://github.com/steinbergmedia/bravura) de
+Steinberg, bajo la licencia SIL Open Font License 1.1.

@@ -53,7 +53,12 @@ export function ScoreScreen({ scoreId, show }: Props) {
   // Modo show: la barra de abajo y el lápiz arrancan bloqueados; se habilitan con un toque.
   const [locked, setLocked] = useState(!!show);
   const [annotationsVisible, setAnnotationsVisible] = useState(true);
-  const [tool, setTool] = useState<ToolState>({ tool: 'pen', color: COLORS[1], width: 1 });
+  const [tool, setTool] = useState<ToolState>({
+    tool: 'pen',
+    color: COLORS[1],
+    width: 1,
+    symbol: 'noteQuarterUp',
+  });
   const [practice, setPractice] = useState(false);
   const [autoscrolling, setAutoscrolling] = useState(false);
   const [nextShown, setNextShown] = useState(false); // aviso de obra siguiente (modo show)

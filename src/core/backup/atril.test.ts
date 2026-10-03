@@ -15,6 +15,7 @@ async function seed() {
   await saveAnnotations({
     ...emptyAnnotations(score.id, 0),
     strokes: [{ id: 's', tool: 'pen', color: '#000', width: 0.004, points: [[0.1, 0.2, 0.5]] }],
+    stamps: [{ id: 'st', symbol: 'dynamicMF', x: 0.3, y: 0.4, size: 0.04, color: '#D7352B' }],
   });
   const list = await addSetList('Concierto');
   await db.setlists.update(list.id, { items: [{ id: 'i', type: 'score', scoreId: score.id }] });

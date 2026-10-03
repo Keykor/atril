@@ -4,6 +4,13 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.5.0
+
+- Símbolos musicales: en Anotar hay una herramienta nueva con figuras (redonda a semicorchea),
+  silencios, sostenido, bemol y becuadro, dinámicas (pp a ff), calderón, acento, staccato y
+  respiración. Se pegan con un toque donde van y se arrastran para acomodarlos; el tamaño se
+  elige con el grosor. Se borran con la goma y se deshacen como cualquier anotación.
+
 ## 0.4.0
 
 Pensada para usar Atril en el celular.
