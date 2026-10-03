@@ -199,3 +199,21 @@
     padding-right: 16px;
   }
 }
+.sheet-backdrop.passive {
+  background: none;
+  pointer-events: none;
+}
+.sheet-backdrop.passive .sheet {
+  pointer-events: auto;
+  max-height: 46dvh;
+  box-shadow: 0 -6px 24px rgba(23, 24, 28, 0.18);
+}
+.popover {
+  position: absolute;
+  z-index: 30;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--bar);
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(23, 24, 28, 0.25);
+}

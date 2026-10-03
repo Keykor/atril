@@ -9,10 +9,20 @@ interface Props {
   penOnly: boolean;
   onChange: (patch: Partial<ReadingPrefs>, scope: 'score' | 'all') => void;
   onPenOnly: (value: boolean) => void;
+  autoscrollSpeed: number; // px por segundo, de esta partitura
+  onAutoscrollSpeed: (speed: number) => void;
   onClose: () => void;
 }
 
-export function ReadingSheet({ prefs, penOnly, onChange, onPenOnly, onClose }: Props) {
+export function ReadingSheet({
+  prefs,
+  penOnly,
+  onChange,
+  onPenOnly,
+  autoscrollSpeed,
+  onAutoscrollSpeed,
+  onClose,
+}: Props) {
   const [scope, setScope] = useState<'score' | 'all'>('score');
   const r = t.reading;
   const set = (patch: Partial<ReadingPrefs>) => onChange(patch, scope);
@@ -60,6 +70,21 @@ export function ReadingSheet({ prefs, penOnly, onChange, onPenOnly, onClose }: P
             ]}
           />
         )
+      )}
+      {prefs.mode === 'vertical' && (
+        <label className="field">
+          <span className="field-label">{r.autoscrollSpeed}</span>
+          <input
+            type="range"
+            className="range"
+            min={5}
+            max={200}
+            step={5}
+            value={autoscrollSpeed}
+            onChange={(e) => onAutoscrollSpeed(Number(e.target.value))}
+          />
+          <span className="field-hint">{r.autoscrollHint}</span>
+        </label>
       )}
       <div className="sheet-cols">
         <Segmented

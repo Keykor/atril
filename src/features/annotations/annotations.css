@@ -38,25 +38,23 @@
 
 .annotation-toolbar {
   position: absolute;
-  top: calc(12px + env(safe-area-inset-top));
+  top: calc(8px + env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
-  max-width: calc(100% - 24px);
+  max-width: calc(100% - 12px);
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 4px 12px;
-  padding: 8px 12px;
-  border-radius: 18px;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border-radius: 16px;
   background: var(--bar);
   color: #fff;
   box-shadow: 0 6px 24px rgba(23, 24, 28, 0.25);
 }
-.at-group {
-  display: flex;
-  align-items: center;
-  gap: 2px;
+.annotation-toolbar .icon-btn {
+  width: 40px;
+  height: 44px;
 }
 .annotation-toolbar .icon-btn[aria-pressed='true'] {
   background: rgba(110, 139, 234, 0.35);
@@ -64,9 +62,30 @@
 .annotation-toolbar .icon-btn:disabled {
   opacity: 0.35;
 }
+.at-sep {
+  width: 1px;
+  height: 28px;
+  margin: 0 2px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.at-style {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.at-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
 .at-color {
   width: 40px;
-  height: var(--tap);
+  height: 44px;
+  flex-shrink: 0;
   padding: 0;
   border: 0;
   background: transparent;
@@ -92,13 +111,13 @@
 .at-penonly {
   height: 40px;
   padding: 0 12px;
-  margin-right: 6px;
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 999px;
   background: transparent;
   color: #fff;
   font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -109,4 +128,6 @@
 }
 .annotation-toolbar .btn.primary {
   min-height: 40px;
+  margin-left: 2px;
+  padding: 0 12px;
 }

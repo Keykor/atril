@@ -12,12 +12,40 @@ async function tapAt(page: Page, fx: number) {
   const box = (await page.locator('.reader-stage').boundingBox())!;
   await page.mouse.click(box.x + box.width * fx, box.y + box.height / 2);
 }
+/** Toca un punto (en fracciones) de la página a la vista, cuando se está eligiendo un lugar. */
+const placePoint = (page: Page, fx: number, fy: number) =>
+  page
+    .locator('.reader-slot[data-where="0"], .vpage')
+    .getByRole('button', { name: 'Elegir el lugar en la página' })
+    .first()
+    .evaluate(
+      (el, [x, y]) => {
+        const r = el.getBoundingClientRect();
+        el.dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+            clientX: r.left + r.width * x,
+            clientY: r.top + r.height * y,
+          }),
+        );
+      },
+      [fx, fy],
+    );
+
+async function addBookmark(page: Page, label: string, fx: number, fy: number) {
+  await clickBar(page, 'Marcadores y saltos');
+  await page.getByRole('button', { name: 'Agregar marcador' }).click();
+  await placePoint(page, fx, fy);
+  await page.getByRole('textbox', { name: 'Nombre del marcador' }).fill(label);
+  await page.getByRole('button', { name: 'Guardar' }).click();
+}
+
 const closeSheet = (page: Page) =>
   page.getByRole('dialog').getByRole('button', { name: 'Cerrar' }).click();
 
 test('orden virtual de páginas y marcadores', async ({ page }) => {
   await openScore(page);
-  await clickBar(page, 'Más opciones');
+  await clickBar(page, 'Página');
   await page.getByLabel('Orden de páginas').fill('1, 2, 3, 2, 3');
   await page.getByLabel('Orden de páginas').blur();
   await closeSheet(page);
@@ -31,30 +59,25 @@ test('orden virtual de páginas y marcadores', async ({ page }) => {
     '1',
   );
 
-  await clickBar(page, 'Marcadores');
-  await page.getByLabel('Nombre del marcador').fill('Letra B');
-  await page.getByRole('button', { name: 'En la página 2' }).click();
-  await closeSheet(page);
+  await addBookmark(page, 'Letra B', 0.3, 0.4);
+  await expect(page.locator('.reader-slot[data-where="0"] .bookmark-flag')).toHaveText('Letra B');
   await page.keyboard.press('ArrowRight');
   await expect(indicator(page)).toHaveText('5 / 5');
 
-  await clickBar(page, 'Marcadores');
+  await clickBar(page, 'Marcadores y saltos');
   await page.locator('.bookmark-go', { hasText: 'Letra B' }).click();
   await expect(indicator(page)).toHaveText('2 / 5'); // primera aparición de la página 2
 });
 
 test('saltos: tocar el origen lleva al destino y se puede volver', async ({ page }) => {
   await openScore(page);
-  await clickBar(page, 'Más opciones');
+  await clickBar(page, 'Marcadores y saltos');
   await page.getByRole('button', { name: 'Agregar salto' }).click();
-  await page
-    .locator('.reader-slot[data-where="0"]')
-    .getByRole('button', { name: 'Elegir el origen del salto' })
-    .click();
-  await page.getByLabel('Página de destino (1 a 3)').fill('3');
+  await placePoint(page, 0.8, 0.8);
+  await page.getByLabel('A una página (1 a 3)').fill('3');
   await page.getByRole('button', { name: 'Guardar' }).click();
 
-  await page.getByRole('button', { name: 'Saltar a la página 3' }).click();
+  await page.getByRole('button', { name: 'Saltar a página 3' }).click();
   await expect(indicator(page)).toHaveText('3 / 3');
   await page.getByRole('button', { name: 'Volver' }).click();
   await expect(indicator(page)).toHaveText('1 / 3');
@@ -67,7 +90,7 @@ test('recorte de márgenes: la página se agranda y las anotaciones siguen aline
   const full = page.locator('.reader-slot[data-where="0"] .page-full');
   const before = (await full.boundingBox())!;
 
-  await clickBar(page, 'Más opciones');
+  await clickBar(page, 'Página');
   await page.getByRole('button', { name: 'Automático' }).click();
   await closeSheet(page);
   await expect.poll(async () => (await full.boundingBox())!.width).toBeGreaterThan(before.width);
@@ -108,7 +131,7 @@ test('una página repetida en el orden virtual se ve en todos los lugares a la v
   page,
 }) => {
   await openScore(page);
-  await clickBar(page, 'Más opciones');
+  await clickBar(page, 'Página');
   await page.getByLabel('Orden de páginas').fill('1, 2, 1');
   await page.getByLabel('Orden de páginas').blur();
   await closeSheet(page);
@@ -123,4 +146,38 @@ test('una página repetida en el orden virtual se ve en todos los lugares a la v
       .poll(() => slot.locator('.page-canvas canvas').evaluate((c: HTMLCanvasElement) => c.width))
       .toBeGreaterThan(300);
   }
+});
+
+test('un salto puede ir a un marcador, y en vertical el marcador lleva al punto exacto', async ({
+  page,
+}) => {
+  await openScore(page);
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await expect(indicator(page)).toHaveText('3 / 3');
+  await addBookmark(page, 'Coda', 0.2, 0.7);
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await expect(indicator(page)).toHaveText('1 / 3');
+
+  await clickBar(page, 'Marcadores y saltos');
+  await page.getByRole('button', { name: 'Agregar salto' }).click();
+  await placePoint(page, 0.8, 0.9);
+  await page.getByRole('button', { name: 'Destino: Coda' }).click();
+  await page.getByRole('button', { name: 'Saltar a Coda' }).click();
+  await expect(indicator(page)).toHaveText('3 / 3');
+  await expect(page.locator('.bookmark-flag[data-highlight]')).toHaveText('Coda');
+  await page.getByRole('button', { name: 'Volver' }).click();
+  await expect(indicator(page)).toHaveText('1 / 3');
+
+  // En modo vertical, ir al marcador deja a la vista el punto marcado, no el tope de la página.
+  await clickBar(page, 'Ajustes de lectura');
+  await page.getByRole('button', { name: 'Vertical' }).click();
+  await closeSheet(page);
+  await clickBar(page, 'Marcadores y saltos');
+  await page.locator('.bookmark-go', { hasText: 'Coda' }).click();
+  const flag = page.locator('.bookmark-flag', { hasText: 'Coda' });
+  await expect(flag).toBeInViewport();
+  // La página 3 es la última: el scroll llega al fondo, con el punto marcado a la vista.
+  expect(await page.locator('.reader-scroll').evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
 });
