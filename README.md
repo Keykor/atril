@@ -75,6 +75,10 @@ qué requiere revisión) están en [`CLAUDE.md`](CLAUDE.md), que leen tanto pers
 Cada push a `main` corre lint y tests y publica en GitHub Pages
 (`.github/workflows/ci.yml`). El trabajo se integra primero en `test` y después pasa a `main`.
 
+Quien ya tiene la app abierta o instalada ve "Hay una versión nueva de Atril" en la biblioteca y
+la aplica con un toque. Nunca se actualiza sola en medio de una lectura. La versión y la fecha
+de publicación están en Ajustes.
+
 ## Backup en Google Drive (opcional)
 
 1. En Google Cloud Console creá un cliente OAuth de tipo "Aplicación web" y agregá

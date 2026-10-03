@@ -287,10 +287,19 @@ export const t = {
     banner: 'Instalá Atril antes de importar partituras: así quedan guardadas en la app.',
     dismiss: 'Cerrar aviso de instalación',
   },
+  update: {
+    title: 'Versión',
+    available: 'Hay una versión nueva de Atril.',
+    apply: 'Actualizar',
+    later: 'Más tarde',
+    version: (version: string, date: string, sha: string) =>
+      `Atril ${version} · publicada el ${date}${sha === 'local' ? '' : ` · ${sha}`}`,
+    upToDate:
+      'Atril busca versiones nuevas sola al abrirla. Si hay una, te avisa acá y en la biblioteca.',
+  },
   settings: {
     title: 'Ajustes',
     penOnly: 'Solo el lápiz dibuja',
     penOnlyHint: 'El dedo sigue pasando páginas mientras anotás',
-    version: (v: string) => `Atril ${v}`,
   },
 };

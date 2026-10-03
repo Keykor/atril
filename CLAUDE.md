@@ -109,5 +109,9 @@ Agregá la etiqueta `needs-human` al PR si toca:
 - **Modo show:** en escena la barra de abajo arranca bloqueada (un toque la habilita) y el aviso
   de obra siguiente aparece recién al tocar para avanzar en la última página, para no tapar
   música. Son pedidos explícitos del usuario; no los "simplifiques".
+- **Actualizaciones:** la versión nueva del service worker queda esperando hasta que el usuario
+  toca "Actualizar" (`core/update.ts` manda `SKIP_WAITING`). No agregues `skipWaiting()` al
+  instalar ni recargas automáticas: podría recargarse en medio de un concierto. El aviso no se
+  muestra dentro del lector.
 - La documentación vigente es `docs/arquitectura.md` y el código. Si un cambio la contradice,
   actualizala en el mismo PR.
