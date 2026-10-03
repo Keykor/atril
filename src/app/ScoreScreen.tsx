@@ -1,16 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
-import { getScore, getScoreMarkers } from '../core/db/queries';
 import {
-  addBookmark,
-  addLink,
   getGlobalReading,
+  getScore,
+  getScoreMarkers,
   getSetting,
   resolveReading,
-  setSetting,
-  touchScore,
-  updateScore,
-} from '../core/db/repos';
+} from '../core/db/queries';
+import { addBookmark, addLink, setSetting, touchScore, updateScore } from '../core/db/repos';
 import type { JumpLink, ReadingPrefs, SetList } from '../core/db/types';
 import { pageSizes } from '../core/pdf/render';
 import { keepAwake } from '../core/wakeLock';

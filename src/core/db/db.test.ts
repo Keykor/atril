@@ -10,8 +10,6 @@ import {
   renameTag,
   duplicateSetList,
   emptyAnnotations,
-  getGlobalReading,
-  resolveReading,
   saveAnnotations,
   setSetting,
   updateSetList,
@@ -20,8 +18,10 @@ import {
   firstDataAt,
   getPageAnnotations,
   getScore,
+  getGlobalReading,
   getScoreMarkers,
   listTags,
+  resolveReading,
   missingPdfIds,
 } from './queries';
 import { filterScores } from './search';

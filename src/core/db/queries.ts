@@ -3,7 +3,15 @@
 // consulta viva en la pantalla. Las escrituras están en repos.ts.
 import { db } from './db';
 import { emptyAnnotations, annotationId } from './repos';
-import type { Bookmark, JumpLink, Score, SetList, Tag } from './types';
+import {
+  defaultReading,
+  type Bookmark,
+  type JumpLink,
+  type ReadingPrefs,
+  type Score,
+  type SetList,
+  type Tag,
+} from './types';
 
 const byName = <T extends { name: string }>(rows: T[]) =>
   rows.sort((a, b) => a.name.localeCompare(b.name, 'es'));
@@ -61,3 +69,20 @@ export const listSetLists = async (): Promise<SetList[]> => byName(await db.setl
 
 export const getSetList = async (id: string): Promise<SetList | null> =>
   (await db.setlists.get(id)) ?? null;
+
+// --- Ajustes ---
+
+export async function getSetting<T>(key: string, fallback: T): Promise<T> {
+  return ((await db.settings.get(key))?.value as T | undefined) ?? fallback;
+}
+
+export const getGlobalReading = async (): Promise<ReadingPrefs> => ({
+  ...defaultReading,
+  ...(await getSetting<Partial<ReadingPrefs>>('reading', {})),
+});
+
+/** Ajustes de lectura efectivos: los globales pisados por los de la partitura. */
+export const resolveReading = (global: ReadingPrefs, score?: Score): ReadingPrefs => ({
+  ...global,
+  ...score?.reading,
+});

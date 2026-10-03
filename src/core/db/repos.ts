@@ -2,11 +2,9 @@ import { db, newId } from './db';
 
 export { newId };
 import {
-  defaultReading,
   type Bookmark,
   type JumpLink,
   type PageAnnotations,
-  type ReadingPrefs,
   type Score,
   type SetList,
   type Tag,
@@ -141,17 +139,4 @@ export const deleteLink = (id: string) => db.links.delete(id);
 
 // --- Ajustes ---
 
-export async function getSetting<T>(key: string, fallback: T): Promise<T> {
-  return ((await db.settings.get(key))?.value as T | undefined) ?? fallback;
-}
 export const setSetting = (key: string, value: unknown) => db.settings.put({ key, value });
-
-export const getGlobalReading = async (): Promise<ReadingPrefs> => ({
-  ...defaultReading,
-  ...(await getSetting<Partial<ReadingPrefs>>('reading', {})),
-});
-
-export const resolveReading = (global: ReadingPrefs, score?: Score): ReadingPrefs => ({
-  ...global,
-  ...score?.reading,
-});

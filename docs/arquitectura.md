@@ -30,7 +30,10 @@ Reglas de dependencia, que hace cumplir ESLint (`no-restricted-imports` en `esli
 - **Leer:** con `useLiveQuery(() => consulta(...))`, usando funciones de `core/db/queries.ts`.
   `useLiveQuery` vuelve a ejecutar la consulta cuando cambian las tablas que lee, así que la
   pantalla se actualiza sola, venga el cambio de donde venga (otra pantalla, un backup
-  importado).
+  importado). Toda lectura de la base vive en `queries.ts`, incluidos los ajustes
+  (`getSetting`, `getGlobalReading`). Los módulos de `core` que tienen estado propio exponen
+  una lectura con nombre de dominio construida sobre esas (`getDriveState` en
+  `core/backup/drive.ts`, `getLastBackupAt` en `core/backup/files.ts`).
 - **Escribir:** con funciones de `core/db/repos.ts`. Ahí viven las reglas que tienen que
   cumplirse siempre: borrar en cascada, actualizar `updatedAt`, sacar una partitura de las
   listas cuando se borra.

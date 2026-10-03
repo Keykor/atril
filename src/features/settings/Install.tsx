@@ -7,7 +7,8 @@ import {
   onInstallChange,
   promptInstall,
 } from '../../core/install';
-import { getSetting, setSetting } from '../../core/db/repos';
+import { getSetting } from '../../core/db/queries';
+import { setSetting } from '../../core/db/repos';
 import { Icon } from '../../ui/Icon';
 import { t } from '../../app/strings';
 import './settings.css';

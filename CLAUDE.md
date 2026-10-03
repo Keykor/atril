@@ -38,7 +38,8 @@ Arquitectura (la hace cumplir ESLint, no la desactives con `eslint-disable`):
 
 - `app/`, `features/` y `ui/` no importan `core/db/db`, `dexie` ni `pdfjs-dist`.
 - **Leer datos:** `useLiveQuery(() => consulta())` con funciones de `src/core/db/queries.ts`.
-  Si necesitás una consulta nueva, va ahí, con test en `src/core/db/db.test.ts`.
+  Si necesitás una consulta nueva, va ahí, con test en `src/core/db/db.test.ts`. Ajustes
+  incluidos: `getSetting` está en `queries.ts`, `setSetting` en `repos.ts`.
 - **Escribir datos:** funciones de `src/core/db/repos.ts`. Borrados en cascada y `updatedAt` se
   manejan ahí, nunca en la pantalla.
 - Una feature no importa de otra: lo que junta varias se compone en `src/app/`.
