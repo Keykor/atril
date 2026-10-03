@@ -240,3 +240,26 @@ test('en el celular, metrónomo y teclado van en pestañas; en tablet se ven los
   await expect(bpm).toBeVisible();
   await expect(panel.getByRole('tab', { name: 'Teclado' })).toBeHidden();
 });
+
+test('en el celular las hojas ocupan toda la altura y avisan si hay más abajo', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openScore(page);
+  await clickBar(page, 'Ajustes de lectura');
+  const sheet = page.getByRole('dialog', { name: 'Ajustes de lectura' });
+  const box = (await sheet.boundingBox())!;
+  expect(box.y).toBeLessThanOrEqual(1);
+  expect(box.height).toBeGreaterThanOrEqual(843);
+
+  const more = sheet.locator('.sheet-more');
+  await expect(more).toBeVisible();
+  await sheet.locator('.sheet-body').evaluate((el) => (el.scrollTop = el.scrollHeight));
+  await expect(more).toHaveCount(0);
+  await sheet.getByRole('button', { name: 'Cerrar' }).click();
+
+  // La hoja de página muestra el valor de cada recorte.
+  await clickBar(page, 'Página');
+  await page.getByRole('button', { name: 'Automático' }).click();
+  await expect(page.getByRole('dialog').locator('output').first()).toHaveText(/^\d+ %$/);
+});

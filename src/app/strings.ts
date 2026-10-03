@@ -165,6 +165,8 @@ export const t = {
     pageOrderHint: (n: number) =>
       `Repetí o reordená páginas sin tocar el PDF, por ejemplo 1, 2, 3, 2, 3, 4. El PDF tiene ${n}.`,
     crop: 'Recorte de márgenes',
+    cropHint: 'Saca el blanco de los bordes para que la música se vea más grande.',
+    percent: (n: number) => `${n} %`,
     cropAuto: 'Automático',
     cropReset: 'Quitar recorte',
     cropSides: { top: 'Arriba', bottom: 'Abajo', left: 'Izquierda', right: 'Derecha' },

@@ -506,3 +506,14 @@
   justify-content: center;
   gap: 12px;
 }
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+@media (max-width: 600px) {
+  .crop-sliders {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
