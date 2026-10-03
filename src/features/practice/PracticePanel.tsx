@@ -31,17 +31,28 @@ interface Props {
 
 /** Panel de ensayo sobre el lector: metrónomo y teclado. No tapa la partitura entera. */
 export function PracticePanel({ score, onChange, onClose }: Props) {
+  // En el celular los dos no entran juntos: se muestra uno por vez con pestañas (solo CSS, así
+  // el metrónomo sigue sonando al pasar al teclado). En tablet y compu se ven los dos.
+  const [tab, setTab] = useState<'metronome' | 'keyboard'>('metronome');
   return (
     <section
       className="practice"
       role="region"
       aria-label={p.title}
+      data-tab={tab}
       onPointerDown={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >
       <button className="icon-btn round practice-close" aria-label={p.close} onClick={onClose}>
         <Icon name="close" />
       </button>
+      <div className="practice-tabs" role="tablist" aria-label={p.title}>
+        {(['metronome', 'keyboard'] as const).map((id) => (
+          <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>
+            {p[id]}
+          </button>
+        ))}
+      </div>
       <MetronomeBox score={score} onChange={onChange} />
       <KeyboardBox
         startNotes={score.startNotes}
@@ -91,7 +102,7 @@ function MetronomeBox({ score, onChange }: Pick<Props, 'score' | 'onChange'>) {
   };
 
   return (
-    <div className="practice-box">
+    <div className="practice-box metronome">
       <header>
         <h2>{p.metronome}</h2>
         <span>{p.savedTempo}</span>
@@ -174,7 +185,7 @@ function KeyboardBox({
       : midiToLabel(midi);
 
   return (
-    <div className="practice-box">
+    <div className="practice-box keyboard">
       <header>
         <h2>{p.keyboard}</h2>
         <div className="kb-octave">

@@ -49,8 +49,9 @@ export function AnnotationLayer(p: Props) {
     points: [] as Stroke['points'],
     before: saved,
     erased: saved,
-    touches: new Set<number>(),
+    touches: new Map<number, { x: number; y: number }>(), // dedos apoyados y dónde empezaron
     twoFingerAt: 0,
+    twoFingerMoved: false, // los dos dedos se movieron: fue mover o hacer zoom, no "deshacer"
     textAt: null as [number, number] | null,
   }).current;
 
@@ -70,11 +71,13 @@ export function AnnotationLayer(p: Props) {
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.pointerType === 'touch') {
-      g.touches.add(e.pointerId);
+      g.touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (p.active && g.touches.size === 2) {
-        // Segundo dedo: no es un trazo. Si levantan enseguida, es "deshacer".
+        // Segundo dedo: no es un trazo. Si se mueven, el lector mueve la página o hace zoom
+        // (lo escucha en la fase de captura); si levantan enseguida sin moverse, es "deshacer".
         cancel();
         g.twoFingerAt = performance.now();
+        g.twoFingerMoved = false;
         e.stopPropagation();
         return;
       }
@@ -114,6 +117,8 @@ export function AnnotationLayer(p: Props) {
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    const touch = g.twoFingerAt ? g.touches.get(e.pointerId) : undefined;
+    if (touch && Math.hypot(e.clientX - touch.x, e.clientY - touch.y) > 12) g.twoFingerMoved = true;
     if (e.pointerId !== g.id) return;
     e.stopPropagation();
     if (draft) {
@@ -141,7 +146,7 @@ export function AnnotationLayer(p: Props) {
     if (e.pointerType === 'touch') {
       g.touches.delete(e.pointerId);
       if (g.twoFingerAt && g.touches.size === 0) {
-        if (performance.now() - g.twoFingerAt < 400) p.onUndo();
+        if (!g.twoFingerMoved && performance.now() - g.twoFingerAt < 400) p.onUndo();
         g.twoFingerAt = 0;
         e.stopPropagation();
         return;

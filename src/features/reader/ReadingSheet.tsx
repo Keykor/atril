@@ -74,15 +74,18 @@ export function ReadingSheet({
       {prefs.mode === 'vertical' && (
         <label className="field">
           <span className="field-label">{r.autoscrollSpeed}</span>
-          <input
-            type="range"
-            className="range"
-            min={5}
-            max={200}
-            step={5}
-            value={autoscrollSpeed}
-            onChange={(e) => onAutoscrollSpeed(Number(e.target.value))}
-          />
+          <span className="range-row">
+            <input
+              type="range"
+              className="range"
+              min={5}
+              max={200}
+              step={5}
+              value={autoscrollSpeed}
+              onChange={(e) => onAutoscrollSpeed(Number(e.target.value))}
+            />
+            <output className="range-value">{autoscrollSpeed}</output>
+          </span>
           <span className="field-hint">{r.autoscrollHint}</span>
         </label>
       )}

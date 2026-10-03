@@ -148,6 +148,7 @@
   justify-content: center;
 }
 .sheet {
+  position: relative;
   width: min(100%, 800px);
   max-height: 92dvh;
   display: flex;
@@ -216,4 +217,49 @@
   background: var(--bar);
   color: #fff;
   box-shadow: 0 6px 24px rgba(23, 24, 28, 0.25);
+}
+
+/* Hay más contenido abajo: degradé sobre el final visible y una flecha. */
+.sheet-more {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  height: 56px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+  background: linear-gradient(to bottom, transparent, var(--surface) 75%);
+  color: var(--text-3);
+  pointer-events: none;
+}
+.sheet-backdrop.passive .sheet-more {
+  bottom: 12px;
+}
+@media (max-width: 600px) {
+  /* En el celular las hojas modales ocupan toda la altura: nada queda escondido abajo. */
+  .sheet-backdrop:not(.passive) .sheet {
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    padding-top: calc(8px + env(safe-area-inset-top));
+  }
+  .sheet-backdrop:not(.passive) .sheet-handle {
+    display: none;
+  }
+  .sheet-backdrop.passive .sheet {
+    max-height: 52dvh;
+  }
+  .sheet-more {
+    bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
+.range-value {
+  min-width: 3.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
 }

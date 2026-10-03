@@ -167,3 +167,47 @@
     height: 120px;
   }
 }
+.practice-tabs {
+  display: none;
+}
+@media (max-width: 600px) {
+  .practice {
+    max-height: 62dvh;
+    gap: 8px;
+    padding-top: 10px;
+  }
+  .practice-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-right: 52px; /* lugar para la X de cerrar */
+    padding: 4px;
+    border-radius: 12px;
+    background: #efefec;
+  }
+  .practice-tabs button {
+    min-height: 44px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+  .practice-tabs button[aria-selected='true'] {
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgba(23, 24, 28, 0.12);
+    color: var(--text);
+    font-weight: 600;
+  }
+  .practice[data-tab='metronome'] .practice-box.keyboard,
+  .practice[data-tab='keyboard'] .practice-box.metronome {
+    display: none;
+  }
+  /* El título de cada caja ya está en la pestaña. */
+  .practice-box h2 {
+    display: none;
+  }
+  .practice-close {
+    top: 10px;
+  }
+}

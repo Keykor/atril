@@ -31,6 +31,10 @@ fuera del sandbox. Si `npm install` falla por la cache, usá `npm_config_cache=$
 - PR: secciones "Qué hace", "Plan", "Cómo probarlo", "Notas para quien revisa". Decir siempre
   qué no se pudo verificar (ver "Contexto").
 - El merge siempre lo hace una persona.
+- **Versión:** cada PR sube `version` en `package.json` y agrega su entrada arriba de todo en
+  `CHANGELOG.md`, escrita para quien usa la app (qué cambia para el usuario, no cómo). Semver;
+  mientras sea 0.x: funcionalidad nueva sube el del medio (0.4.0), arreglos o cambios internos
+  el último (0.4.1). La versión se ve en Ajustes → Versión.
 
 ## Convenciones de código
 
@@ -109,6 +113,10 @@ Agregá la etiqueta `needs-human` al PR si toca:
 - **Modo show:** en escena la barra de abajo arranca bloqueada (un toque la habilita) y el aviso
   de obra siguiente aparece recién al tocar para avanzar en la última página, para no tapar
   música. Son pedidos explícitos del usuario; no los "simplifiques".
+- **Gestos anotando:** el lector pone `touch-action: none` y desplaza él la página (`manualPan`):
+  un dedo dibuja, dos dedos mueven y hacen zoom. Los gestos de dos dedos se escuchan en la fase
+  de captura porque la capa de anotaciones corta el evento del dedo que dibuja. Los e2e de
+  toques multidedo usan CDP (`Input.dispatchTouchEvent`), así que corren solo en Chromium.
 - **Actualizaciones:** la versión nueva del service worker queda esperando hasta que el usuario
   toca "Actualizar" (`core/update.ts` manda `SKIP_WAITING`). No agregues `skipWaiting()` al
   instalar ni recargas automáticas: podría recargarse en medio de un concierto. El aviso no se

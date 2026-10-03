@@ -211,6 +211,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
         onView={setView}
         onCenterTap={() => !annotating && !placing && setBars((b) => !b)}
         onEdge={onEdge}
+        manualPan={annotating}
         scrollTarget={target}
         autoscroll={autoscrolling && vertical ? (score.autoscrollSpeed ?? 30) : undefined}
         interceptTap={() => {
@@ -241,6 +242,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
               highlight={target?.id}
               jumpLabel={t.bookmarks.jumpTo}
               pageLabel={t.bookmarks.pageLong}
+              pageShort={t.bookmarks.pageShort}
               placeLabel={t.bookmarks.placeLabel}
               onJump={jump}
               onPlace={(point) => {
