@@ -13,6 +13,8 @@ export interface PagePoint {
 export const bookmarkAt = (bookmarks: Bookmark[], to: JumpLink['to']) =>
   bookmarks.find((b) => b.page === to.page && b.y === to.y && b.x !== undefined);
 
+const FLAG_ROOM = 0.05; // fracción del alto de página que ocupa una banderita, con margen
+
 interface Props {
   scoreId: string;
   page: number; // página real
@@ -45,6 +47,9 @@ export function PageMarkers(p: Props) {
             key={b.id}
             className="bookmark-flag"
             data-highlight={b.id === p.highlight || undefined}
+            // Cerca del borde superior la banderita va debajo del punto: arriba quedaría fuera
+            // de la página (que recorta lo que sobresale).
+            data-below={b.y < FLAG_ROOM || undefined}
             style={{ left: `${b.x! * 100}%`, top: `${b.y * 100}%` }}
           >
             <Icon name="bookmark" size={14} />

@@ -348,6 +348,10 @@
   align-items: center;
   gap: 2px;
 }
+.bookmark-flag[data-below] {
+  transform: translate(-6px, 0);
+  border-radius: 0 6px 6px 6px;
+}
 .bookmark-flag[data-highlight] {
   animation: flag-pulse 0.5s ease-in-out 4;
 }

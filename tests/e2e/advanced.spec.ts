@@ -148,6 +148,14 @@ test('una página repetida en el orden virtual se ve en todos los lugares a la v
   }
 });
 
+test('un marcador en el borde superior se ve dentro de la página', async ({ page }) => {
+  await openScore(page);
+  await addBookmark(page, 'Arriba', 0.5, 0);
+  const pageBox = (await page.locator('.reader-slot[data-where="0"] .page').boundingBox())!;
+  const flag = (await page.locator('.bookmark-flag', { hasText: 'Arriba' }).boundingBox())!;
+  expect(flag.y).toBeGreaterThanOrEqual(pageBox.y - 1); // redondeo subpíxel
+});
+
 test('un salto puede ir a un marcador, y en vertical el marcador lleva al punto exacto', async ({
   page,
 }) => {
