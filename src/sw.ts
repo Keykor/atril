@@ -3,8 +3,12 @@ import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 
 declare const self: ServiceWorkerGlobalScope;
 
-// Actualización automática: la versión nueva toma el control sin esperar a cerrar la app.
-self.addEventListener('install', () => void self.skipWaiting());
+// La versión nueva queda esperando hasta que el usuario toca "Actualizar" (core/update.ts manda
+// SKIP_WAITING). Nunca se activa sola: una recarga en pleno concierto sería peor que una
+// versión vieja.
+self.addEventListener('message', (e) => {
+  if (e.data?.type === 'SKIP_WAITING') void self.skipWaiting();
+});
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
 cleanupOutdatedCaches();

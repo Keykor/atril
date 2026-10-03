@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { UpdateBanner } from '../features/settings/Update';
 import { Icon, type IconName } from '../ui/Icon';
 import { t } from './strings';
 import './shell.css';
@@ -38,7 +39,10 @@ export function Shell({ section, sidebar, footer, children }: Props) {
         <div className="shell-extra">{sidebar}</div>
         <div className="shell-footer">{footer}</div>
       </nav>
-      <main className="shell-main">{children}</main>
+      <main className="shell-main">
+        <UpdateBanner />
+        {children}
+      </main>
     </div>
   );
 }

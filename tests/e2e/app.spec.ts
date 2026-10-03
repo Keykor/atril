@@ -1,3 +1,4 @@
+import { readFile, writeFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { FIXTURES, importFixtures } from './helpers';
 
@@ -45,11 +46,11 @@ test('funciona sin conexión después de la primera carga', async ({
   await expect(page.locator('.page canvas').first()).toBeVisible();
 });
 
-test('ajustes muestra instalación, backup y versión', async ({ page }) => {
+test('ajustes muestra instalación, backup y versión con fecha de publicación', async ({ page }) => {
   await page.goto('/#/settings');
   await expect(page.getByRole('heading', { name: 'Instalar Atril' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Backup en Google Drive' })).toBeVisible();
-  await expect(page.getByText(/^Atril \d+\.\d+\.\d+$/)).toBeVisible();
+  await expect(page.getByText(/^Atril \d+\.\d+\.\d+ · publicada el /)).toBeVisible();
 });
 
 test('etiquetas: crear, renombrar y borrar; el aviso de instalar se puede cerrar', async ({
@@ -75,4 +76,39 @@ test('etiquetas: crear, renombrar y borrar; el aviso de instalar se puede cerrar
   page.on('dialog', (d) => d.accept());
   await sheet.getByRole('button', { name: 'Eliminar etiqueta Navidad' }).click();
   await expect(chips.getByRole('button', { name: 'Navidad', exact: true })).toHaveCount(0);
+});
+
+test('aviso de versión nueva: no se aplica sola y se actualiza con un toque', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName === 'webkit', 'El WebKit de Playwright no sirve desde el service worker');
+  await page.goto('/');
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  const banner = page.getByText('Hay una versión nueva de Atril.');
+  await expect(banner).toHaveCount(0);
+
+  // Se "publica" una versión nueva: el sw.js que sirve el preview cambia de contenido.
+  // (page.route no intercepta la descarga del service worker, por eso se toca el archivo.)
+  const swPath = 'dist/sw.js';
+  const original = await readFile(swPath, 'utf8');
+  try {
+    await writeFile(swPath, `${original}\n// versión nueva ${Date.now()}`);
+    await page.reload();
+    await expect(banner).toBeVisible();
+    // Queda esperando: no se activa sola.
+    const waiting = () =>
+      page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => !!r?.waiting));
+    expect(await waiting()).toBe(true);
+
+    // "Actualizar" activa la versión nueva y recarga la página.
+    await Promise.all([
+      page.waitForEvent('load'),
+      page.getByRole('button', { name: 'Actualizar' }).click(),
+    ]);
+    await expect.poll(waiting).toBe(false);
+    await expect(banner).toHaveCount(0);
+  } finally {
+    await writeFile(swPath, original);
+  }
 });

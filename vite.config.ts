@@ -9,11 +9,18 @@ const base = process.env.BASE ?? '/';
 
 export default defineConfig({
   base,
-  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+    // En CI es el commit publicado; en local, "local".
+    __BUILD_SHA__: JSON.stringify((process.env.GITHUB_SHA ?? 'local').slice(0, 7)),
+  },
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // El SW se registra desde core/update.ts, que avisa cuando hay una versión nueva.
+      registerType: 'prompt',
+      injectRegister: false,
       // SW propio (src/sw.ts): precache + Web Share Target.
       strategies: 'injectManifest',
       srcDir: 'src',
