@@ -1,0 +1,70 @@
+/* Tokens sacados de los diseños de referencia (Atril — pantallas). */
+:root {
+  --bg: #f4f4f1;
+  --surface: #ffffff;
+  --border: #e2e2de;
+  --border-strong: #d4d4cf;
+  --chip: #ebebe7;
+  --text: #17181c;
+  --text-2: #4a4d55;
+  --text-3: #6b6e76;
+  --accent: #2950c7;
+  --accent-dark: #1e3d9e;
+  --accent-soft: #e8edfa;
+  --reader-bg: #e9e9e6;
+  --bar: rgba(31, 32, 38, 0.96);
+  --bar-text-2: #b9bbc2;
+  --ok: #15803d;
+  --danger: #d7352b;
+  --font: 'Instrument Sans Variable', system-ui, sans-serif;
+  --font-hand: 'Caveat', cursive;
+  --tap: 48px;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+button {
+  cursor: pointer;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
