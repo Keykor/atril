@@ -1,0 +1,427 @@
+.reader-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--reader-bg);
+  --z: 1;
+}
+.reader-stage.theme-sepia {
+  background: #e4d8bf;
+}
+.reader-stage.theme-dark {
+  background: #141518;
+}
+.reader-track {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+.reader-slot,
+.reader-scroll {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  scrollbar-width: none;
+}
+.zoom-sizer {
+  margin: auto;
+  flex-shrink: 0;
+  width: calc(var(--bw) * var(--z) * 1px);
+  height: calc(var(--bh) * var(--z) * 1px);
+}
+.zoom-inner {
+  position: relative;
+  width: calc(var(--bw) * 1px);
+  height: calc(var(--bh) * 1px);
+  transform: scale(var(--z));
+  transform-origin: 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vpage {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+.page {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(23, 24, 28, 0.1);
+}
+/* El filtro va sobre la página entera, anotaciones incluidas: la tinta negra pasa a blanca. */
+.theme-dark .page {
+  filter: invert(1) hue-rotate(180deg);
+}
+.theme-sepia .page {
+  filter: sepia(0.45) brightness(0.97);
+}
+.page-full {
+  position: absolute;
+}
+.page-canvas,
+.page-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.half-top {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  border-bottom: 2px dashed var(--accent);
+}
+.page-indicator {
+  position: absolute;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(23, 24, 28, 0.72);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.score-screen:has(.reader-bottom, .show-next, .practice) .page-indicator {
+  display: none;
+}
+
+.score-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--reader-bg);
+}
+.reader-top,
+.reader-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: var(--bar);
+  color: #fff;
+  display: flex;
+  align-items: center;
+}
+.reader-top {
+  top: 0;
+  min-height: 76px;
+  padding: env(safe-area-inset-top) 12px 0;
+  gap: 8px;
+}
+.reader-top .back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+  padding: 0 12px 0 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #fff;
+  font-weight: 500;
+}
+.reader-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+.reader-title strong {
+  max-width: 100%;
+  font-size: 17px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reader-title span {
+  font-size: 13px;
+  color: var(--bar-text-2);
+}
+.reader-bottom {
+  bottom: 0;
+  min-height: 128px;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  gap: 16px;
+}
+.page-strip {
+  display: flex;
+  gap: 10px;
+  max-width: 45%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 3px;
+}
+.page-strip button {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--bar-text-2);
+  font-size: 12px;
+  font-weight: 500;
+}
+.page-strip span {
+  width: 56px;
+  height: 76px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #fff;
+  opacity: 0.85;
+}
+.page-strip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+}
+.page-strip button[aria-current='page'] {
+  color: #fff;
+  font-weight: 600;
+}
+.page-strip button[aria-current='page'] span {
+  outline: 3px solid #6e8bea;
+  opacity: 1;
+}
+.reader-divider {
+  width: 1px;
+  height: 72px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.16);
+}
+.reader-tools {
+  flex: 1;
+  display: flex;
+  justify-content: space-around;
+  gap: 4px;
+}
+.reader-tools button {
+  min-width: 76px;
+  height: 76px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.reader-tools button.accent {
+  background: rgba(110, 139, 234, 0.18);
+}
+.reader-tools button:disabled {
+  opacity: 0.45;
+}
+.reader-message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-2);
+}
+.option-cards {
+  display: grid;
+  gap: 12px;
+}
+.option-cards button {
+  min-height: 72px;
+  padding: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.option-cards button small {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-2);
+}
+.option-cards button[aria-pressed='true'] {
+  border: 2px solid var(--accent);
+  background: #f5f7fd;
+  font-weight: 600;
+}
+.sheet-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+@media (max-width: 600px) {
+  .reader-top .back span {
+    display: none;
+  }
+  .reader-bottom {
+    min-height: 0;
+    padding-top: 8px;
+  }
+  .page-strip,
+  .reader-divider {
+    display: none;
+  }
+  .reader-tools button {
+    min-width: 0;
+    flex: 1;
+    height: 64px;
+  }
+  .sheet-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jump-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.jump-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: var(--tap);
+  height: var(--tap);
+  padding: 0 10px;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  background: rgba(232, 237, 250, 0.9);
+  color: var(--accent-dark);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: auto;
+}
+.jump-place {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 3px dashed var(--accent);
+  background: rgba(41, 80, 199, 0.08);
+  cursor: crosshair;
+  pointer-events: auto;
+}
+.reader-float {
+  position: absolute;
+  left: 50%;
+  top: calc(16px + env(safe-area-inset-top));
+  transform: translateX(-50%);
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 6px 6px 16px;
+  border-radius: 999px;
+  background: var(--bar);
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 6px 24px rgba(23, 24, 28, 0.25);
+  white-space: nowrap;
+}
+.reader-float .btn {
+  min-height: var(--tap);
+  border-radius: 999px;
+}
+.crop-sliders {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 24px;
+  align-items: center;
+}
+.crop-sliders label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.crop-sliders label span {
+  width: 72px;
+  flex-shrink: 0;
+}
+.crop-sliders input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  accent-color: var(--accent);
+}
+.sheet .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.row-form {
+  display: flex;
+  gap: 8px;
+}
+.row-form .input {
+  flex: 1;
+}
+.plain-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.plain-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  border-top: 1px solid var(--border);
+}
+.plain-list li > span {
+  flex: 1;
+}
+.bookmark-go {
+  flex: 1;
+  min-height: 52px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bookmark-go span {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-3);
+}

@@ -1,0 +1,112 @@
+.annotation-layer {
+  position: absolute;
+  inset: 0;
+}
+.annotation-layer[data-active] {
+  cursor: crosshair;
+}
+.annotation-layer svg,
+.annotation-layer canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.annotation-layer path.highlighter {
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+}
+.annotation-layer text,
+.annotation-text {
+  font-family: var(--font-hand);
+  font-weight: 700;
+}
+.annotation-text {
+  position: absolute;
+  transform: translateY(-80%);
+  min-width: 140px;
+  padding: 0 4px;
+  border: 1px dashed var(--accent);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  outline: 0;
+}
+.annotations-hidden .annotation-layer svg {
+  display: none;
+}
+
+.annotation-toolbar {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  max-width: calc(100% - 24px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 12px;
+  padding: 8px 12px;
+  border-radius: 18px;
+  background: var(--bar);
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(23, 24, 28, 0.25);
+}
+.at-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.annotation-toolbar .icon-btn[aria-pressed='true'] {
+  background: rgba(110, 139, 234, 0.35);
+}
+.annotation-toolbar .icon-btn:disabled {
+  opacity: 0.35;
+}
+.at-color {
+  width: 40px;
+  height: var(--tap);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.at-color span {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+}
+.at-color[aria-pressed='true'] span {
+  outline: 3px solid #6e8bea;
+  outline-offset: 2px;
+}
+.at-width {
+  width: 22px;
+  border-radius: 999px;
+  background: #fff;
+}
+.at-penonly {
+  height: 40px;
+  padding: 0 12px;
+  margin-right: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.at-penonly[aria-checked='true'] {
+  background: rgba(110, 139, 234, 0.35);
+  border-color: transparent;
+}
+.annotation-toolbar .btn.primary {
+  min-height: 40px;
+}
