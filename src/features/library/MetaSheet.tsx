@@ -14,43 +14,99 @@ interface Props {
   onDeleted?: () => void;
 }
 
-/** Editor de metadatos. Se usa desde la biblioteca y desde el lector. */
+const FORM_ID = 'meta-form';
+
+/**
+ * Editor de metadatos. Se usa desde la biblioteca y desde el lector. Solo "Guardar" escribe:
+ * cerrar o cancelar descarta los cambios.
+ */
 export function MetaSheet({ scoreId, onClose, onDeleted }: Props) {
   const score = useLiveQuery(() => getScore(scoreId), [scoreId]);
   const tags = useLiveQuery(listTags, []) ?? [];
   if (!score) return null;
+  const remove = async () => {
+    if (!confirm(t.meta.confirmDelete(score.title))) return;
+    onClose();
+    onDeleted?.();
+    await deleteScore(score.id);
+  };
   return (
-    <Sheet title={t.meta.title} closeLabel={t.close} onClose={onClose}>
-      <Form key={score.id} score={score} tags={tags} onClose={onClose} onDeleted={onDeleted} />
+    <Sheet
+      title={t.meta.title}
+      closeLabel={t.close}
+      onClose={onClose}
+      footer={
+        <>
+          <button type="button" className="btn danger" onClick={remove}>
+            {t.meta.delete}
+          </button>
+          <span className="spacer" />
+          <button type="button" className="btn" onClick={onClose}>
+            {t.cancel}
+          </button>
+          <button type="submit" form={FORM_ID} className="btn primary">
+            {t.save}
+          </button>
+        </>
+      }
+    >
+      <Form key={score.id} score={score} tags={tags} onSaved={onClose} />
     </Sheet>
   );
 }
 
+type TextField = 'title' | 'composer' | 'key' | 'timeSignature';
+
 function Form({
   score,
   tags,
-  onClose,
-  onDeleted,
-}: Omit<Props, 'scoreId'> & { score: Score; tags: { id: string; name: string; color: string }[] }) {
-  const [startNotes, setStartNotes] = useState(formatStartNotes(score.startNotes));
-  const set = (patch: Partial<Score>) => void updateScore(score.id, patch);
-  const text = (field: 'title' | 'composer' | 'key' | 'timeSignature', label: string, ph = '') => (
+  onSaved,
+}: {
+  score: Score;
+  tags: { id: string; name: string; color: string }[];
+  onSaved: () => void;
+}) {
+  const [draft, setDraft] = useState({
+    title: score.title,
+    composer: score.composer ?? '',
+    key: score.key ?? '',
+    timeSignature: score.timeSignature ?? '',
+    bpm: score.bpm ? String(score.bpm) : '',
+    startNotes: formatStartNotes(score.startNotes),
+    tagIds: score.tagIds,
+  });
+  const set = (patch: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...patch }));
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const bpm = Number(draft.bpm);
+    const startNotes = parseStartNotes(draft.startNotes);
+    await updateScore(score.id, {
+      title: draft.title.trim() || score.title,
+      composer: draft.composer.trim() || undefined,
+      key: draft.key.trim() || undefined,
+      timeSignature: draft.timeSignature.trim() || undefined,
+      bpm: bpm ? Math.min(250, Math.max(30, Math.round(bpm))) : undefined,
+      startNotes: startNotes.length ? startNotes : undefined,
+      tagIds: draft.tagIds,
+    });
+    onSaved();
+  };
+
+  const text = (field: TextField, label: string, ph = '') => (
     <label className="field">
       <span className="field-label">{label}</span>
       <input
         className="input"
-        defaultValue={score[field] ?? ''}
+        value={draft[field]}
         placeholder={ph}
-        onBlur={(e) => {
-          const v = e.target.value.trim();
-          if (field === 'title' ? v : true) set({ [field]: v || undefined });
-        }}
+        onChange={(e) => set({ [field]: e.target.value })}
       />
     </label>
   );
 
   return (
-    <>
+    <form id={FORM_ID} className="meta-form" onSubmit={save}>
       {text('title', t.meta.name)}
       {text('composer', t.meta.composer)}
       <div className="meta-grid">
@@ -63,11 +119,8 @@ function Form({
             inputMode="numeric"
             min={30}
             max={250}
-            defaultValue={score.bpm ?? ''}
-            onBlur={(e) => {
-              const n = Number(e.target.value);
-              set({ bpm: n ? Math.min(250, Math.max(30, Math.round(n))) : undefined });
-            }}
+            value={draft.bpm}
+            onChange={(e) => set({ bpm: e.target.value })}
           />
         </label>
         {text('timeSignature', t.meta.timeSignature, '4/4')}
@@ -76,13 +129,9 @@ function Form({
         <span className="field-label">{t.meta.startNotes}</span>
         <input
           className="input"
-          value={startNotes}
-          onChange={(e) => setStartNotes(e.target.value)}
-          onBlur={() => {
-            const parsed = parseStartNotes(startNotes);
-            set({ startNotes: parsed.length ? parsed : undefined });
-            setStartNotes(formatStartNotes(parsed));
-          }}
+          value={draft.startNotes}
+          onChange={(e) => set({ startNotes: e.target.value })}
+          onBlur={() => set({ startNotes: formatStartNotes(parseStartNotes(draft.startNotes)) })}
         />
         <span className="field-hint">{t.meta.startNotesHint}</span>
       </label>
@@ -91,17 +140,18 @@ function Form({
           <span className="field-label">{t.meta.tags}</span>
           <div className="tagnav chips wrap">
             {tags.map((tag) => {
-              const on = score.tagIds.includes(tag.id);
+              const on = draft.tagIds.includes(tag.id);
               return (
                 <button
                   key={tag.id}
+                  type="button"
                   className="tag-item"
                   aria-pressed={on}
                   onClick={() =>
                     set({
                       tagIds: on
-                        ? score.tagIds.filter((id) => id !== tag.id)
-                        : [...score.tagIds, tag.id],
+                        ? draft.tagIds.filter((id) => id !== tag.id)
+                        : [...draft.tagIds, tag.id],
                     })
                   }
                 >
@@ -113,17 +163,6 @@ function Form({
           </div>
         </div>
       )}
-      <button
-        className="btn danger"
-        onClick={async () => {
-          if (!confirm(t.meta.confirmDelete(score.title))) return;
-          onClose();
-          onDeleted?.();
-          await deleteScore(score.id);
-        }}
-      >
-        {t.meta.delete}
-      </button>
-    </>
+    </form>
   );
 }

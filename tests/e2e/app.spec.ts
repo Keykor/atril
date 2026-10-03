@@ -24,10 +24,16 @@ test('buscar y editar metadatos', async ({ page }) => {
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Compositor').fill('W. A. Mozart');
   await dialog.getByLabel('Tonalidad').fill('Re M');
-  await dialog.getByLabel('Tonalidad').blur();
-  await dialog.getByRole('button', { name: 'Cerrar' }).click();
+  await dialog.getByRole('button', { name: 'Guardar' }).click();
+  await expect(dialog).toBeHidden();
   await expect(grid.getByText('W. A. Mozart')).toBeVisible();
   await expect(grid.getByText('Re M')).toBeVisible();
+
+  // Cancelar descarta lo escrito.
+  await page.getByRole('button', { name: 'Editar Ave verum corpus' }).click();
+  await dialog.getByLabel('Compositor').fill('Otro');
+  await dialog.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(grid.getByText('W. A. Mozart')).toBeVisible();
 });
 
 test('funciona sin conexión después de la primera carga', async ({
