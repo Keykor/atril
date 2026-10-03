@@ -298,7 +298,7 @@ test('símbolos: se pegan con un toque, se mueven, se borran y quedan guardados'
   await page.mouse.move(...at(0.6, 0.3), { steps: 6 });
   await page.mouse.up();
   await expect(stamps).toHaveCount(1);
-  expect(Number(await stamps.getAttribute('x'))).toBeGreaterThan(x0 + 100);
+  await expect.poll(async () => Number(await stamps.getAttribute('x'))).toBeGreaterThan(x0 + 100);
 
   // Grosor grueso = símbolo más grande.
   await page.getByRole('button', { name: 'Color y grosor' }).click();

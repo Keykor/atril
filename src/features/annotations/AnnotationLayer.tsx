@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getPageAnnotations } from '../../core/db/queries';
 import { emptyAnnotations, newId } from '../../core/db/repos';
 import type { PageAnnotations, Stamp, Stroke, TextNote } from '../../core/db/types';
@@ -43,7 +43,17 @@ export function AnnotationLayer(p: Props) {
   const [editing, setEditing] = useState<TextNote>();
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  // Lo que se ve, y desde donde arranca cada gesto: puede ir adelante de lo guardado.
   const shown = draft ?? saved;
+
+  // Lo provisorio (goma, símbolo arrastrado, trazo recién hecho) queda a la vista hasta que la
+  // base devuelve lo guardado. Si se descartara al soltar, por un instante se vería lo de antes.
+  // Cada cambio guardado lleva la hora en que se hizo; la base guarda con una hora igual o
+  // posterior. Se descarta lo provisorio solo cuando lo guardado lo alcanza, así una respuesta
+  // vieja (de un cambio anterior) no lo pisa.
+  useEffect(() => {
+    setDraft((d) => (d && saved.updatedAt >= d.updatedAt ? undefined : d));
+  }, [saved.updatedAt]);
 
   const g = useRef({
     id: -1,
@@ -57,6 +67,7 @@ export function AnnotationLayer(p: Props) {
     twoFingerAt: 0,
     twoFingerMoved: false, // los dos dedos se movieron: fue mover o hacer zoom, no "deshacer"
     textAt: null as [number, number] | null,
+    committed: false, // el gesto que termina guardó algo
   }).current;
 
   const norm = (e: { clientX: number; clientY: number }) => {
@@ -66,10 +77,10 @@ export function AnnotationLayer(p: Props) {
   const strokeWidth = () =>
     WIDTHS[p.tool.width] * (p.tool.tool === 'highlighter' ? HIGHLIGHTER_FACTOR : 1);
 
-  const cancel = () => {
+  const cancel = (keepDraft = false) => {
     g.id = -1;
     g.stampAt = g.stampDrag = null;
-    setDraft(undefined);
+    if (!keepDraft) setDraft(undefined);
     const c = canvas.current;
     c?.getContext('2d')?.clearRect(0, 0, c.width, c.height);
   };
@@ -104,12 +115,12 @@ export function AnnotationLayer(p: Props) {
     }
     root.current!.setPointerCapture(e.pointerId);
     g.id = e.pointerId;
-    g.before = saved;
-    g.erased = saved;
+    g.before = shown;
+    g.erased = shown;
     if (tool === 'stamp') {
       // Tocar un símbolo lo agarra para moverlo; tocar en otro lado pega uno nuevo al soltar.
       g.mode = 'stamp';
-      const hit = [...(saved.stamps ?? [])]
+      const hit = [...(shown.stamps ?? [])]
         .reverse()
         .find((s) => hitsStamp(s, x, y, p.aspect, STAMP_HIT));
       g.stampDrag = hit ? { id: hit.id, dx: hit.x - x, dy: hit.y - y } : null;
@@ -118,7 +129,7 @@ export function AnnotationLayer(p: Props) {
     }
     if (tool === 'eraser') {
       g.mode = 'erase';
-      g.erased = eraseAt(saved, x, y, p.aspect);
+      g.erased = eraseAt(shown, x, y, p.aspect);
       setDraft(g.erased);
       return;
     }
@@ -184,9 +195,10 @@ export function AnnotationLayer(p: Props) {
     }
     if (e.pointerId !== g.id) return;
     e.stopPropagation();
+    g.committed = false;
     if (g.mode === 'stamp') {
       if (g.stampDrag) {
-        if (g.erased !== g.before) p.onCommit(g.before, roundStamps(g.erased));
+        if (g.erased !== g.before) commit(g.before, roundStamps(g.erased));
       } else if (g.stampAt && e.type === 'pointerup') {
         const [x, y] = g.stampAt;
         const stamp: Stamp = {
@@ -197,11 +209,11 @@ export function AnnotationLayer(p: Props) {
           size: STAMP_SIZES[p.tool.width],
           color: p.tool.color,
         };
-        p.onCommit(g.before, { ...g.before, stamps: [...(g.before.stamps ?? []), stamp] });
+        commit(g.before, { ...g.before, stamps: [...(g.before.stamps ?? []), stamp] });
       }
       g.stampAt = g.stampDrag = null;
     } else if (g.mode === 'erase') {
-      if (g.erased !== g.before) p.onCommit(g.before, g.erased);
+      if (g.erased !== g.before) commit(g.before, g.erased);
     } else if (e.type === 'pointerup') {
       const tool = p.tool.tool === 'highlighter' ? 'highlighter' : 'pen';
       const stroke: Stroke = {
@@ -211,16 +223,24 @@ export function AnnotationLayer(p: Props) {
         width: strokeWidth(),
         points: g.points.map(([x, y, pr]) => [round(x), round(y), Math.round(pr * 100) / 100]),
       };
-      p.onCommit(g.before, { ...g.before, strokes: [...g.before.strokes, stroke] });
+      commit(g.before, { ...g.before, strokes: [...g.before.strokes, stroke] });
     }
-    cancel();
+    // Si se guardó algo, lo provisorio queda hasta que vuelva de la base (ver el efecto arriba).
+    cancel(g.committed);
+  };
+
+  const commit = (before: PageAnnotations, after: PageAnnotations) => {
+    const marked = { ...after, updatedAt: Date.now() };
+    p.onCommit(before, marked);
+    setDraft(marked);
+    g.committed = true;
   };
 
   const onClick = () => {
     if (!g.textAt) return;
     const [x, y] = g.textAt;
     g.textAt = null;
-    const hit = saved.texts.find(
+    const hit = shown.texts.find(
       (n) => Math.abs(n.x - x) < 0.08 && Math.abs((n.y - y) * p.aspect) < n.size,
     );
     setEditing(hit ?? { id: newId(), x, y, text: '', color: p.tool.color, size: TEXT_SIZE });
@@ -228,10 +248,10 @@ export function AnnotationLayer(p: Props) {
 
   const commitText = (text: string) => {
     if (!editing) return;
-    const others = saved.texts.filter((n) => n.id !== editing.id);
+    const others = shown.texts.filter((n) => n.id !== editing.id);
     const texts = text.trim() ? [...others, { ...editing, text: text.trim() }] : others;
-    if (texts.length !== saved.texts.length || text.trim() !== editing.text)
-      p.onCommit(saved, { ...saved, texts });
+    if (texts.length !== shown.texts.length || text.trim() !== editing.text)
+      commit(shown, { ...shown, texts });
     setEditing(undefined);
   };
 
