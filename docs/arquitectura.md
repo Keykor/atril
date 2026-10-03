@@ -53,7 +53,7 @@ Resumen:
 | `thumbnails`  | Miniatura JPEG de la primera página, por partitura                                                                                 |
 | `scores`      | Partituras: título, compositor, etiquetas, BPM, notas de inicio, ajustes de lectura propios, recorte, orden virtual, última página |
 | `tags`        | Etiquetas con color                                                                                                                |
-| `annotations` | Trazos y textos por página real del PDF (`${scoreId}:${page}`)                                                                     |
+| `annotations` | Trazos, textos y símbolos musicales por página real del PDF (`${scoreId}:${page}`)                                                 |
 | `setlists`    | Listas: ítems de tipo partitura o separador                                                                                        |
 | `bookmarks`   | Marcadores: página real y punto (`x`, `y` de 0 a 1)                                                                                |
 | `links`       | Saltos: de un punto a una página (o al punto de un marcador)                                                                       |
@@ -62,7 +62,7 @@ Resumen:
 Convenciones del modelo:
 
 - **Coordenadas normalizadas.** Todo lo que se dibuja sobre una página (trazos, textos,
-  marcadores, saltos) guarda posiciones de 0 a 1 y grosores como fracción del ancho de página.
+  símbolos, marcadores, saltos) guarda posiciones de 0 a 1 y grosores como fracción del ancho de página.
   Así se ve igual en cualquier pantalla, con zoom o con recorte.
 - **Página real, no posición.** Anotaciones y marcadores apuntan a la página real del PDF (base
   0). El orden virtual (`pageOrder`, por ejemplo 1, 2, 3, 2, 3) solo cambia qué se muestra; si se
@@ -94,17 +94,18 @@ render cuando la memoria total de canvas pasa los ~384 MB.
 
 ## Decisiones y por qué
 
-| Decisión                                        | Por qué                                                                                                                          | Alternativa descartada                                               |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| PWA en vez de app nativa                        | Se instala desde un link, sin tiendas ni cuentas de desarrollador pagas; una actualización llega a todos al publicar             | Capacitor o Flutter: USD 99/año para iOS y builds que vencen         |
-| Bytes de PDF como `ArrayBuffer` en tabla aparte | WebKit falla al guardar `Blob` en IndexedDB en algunos contextos; además las consultas de metadatos no cargan los PDFs           | `Blob` dentro de la misma fila                                       |
-| Consultas en `core/db/queries.ts`               | Una sola fuente de verdad para cada consulta, testeable sin pantalla, y una regla de lint que la hace cumplir                    | Consultas dentro de cada pantalla                                    |
-| Router por hash (`#/score/…`)                   | Funciona en GitHub Pages sin configurar fallback, y el botón atrás de Android anda                                               | Librería de rutas                                                    |
-| CSS plano con variables                         | Cinco pantallas no justifican un framework de estilos                                                                            | Tailwind u otro                                                      |
-| Fuentes empaquetadas con `@fontsource`          | Google Fonts por CDN rompe el modo sin conexión                                                                                  | CDN                                                                  |
-| Orden de páginas como texto ("1, 2, 3, 2")      | Las miniaturas de partituras casi no se distinguen y el texto deja repetir páginas fácil                                         | Arrastrar miniaturas                                                 |
-| Drive sin backend                               | Sin servidor que mantener; el scope `drive.file` solo ve los archivos que crea Atril                                             | Backend con refresh tokens (el token dura ~1 h y hay que reconectar) |
-| Versión nueva con aviso, no automática          | La versión nueva se descarga sola pero espera a que el usuario toque "Actualizar": recargar sola podría pasar en pleno concierto | Activarla apenas se descarga (`skipWaiting` al instalar)             |
+| Decisión                                         | Por qué                                                                                                                          | Alternativa descartada                                               |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| PWA en vez de app nativa                         | Se instala desde un link, sin tiendas ni cuentas de desarrollador pagas; una actualización llega a todos al publicar             | Capacitor o Flutter: USD 99/año para iOS y builds que vencen         |
+| Bytes de PDF como `ArrayBuffer` en tabla aparte  | WebKit falla al guardar `Blob` en IndexedDB en algunos contextos; además las consultas de metadatos no cargan los PDFs           | `Blob` dentro de la misma fila                                       |
+| Consultas en `core/db/queries.ts`                | Una sola fuente de verdad para cada consulta, testeable sin pantalla, y una regla de lint que la hace cumplir                    | Consultas dentro de cada pantalla                                    |
+| Router por hash (`#/score/…`)                    | Funciona en GitHub Pages sin configurar fallback, y el botón atrás de Android anda                                               | Librería de rutas                                                    |
+| CSS plano con variables                          | Cinco pantallas no justifican un framework de estilos                                                                            | Tailwind u otro                                                      |
+| Fuentes empaquetadas con `@fontsource`           | Google Fonts por CDN rompe el modo sin conexión                                                                                  | CDN                                                                  |
+| Orden de páginas como texto ("1, 2, 3, 2")       | Las miniaturas de partituras casi no se distinguen y el texto deja repetir páginas fácil                                         | Arrastrar miniaturas                                                 |
+| Drive sin backend                                | Sin servidor que mantener; el scope `drive.file` solo ve los archivos que crea Atril                                             | Backend con refresh tokens (el token dura ~1 h y hay que reconectar) |
+| Versión nueva con aviso, no automática           | La versión nueva se descarga sola pero espera a que el usuario toque "Actualizar": recargar sola podría pasar en pleno concierto | Activarla apenas se descarga (`skipWaiting` al instalar)             |
+| Símbolos musicales con la fuente Bravura (SMuFL) | Se ven como en una partitura impresa; la fuente trae la caja de cada glifo, así se anclan bien y se pueden tocar                 | Dibujar cada símbolo a mano en SVG                                   |
 
 Una decisión de arquitectura nueva se agrega a esta tabla en el mismo PR que la introduce. La
 discusión completa queda en la descripción de ese PR.

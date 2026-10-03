@@ -1,11 +1,13 @@
 import { getStroke } from 'perfect-freehand';
 import type { PageAnnotations, Stroke } from '../../core/db/types';
+import { hitsStamp } from './symbols';
 
-export type Tool = 'pen' | 'highlighter' | 'text' | 'eraser';
+export type Tool = 'pen' | 'highlighter' | 'text' | 'eraser' | 'stamp';
 export interface ToolState {
   tool: Tool;
   color: string;
-  width: number; // índice en WIDTHS
+  width: number; // índice en WIDTHS (y en STAMP_SIZES para los símbolos)
+  symbol: string; // símbolo elegido para la herramienta 'stamp'
 }
 
 export const COLORS = ['#17181C', '#D7352B', '#2950C7', '#15803D', '#FFD43B'] as const;
@@ -62,7 +64,10 @@ export function eraseAt(a: PageAnnotations, x: number, y: number, aspect: number
         Math.abs((y - n.y) * aspect + n.size / 2) <= n.size
       ),
   );
-  return strokes.length === a.strokes.length && texts.length === a.texts.length
+  const stamps = a.stamps?.filter((s) => !hitsStamp(s, x, y, aspect, ERASER_RADIUS));
+  return strokes.length === a.strokes.length &&
+    texts.length === a.texts.length &&
+    (stamps?.length ?? 0) === (a.stamps?.length ?? 0)
     ? a
-    : { ...a, strokes, texts };
+    : { ...a, strokes, texts, stamps };
 }

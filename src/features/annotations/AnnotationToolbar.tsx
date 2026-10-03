@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Icon, type IconName } from '../../ui/Icon';
 import { t } from '../../app/strings';
 import { COLORS, WIDTHS, type Tool, type ToolState } from './strokes';
+import { SYMBOL_GROUPS, SYMBOLS, symbolById } from './symbols';
 import './annotations.css';
 
 interface Props {
@@ -16,17 +17,23 @@ interface Props {
   onDone: () => void;
 }
 
-const TOOLS: { id: Tool; icon: IconName }[] = [
+const TOOLS: { id: Exclude<Tool, 'stamp'>; icon: IconName }[] = [
   { id: 'pen', icon: 'pen' },
   { id: 'highlighter', icon: 'highlighter' },
   { id: 'text', icon: 'text' },
   { id: 'eraser', icon: 'eraser' },
 ];
 
-/** Una sola fila, para tapar lo menos posible. Color, grosor y "solo lápiz" van en un desplegable. */
+/**
+ * Una sola fila, para tapar lo menos posible. Color, grosor y "solo lápiz" van en un desplegable;
+ * los símbolos musicales, en otro.
+ */
 export function AnnotationToolbar(p: Props) {
   const a = t.annotate;
-  const [styleOpen, setStyleOpen] = useState(false);
+  const [open, setOpen] = useState<'style' | 'symbols' | null>(null);
+  const toggle = (which: 'style' | 'symbols') => setOpen(open === which ? null : which);
+  const symbol = symbolById(p.tool.symbol);
+
   return (
     <div
       className="annotation-toolbar"
@@ -40,16 +47,33 @@ export function AnnotationToolbar(p: Props) {
           className="icon-btn"
           aria-label={a.tools[id]}
           aria-pressed={p.tool.tool === id}
-          onClick={() => p.onTool({ ...p.tool, tool: id })}
+          onClick={() => {
+            p.onTool({ ...p.tool, tool: id });
+            setOpen(null);
+          }}
         >
           <Icon name={icon} size={22} />
         </button>
       ))}
       <button
+        className="icon-btn at-symbol-tool"
+        aria-label={a.tools.stamp}
+        aria-pressed={p.tool.tool === 'stamp'}
+        aria-expanded={open === 'symbols'}
+        onClick={() => {
+          p.onTool({ ...p.tool, tool: 'stamp' });
+          toggle('symbols');
+        }}
+      >
+        <span className="music-glyph" aria-hidden="true">
+          {symbol?.char}
+        </span>
+      </button>
+      <button
         className="at-color"
         aria-label={a.style}
-        aria-expanded={styleOpen}
-        onClick={() => setStyleOpen(!styleOpen)}
+        aria-expanded={open === 'style'}
+        onClick={() => toggle('style')}
       >
         <span style={{ background: p.tool.color }} />
       </button>
@@ -65,7 +89,7 @@ export function AnnotationToolbar(p: Props) {
         <span>{t.done}</span>
       </button>
 
-      {styleOpen && (
+      {open === 'style' && (
         <div className="popover at-style">
           <div className="at-group" role="group" aria-label={a.color}>
             {COLORS.map((color, i) => (
@@ -102,6 +126,36 @@ export function AnnotationToolbar(p: Props) {
             <Icon name={p.penOnly ? 'check' : 'pen'} size={16} />
             {t.settings.penOnly}
           </button>
+        </div>
+      )}
+
+      {open === 'symbols' && (
+        <div className="popover at-symbols" role="dialog" aria-label={a.symbols}>
+          {SYMBOL_GROUPS.map((group) => (
+            <div key={group} className="at-symbol-group" role="group" aria-label={a.groups[group]}>
+              <span>{a.groups[group]}</span>
+              <div>
+                {SYMBOLS.filter((s) => s.group === group).map((s) => (
+                  <button
+                    key={s.id}
+                    className="at-symbol"
+                    data-group={s.group}
+                    aria-label={a.symbolNames[s.id as keyof typeof a.symbolNames]}
+                    aria-pressed={p.tool.tool === 'stamp' && p.tool.symbol === s.id}
+                    onClick={() => {
+                      p.onTool({ ...p.tool, tool: 'stamp', symbol: s.id });
+                      setOpen(null);
+                    }}
+                  >
+                    <span className="music-glyph" aria-hidden="true">
+                      {s.char}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+          <p className="at-symbols-hint">{a.symbolsHint}</p>
         </div>
       )}
     </div>

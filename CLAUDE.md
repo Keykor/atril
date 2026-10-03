@@ -57,7 +57,7 @@ Además:
   frameworks de CSS. Objetivos táctiles de 44–48 px como mínimo.
 - Accesibilidad: `<button>` y `<a>` reales, `aria-label` en botones de solo ícono. Los e2e
   buscan por rol y nombre, así que un nombre accesible roto rompe tests.
-- Lo que se dibuja sobre una página (trazos, textos, marcadores, saltos) se guarda normalizado
+- Lo que se dibuja sobre una página (trazos, textos, símbolos, marcadores, saltos) se guarda normalizado
   (0..1, grosores como fracción del ancho) y por **página real** del PDF, no por posición del
   orden virtual. El PDF original nunca se modifica.
 - Estado: no hay store global. Base → `useLiveQuery`; estado de pantalla → `useState`.
