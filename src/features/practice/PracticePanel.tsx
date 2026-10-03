@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { playNote } from '../../core/audio/engine';
 import { beatsOf, Metronome, tapTempo } from '../../core/audio/metronome';
-import { midiToLabel, parseNote } from '../../core/audio/notes';
+import { midiToLabel, midiToSci, parseNote } from '../../core/audio/notes';
 import type { Score, StartNotes } from '../../core/db/types';
 import { Icon } from '../../ui/Icon';
 import { t } from '../../app/strings';
@@ -25,7 +25,7 @@ export function playStartNotes(groups: StartNotes[] = []) {
 
 interface Props {
   score: Score;
-  onChange: (patch: Pick<Partial<Score>, 'bpm' | 'timeSignature'>) => void;
+  onChange: (patch: Pick<Partial<Score>, 'bpm' | 'timeSignature' | 'startNotes'>) => void;
   onClose: () => void;
 }
 
@@ -43,7 +43,10 @@ export function PracticePanel({ score, onChange, onClose }: Props) {
         <Icon name="close" />
       </button>
       <MetronomeBox score={score} onChange={onChange} />
-      <KeyboardBox startNotes={score.startNotes} />
+      <KeyboardBox
+        startNotes={score.startNotes}
+        onStartNotes={(startNotes) => onChange({ startNotes })}
+      />
     </section>
   );
 }
@@ -148,8 +151,20 @@ function MetronomeBox({ score, onChange }: Pick<Props, 'score' | 'onChange'>) {
   );
 }
 
-function KeyboardBox({ startNotes }: { startNotes?: StartNotes[] }) {
+function KeyboardBox({
+  startNotes,
+  onStartNotes,
+}: {
+  startNotes?: StartNotes[];
+  onStartNotes: (notes: StartNotes[] | undefined) => void;
+}) {
   const [octave, setOctave] = useState(4);
+  // Grabando: las teclas que se tocan pasan a ser las notas de inicio de la partitura.
+  const [recording, setRecording] = useState<number[]>();
+  const press = (midi: number) => {
+    playNote(midi);
+    if (recording) setRecording([...recording, midi]);
+  };
   const first = (octave + 1) * 12; // Do de la octava
   const keys = Array.from({ length: 24 }, (_, i) => first + i);
   const whites = keys.filter((m) => !BLACK.has(m % 12));
@@ -188,7 +203,7 @@ function KeyboardBox({ startNotes }: { startNotes?: StartNotes[] }) {
             key={midi}
             className="kb-white"
             aria-label={label(midi)}
-            onPointerDown={() => playNote(midi)}
+            onPointerDown={() => press(midi)}
           >
             {midi % 12 === 0 && <span>{midiToLabel(midi)}</span>}
           </button>
@@ -204,27 +219,60 @@ function KeyboardBox({ startNotes }: { startNotes?: StartNotes[] }) {
                 className="kb-black"
                 style={{ left: `${(whiteIndex / whites.length) * 100}%` }}
                 aria-label={label(midi)}
-                onPointerDown={() => playNote(midi)}
+                onPointerDown={() => press(midi)}
               />
             );
           })}
       </div>
-      {startNotes?.length ? (
-        <div className="kb-start">
-          <span>{p.startNotes}</span>
-          {startNotes.flatMap((g, gi) =>
-            g.notes.map((n, ni) => {
-              const midi = parseNote(n);
-              return midi === undefined ? null : (
-                <button key={`${gi}-${ni}`} className="btn" onPointerDown={() => playNote(midi)}>
-                  {g.label ? `${g.label} · ` : ''}
-                  {midiToLabel(midi)}
-                </button>
-              );
-            }),
-          )}
-        </div>
-      ) : null}
+      <div className="kb-start">
+        <span>{p.startNotes}</span>
+        {recording ? (
+          <>
+            {recording.length === 0 && <em>{p.recordHint}</em>}
+            {recording.map((midi, i) => (
+              <span key={i} className="chip">
+                {midiToLabel(midi)}
+              </span>
+            ))}
+            <button
+              className="btn primary"
+              disabled={recording.length === 0}
+              onClick={() => {
+                // Cada nota en su grupo: al dar el tono suenan una tras otra, en este orden.
+                onStartNotes(recording.map((midi) => ({ notes: [midiToSci(midi)] })));
+                setRecording(undefined);
+              }}
+            >
+              {t.save}
+            </button>
+            <button className="btn ghost" onClick={() => setRecording(undefined)}>
+              {t.cancel}
+            </button>
+          </>
+        ) : (
+          <>
+            {startNotes?.flatMap((g, gi) =>
+              g.notes.map((n, ni) => {
+                const midi = parseNote(n);
+                return midi === undefined ? null : (
+                  <button key={`${gi}-${ni}`} className="btn" onPointerDown={() => playNote(midi)}>
+                    {g.label ? `${g.label} · ` : ''}
+                    {midiToLabel(midi)}
+                  </button>
+                );
+              }),
+            )}
+            <button className="btn ghost" onClick={() => setRecording([])}>
+              {startNotes?.length ? p.recordAgain : p.record}
+            </button>
+            {startNotes?.length ? (
+              <button className="btn ghost" onClick={() => onStartNotes(undefined)}>
+                {p.clearStartNotes}
+              </button>
+            ) : null}
+          </>
+        )}
+      </div>
     </div>
   );
 }

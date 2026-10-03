@@ -1,4 +1,5 @@
-import { getSetting, setSetting } from '../db/repos';
+import { getSetting } from '../db/queries';
+import { setSetting } from '../db/repos';
 import { regenerateThumbnails } from '../pdf/import';
 import { exportBackup, importBackup } from './atril';
 

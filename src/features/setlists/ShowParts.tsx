@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../../core/db/db';
+import { getScore, listScores } from '../../core/db/queries';
 import type { SetList } from '../../core/db/types';
 import { Icon } from '../../ui/Icon';
 import { Sheet } from '../../ui/Sheet';
@@ -7,7 +7,7 @@ import { t } from '../../app/strings';
 import { nextInShow, scoreNumber } from './show';
 import './setlists.css';
 
-const describe = (s?: { title: string; composer?: string; key?: string }) =>
+const describe = (s?: { title: string; composer?: string; key?: string } | null) =>
   s ? [s.title, s.composer, s.key].filter(Boolean).join(' · ') : t.lists.missingScore;
 
 /** Progreso de la lista: una barrita por obra. */
@@ -33,10 +33,7 @@ export function ShowNext({
   onNext: (index: number) => void;
 }) {
   const { breaks, next } = nextInShow(list, index);
-  const score = useLiveQuery(
-    () => (next ? db.scores.get(next.scoreId) : undefined),
-    [next?.scoreId],
-  );
+  const score = useLiveQuery(() => (next ? getScore(next.scoreId) : undefined), [next?.scoreId]);
   const s = t.lists;
   if (!next)
     return (
@@ -73,7 +70,7 @@ export function ShowIndex({
   onPick: (index: number) => void;
   onClose: () => void;
 }) {
-  const scores = useLiveQuery(() => db.scores.toArray(), []);
+  const scores = useLiveQuery(listScores, []);
   const byId = new Map((scores ?? []).map((sc) => [sc.id, sc]));
   let n = 0;
   return (

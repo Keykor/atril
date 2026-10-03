@@ -1,10 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState } from 'react';
-import { db } from '../../core/db/db';
+import { getThumbnail } from '../../core/db/queries';
 
 /** Miniatura de una partitura (primera página), desde la tabla thumbnails. */
 export function Thumb({ scoreId }: { scoreId: string }) {
-  const data = useLiveQuery(() => db.thumbnails.get(scoreId), [scoreId])?.data;
+  const data = useLiveQuery(() => getThumbnail(scoreId), [scoreId]);
   const [url, setUrl] = useState<string>();
   useEffect(() => {
     if (!data) return setUrl(undefined);

@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useRef, useState } from 'react';
-import { db, newId } from '../../core/db/db';
-import { annotationId, emptyAnnotations } from '../../core/db/repos';
+import { getPageAnnotations } from '../../core/db/queries';
+import { emptyAnnotations, newId } from '../../core/db/repos';
 import type { PageAnnotations, Stroke, TextNote } from '../../core/db/types';
 import {
   eraseAt,
@@ -36,7 +36,7 @@ interface Props {
  */
 export function AnnotationLayer(p: Props) {
   const saved =
-    useLiveQuery(() => db.annotations.get(annotationId(p.scoreId, p.page)), [p.scoreId, p.page]) ??
+    useLiveQuery(() => getPageAnnotations(p.scoreId, p.page), [p.scoreId, p.page]) ??
     emptyAnnotations(p.scoreId, p.page);
   const [draft, setDraft] = useState<PageAnnotations>(); // mientras se usa la goma
   const [editing, setEditing] = useState<TextNote>();

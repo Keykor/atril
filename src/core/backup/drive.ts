@@ -1,5 +1,6 @@
 import Dexie from 'dexie';
-import { getSetting, setSetting } from '../db/repos';
+import { getSetting } from '../db/queries';
+import { setSetting } from '../db/repos';
 import { exportBackup } from './atril';
 import { backupFileName, importFromFile, markBackedUp } from './files';
 

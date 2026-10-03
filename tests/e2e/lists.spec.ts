@@ -34,13 +34,21 @@ test('armar una lista, reordenarla y recorrerla en modo show solo con toques', a
   const tapRight = () => page.mouse.click(box.x + box.width * 0.9, box.y + box.height / 2);
   await tapRight();
   await expect(page.locator('.page-indicator')).toHaveText('2 / 2');
+  // El aviso no aparece solo: no tapa la última página mientras se lee.
+  await expect(page.locator('.show-next')).toHaveCount(0);
+  await tapRight();
   await expect(page.locator('.show-next')).toContainText('Intervalo');
   await expect(page.locator('.show-next')).toContainText('Después, Cancion de ejemplo');
   await tapRight();
   await expect(page.locator('.page-indicator')).toHaveText('1 / 3');
   await expect(page.getByLabel('obra 2 de 2')).toBeVisible();
+  await expect(page.locator('.show-next')).toHaveCount(0);
 
-  // En modo show anotar arranca bloqueado.
+  // En modo show la barra de abajo arranca bloqueada: hace falta un toque de confirmación.
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  await expect(page.getByRole('button', { name: 'Anotar bloqueado' })).toBeVisible();
+  const tools = page.locator('.reader-bottom');
+  await expect(tools.getByRole('button', { name: 'Anotar' })).toHaveCount(0);
+  await tools.getByRole('button', { name: /Herramientas bloqueadas/ }).click();
+  await expect(tools.getByRole('button', { name: 'Anotar' })).toBeVisible();
+  await expect(tools.getByRole('button', { name: 'Ensayo' })).toBeVisible();
 });

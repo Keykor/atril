@@ -111,6 +111,7 @@ export interface Bookmark {
   id: ID;
   scoreId: ID;
   page: number;
+  x?: number; // 0..1 en la página real; ausente en marcadores viejos (solo de página)
   y: number;
   label: string;
 }

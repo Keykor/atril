@@ -7,10 +7,11 @@ interface Props {
   closeLabel: string;
   onClose: () => void;
   children: ReactNode;
+  modal?: boolean; // false: sin fondo oscuro y más baja, para ver la partitura mientras se ajusta
 }
 
 /** Hoja inferior modal (en pantallas anchas queda centrada abajo). */
-export function Sheet({ title, closeLabel, onClose, children }: Props) {
+export function Sheet({ title, closeLabel, onClose, children, modal = true }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -18,7 +19,10 @@ export function Sheet({ title, closeLabel, onClose, children }: Props) {
   }, [onClose]);
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div
+      className={`sheet-backdrop${modal ? '' : ' passive'}`}
+      onClick={modal ? onClose : undefined}
+    >
       <section
         className="sheet"
         role="dialog"

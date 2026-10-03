@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import { db } from '../core/db/db';
+import { getSetList } from '../core/db/queries';
 import { LibraryScreen } from '../features/library/LibraryScreen';
 import { TagNav } from '../features/library/TagNav';
 import { ListsScreen } from '../features/setlists/ListsScreen';
@@ -64,7 +64,7 @@ export function App() {
 
 /** Modo show: abre el ítem `index` de una lista. */
 function ShowRoute({ listId, index }: { listId: string; index: number }) {
-  const list = useLiveQuery(() => db.setlists.get(listId).then((l) => l ?? null), [listId]);
+  const list = useLiveQuery(() => getSetList(listId), [listId]);
   if (list === undefined) return null;
   const item = list?.items[index];
   if (!list || item?.type !== 'score')
