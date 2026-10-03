@@ -9,7 +9,8 @@ import {
   touchScore,
   updateScore,
 } from '../core/db/repos';
-import type { ReadingPrefs, SetList } from '../core/db/types';
+import { addLink } from '../core/db/repos';
+import type { JumpLink, ReadingPrefs, SetList } from '../core/db/types';
 import { pageSizes } from '../core/pdf/render';
 import { keepAwake } from '../core/wakeLock';
 import { AnnotationLayer } from '../features/annotations/AnnotationLayer';
@@ -18,6 +19,9 @@ import { COLORS, type ToolState } from '../features/annotations/strokes';
 import { useAnnotationHistory } from '../features/annotations/useHistory';
 import { MetaSheet } from '../features/library/MetaSheet';
 import { PracticePanel } from '../features/practice/PracticePanel';
+import { BookmarksSheet } from '../features/reader/BookmarksSheet';
+import { JumpMarkers } from '../features/reader/JumpMarkers';
+import { JumpTargetSheet, MoreSheet } from '../features/reader/MoreSheet';
 import { PageStrip } from '../features/reader/PageStrip';
 import { Reader } from '../features/reader/Reader';
 import { ReadingSheet } from '../features/reader/ReadingSheet';
@@ -29,7 +33,7 @@ import { PlayStartNotes } from './reader-tools';
 import { back, navigate } from './router';
 import { t } from './strings';
 
-type SheetName = 'reading' | 'meta' | 'index' | null;
+type SheetName = 'reading' | 'meta' | 'index' | 'more' | 'bookmarks' | null;
 
 interface Props {
   scoreId: string;
@@ -49,6 +53,10 @@ export function ScoreScreen({ scoreId, show }: Props) {
   const [annotating, setAnnotating] = useState(false);
   const [locked, setLocked] = useState(!!show); // en modo show no se raya en escena
   const [practice, setPractice] = useState(false);
+  const [autoscrolling, setAutoscrolling] = useState(false);
+  const [returnTo, setReturnTo] = useState<View>(); // desde dónde se saltó, para volver
+  // Salto nuevo: primero se toca el origen en la página, después se elige el destino.
+  const [jumpDraft, setJumpDraft] = useState<'placing' | JumpLink['from']>();
   const [annotationsVisible, setAnnotationsVisible] = useState(true);
   const [tool, setTool] = useState<ToolState>({ tool: 'pen', color: COLORS[1], width: 1 });
   const history = useAnnotationHistory();
@@ -143,6 +151,23 @@ export function ScoreScreen({ scoreId, show }: Props) {
     twoUpStep: prefs.twoUpStep,
   });
   const work = show && scoreNumber(show.list, show.index);
+  const currentPage = order[view.pos];
+  const vertical = prefs.mode === 'vertical';
+
+  const goToPage = (page: number) => {
+    const target = order.indexOf(page);
+    if (target >= 0) setView({ pos: target, half: false });
+    return target >= 0;
+  };
+  const jump = (link: JumpLink) => {
+    const from = view;
+    if (goToPage(link.to.page)) setReturnTo(from);
+  };
+  const startAutoscroll = () => {
+    setSheet(null);
+    setBars(false);
+    setAutoscrolling(true);
+  };
 
   return (
     <div className={`score-screen${annotationsVisible ? '' : ' annotations-hidden'}`}>
@@ -156,23 +181,69 @@ export function ScoreScreen({ scoreId, show }: Props) {
         onView={setView}
         onCenterTap={() => !annotating && setBars((b) => !b)}
         onEdge={onEdge}
+        autoscroll={autoscrolling && vertical ? (score.autoscrollSpeed ?? 30) : undefined}
+        interceptTap={() => {
+          if (!autoscrolling) return false;
+          setAutoscrolling(false); // un toque pausa el autoscroll
+          return true;
+        }}
         overlay={(page) => (
-          <AnnotationLayer
-            scoreId={score.id}
-            page={page}
-            aspect={sizes[page].h / sizes[page].w}
-            active={annotating}
-            locked={locked}
-            penOnly={penOnly}
-            tool={tool}
-            label={t.annotate.layer}
-            textPlaceholder={t.annotate.textPlaceholder}
-            onPenStart={startAnnotating}
-            onCommit={history.commit}
-            onUndo={history.undo}
-          />
+          <>
+            <AnnotationLayer
+              scoreId={score.id}
+              page={page}
+              aspect={sizes[page].h / sizes[page].w}
+              active={annotating}
+              locked={locked}
+              penOnly={penOnly}
+              tool={tool}
+              label={t.annotate.layer}
+              textPlaceholder={t.annotate.textPlaceholder}
+              onPenStart={startAnnotating}
+              onCommit={history.commit}
+              onUndo={history.undo}
+            />
+            <JumpMarkers
+              scoreId={score.id}
+              page={page}
+              placing={jumpDraft === 'placing'}
+              jumpLabel={t.more.jumpTo}
+              placeLabel={t.more.placeJumpLabel}
+              onJump={jump}
+              onPlace={setJumpDraft}
+            />
+          </>
         )}
       />
+
+      {jumpDraft === 'placing' && (
+        <div className="reader-float" onPointerDown={(e) => e.stopPropagation()}>
+          {t.more.placeJump}
+          <button className="btn" onClick={() => setJumpDraft(undefined)}>
+            {t.cancel}
+          </button>
+        </div>
+      )}
+      {returnTo && !annotating && (
+        <div className="reader-float" onPointerDown={(e) => e.stopPropagation()}>
+          {t.more.jumped(currentPage + 1)}
+          <button
+            className="btn"
+            onClick={() => {
+              setView(returnTo);
+              setReturnTo(undefined);
+            }}
+          >
+            <Icon name="undo" size={18} />
+            {t.more.jumpBack}
+          </button>
+        </div>
+      )}
+      {autoscrolling && vertical && (
+        <div className="reader-float" style={{ pointerEvents: 'none', paddingRight: 16 }}>
+          {t.more.autoscrollOn}
+        </div>
+      )}
 
       {annotating && (
         <AnnotationToolbar
@@ -240,8 +311,15 @@ export function ScoreScreen({ scoreId, show }: Props) {
             </button>
             <button
               className="icon-btn"
+              aria-label={t.reader.bookmarks}
+              onClick={() => setSheet('bookmarks')}
+            >
+              <Icon name="bookmark" size={22} />
+            </button>
+            <button
+              className="icon-btn"
               aria-label={t.reader.more}
-              onClick={() => setSheet('meta')}
+              onClick={() => setSheet('more')}
             >
               <Icon name="more" size={22} />
             </button>
@@ -256,6 +334,12 @@ export function ScoreScreen({ scoreId, show }: Props) {
             />
             <div className="reader-divider" />
             <div className="reader-tools">
+              {vertical && (
+                <button onClick={startAutoscroll}>
+                  <Icon name="play" size={26} />
+                  {t.more.autoscroll}
+                </button>
+              )}
               <button
                 onClick={() => {
                   setPractice(true);
@@ -308,6 +392,45 @@ export function ScoreScreen({ scoreId, show }: Props) {
           onPick={(i) => {
             setSheet(null);
             goShow(i);
+          }}
+        />
+      )}
+      {sheet === 'more' && (
+        <MoreSheet
+          score={score}
+          pageCount={sizes.length}
+          order={order}
+          currentPage={currentPage}
+          vertical={vertical}
+          onPatch={(patch) => void updateScore(score.id, patch)}
+          onEditMeta={() => setSheet('meta')}
+          onAutoscroll={startAutoscroll}
+          onAddJump={() => {
+            setSheet(null);
+            setBars(false);
+            setJumpDraft('placing');
+          }}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet === 'bookmarks' && (
+        <BookmarksSheet
+          scoreId={score.id}
+          currentPage={currentPage}
+          onClose={() => setSheet(null)}
+          onJump={(page) => {
+            setSheet(null);
+            goToPage(page);
+          }}
+        />
+      )}
+      {jumpDraft && jumpDraft !== 'placing' && (
+        <JumpTargetSheet
+          pageCount={sizes.length}
+          onClose={() => setJumpDraft(undefined)}
+          onPick={(page) => {
+            void addLink({ scoreId: score.id, from: jumpDraft, to: { page, y: 0 } });
+            setJumpDraft(undefined);
           }}
         />
       )}

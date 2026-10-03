@@ -109,5 +109,6 @@ test('metrónomo y teclado: el panel abre, marca los tiempos y guarda el tempo',
   await panel.getByRole('button', { name: 'Cerrar herramientas' }).click();
   await tapAt(page, 0.5);
   await page.getByRole('button', { name: 'Más opciones' }).click();
+  await page.getByRole('button', { name: 'Datos de la partitura' }).click();
   await expect(page.getByRole('dialog').getByLabel('BPM')).toHaveValue('73');
 });

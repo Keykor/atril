@@ -307,3 +307,121 @@
     grid-template-columns: 1fr;
   }
 }
+
+.jump-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.jump-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: var(--tap);
+  height: var(--tap);
+  padding: 0 10px;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  background: rgba(232, 237, 250, 0.9);
+  color: var(--accent-dark);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: auto;
+}
+.jump-place {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 3px dashed var(--accent);
+  background: rgba(41, 80, 199, 0.08);
+  cursor: crosshair;
+  pointer-events: auto;
+}
+.reader-float {
+  position: absolute;
+  left: 50%;
+  top: calc(16px + env(safe-area-inset-top));
+  transform: translateX(-50%);
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 6px 6px 16px;
+  border-radius: 999px;
+  background: var(--bar);
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 6px 24px rgba(23, 24, 28, 0.25);
+  white-space: nowrap;
+}
+.reader-float .btn {
+  min-height: var(--tap);
+  border-radius: 999px;
+}
+.crop-sliders {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 24px;
+  align-items: center;
+}
+.crop-sliders label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.crop-sliders label span {
+  width: 72px;
+  flex-shrink: 0;
+}
+.crop-sliders input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  accent-color: var(--accent);
+}
+.sheet .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.row-form {
+  display: flex;
+  gap: 8px;
+}
+.row-form .input {
+  flex: 1;
+}
+.plain-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.plain-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  border-top: 1px solid var(--border);
+}
+.plain-list li > span {
+  flex: 1;
+}
+.bookmark-go {
+  flex: 1;
+  min-height: 52px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bookmark-go span {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-3);
+}
