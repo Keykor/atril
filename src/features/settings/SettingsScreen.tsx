@@ -22,7 +22,6 @@ export function SettingsScreen({ children }: { children?: ReactNode }) {
         />
       </section>
       {children}
-      <p className="settings-version">{t.settings.version(__APP_VERSION__)}</p>
     </div>
   );
 }

@@ -34,10 +34,6 @@
   flex-wrap: wrap;
   gap: 8px;
 }
-.settings-version {
-  font-size: 13px;
-  color: var(--text-3);
-}
 .card .status {
   font-weight: 600;
   color: var(--text);
@@ -133,4 +129,11 @@
 }
 .reminder.info {
   padding: 4px 4px 4px 16px;
+}
+.update-banner {
+  padding: 6px 6px 6px 16px;
+  gap: 12px;
+}
+.update-banner span {
+  flex: 1;
 }

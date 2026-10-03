@@ -14,7 +14,7 @@ src/
   core/       Todo lo que toca APIs del navegador: db (Dexie), pdf (pdf.js), backup (.atril y
               Drive), audio (Web Audio), wakeLock, install.
   ui/         Componentes compartidos sin lógica de dominio (Icon, Sheet, controles).
-  sw.ts       Service worker: precache y Web Share Target.
+  sw.ts       Service worker: precache, Web Share Target y espera de versiones nuevas.
 ```
 
 Reglas de dependencia, que hace cumplir ESLint (`no-restricted-imports` en `eslint.config.js`):
@@ -94,16 +94,17 @@ render cuando la memoria total de canvas pasa los ~384 MB.
 
 ## Decisiones y por qué
 
-| Decisión                                        | Por qué                                                                                                                | Alternativa descartada                                               |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| PWA en vez de app nativa                        | Se instala desde un link, sin tiendas ni cuentas de desarrollador pagas; una actualización llega a todos al publicar   | Capacitor o Flutter: USD 99/año para iOS y builds que vencen         |
-| Bytes de PDF como `ArrayBuffer` en tabla aparte | WebKit falla al guardar `Blob` en IndexedDB en algunos contextos; además las consultas de metadatos no cargan los PDFs | `Blob` dentro de la misma fila                                       |
-| Consultas en `core/db/queries.ts`               | Una sola fuente de verdad para cada consulta, testeable sin pantalla, y una regla de lint que la hace cumplir          | Consultas dentro de cada pantalla                                    |
-| Router por hash (`#/score/…`)                   | Funciona en GitHub Pages sin configurar fallback, y el botón atrás de Android anda                                     | Librería de rutas                                                    |
-| CSS plano con variables                         | Cinco pantallas no justifican un framework de estilos                                                                  | Tailwind u otro                                                      |
-| Fuentes empaquetadas con `@fontsource`          | Google Fonts por CDN rompe el modo sin conexión                                                                        | CDN                                                                  |
-| Orden de páginas como texto ("1, 2, 3, 2")      | Las miniaturas de partituras casi no se distinguen y el texto deja repetir páginas fácil                               | Arrastrar miniaturas                                                 |
-| Drive sin backend                               | Sin servidor que mantener; el scope `drive.file` solo ve los archivos que crea Atril                                   | Backend con refresh tokens (el token dura ~1 h y hay que reconectar) |
+| Decisión                                        | Por qué                                                                                                                          | Alternativa descartada                                               |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| PWA en vez de app nativa                        | Se instala desde un link, sin tiendas ni cuentas de desarrollador pagas; una actualización llega a todos al publicar             | Capacitor o Flutter: USD 99/año para iOS y builds que vencen         |
+| Bytes de PDF como `ArrayBuffer` en tabla aparte | WebKit falla al guardar `Blob` en IndexedDB en algunos contextos; además las consultas de metadatos no cargan los PDFs           | `Blob` dentro de la misma fila                                       |
+| Consultas en `core/db/queries.ts`               | Una sola fuente de verdad para cada consulta, testeable sin pantalla, y una regla de lint que la hace cumplir                    | Consultas dentro de cada pantalla                                    |
+| Router por hash (`#/score/…`)                   | Funciona en GitHub Pages sin configurar fallback, y el botón atrás de Android anda                                               | Librería de rutas                                                    |
+| CSS plano con variables                         | Cinco pantallas no justifican un framework de estilos                                                                            | Tailwind u otro                                                      |
+| Fuentes empaquetadas con `@fontsource`          | Google Fonts por CDN rompe el modo sin conexión                                                                                  | CDN                                                                  |
+| Orden de páginas como texto ("1, 2, 3, 2")      | Las miniaturas de partituras casi no se distinguen y el texto deja repetir páginas fácil                                         | Arrastrar miniaturas                                                 |
+| Drive sin backend                               | Sin servidor que mantener; el scope `drive.file` solo ve los archivos que crea Atril                                             | Backend con refresh tokens (el token dura ~1 h y hay que reconectar) |
+| Versión nueva con aviso, no automática          | La versión nueva se descarga sola pero espera a que el usuario toque "Actualizar": recargar sola podría pasar en pleno concierto | Activarla apenas se descarga (`skipWaiting` al instalar)             |
 
 Una decisión de arquitectura nueva se agrega a esta tabla en el mismo PR que la introduce. La
 discusión completa queda en la descripción de ese PR.
