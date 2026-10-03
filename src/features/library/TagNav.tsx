@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { db } from '../../core/db/db';
-import { addTag, deleteTag } from '../../core/db/repos';
+import { addTag, deleteTag, renameTag } from '../../core/db/repos';
 import { Icon } from '../../ui/Icon';
 import { Sheet } from '../../ui/Sheet';
 import { t } from '../../app/strings';
@@ -89,7 +89,7 @@ export function TagNav({ tagId, onSelect, variant }: Props) {
                   defaultValue={tag.name}
                   onBlur={(e) => {
                     const next = e.target.value.trim();
-                    if (next && next !== tag.name) void db.tags.update(tag.id, { name: next });
+                    if (next && next !== tag.name) void renameTag(tag.id, next);
                   }}
                 />
                 <button

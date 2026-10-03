@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { db } from '../../core/db/db';
+import { deleteBookmark, deleteLink } from '../../core/db/repos';
 import type { Bookmark, JumpLink } from '../../core/db/types';
 import { Icon } from '../../ui/Icon';
 import { Sheet } from '../../ui/Sheet';
@@ -46,7 +47,7 @@ export function MarkersSheet({ scoreId, onGo, onAdd, onClose }: Props) {
               <button
                 className="icon-btn"
                 aria-label={b.delete(bm.label)}
-                onClick={() => void db.bookmarks.delete(bm.id)}
+                onClick={() => void deleteBookmark(bm.id)}
               >
                 <Icon name="trash" size={18} />
               </button>
@@ -71,7 +72,7 @@ export function MarkersSheet({ scoreId, onGo, onAdd, onClose }: Props) {
                 <button
                   className="icon-btn"
                   aria-label={b.deleteJump(l.from.page + 1, target)}
-                  onClick={() => void db.links.delete(l.id)}
+                  onClick={() => void deleteLink(l.id)}
                 >
                   <Icon name="trash" size={18} />
                 </button>
