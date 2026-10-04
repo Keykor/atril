@@ -189,3 +189,18 @@ test('un salto puede ir a un marcador, y en vertical el marcador lleva al punto 
   // La página 3 es la última: el scroll llega al fondo, con el punto marcado a la vista.
   expect(await page.locator('.reader-scroll').evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
 });
+
+test('si el orden nuevo deja afuera la página a la vista, vuelve a la primera', async ({
+  page,
+}) => {
+  await openScore(page);
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await expect(indicator(page)).toHaveText('3 / 3');
+  await clickBar(page, 'Página');
+  await page.getByLabel('Orden de páginas').fill('1, 2');
+  await page.getByLabel('Orden de páginas').blur();
+  await closeSheet(page);
+  await expect(indicator(page)).toHaveText('1 / 2');
+  await expect(page.locator('.reader-slot[data-where="0"] canvas').first()).toBeVisible();
+});

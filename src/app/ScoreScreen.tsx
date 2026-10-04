@@ -92,12 +92,15 @@ export function ScoreScreen({ scoreId, show }: Props) {
     [score?.pageOrder, pageCount],
   );
 
-  // Vista inicial: la última página leída. Si el orden virtual se achica, se acota.
+  // Vista inicial: la última página leída. Si el orden nuevo deja afuera la página a la vista,
+  // se vuelve a la primera de la obra.
+  const inRange = (v?: View) => !!v && v.pos < order.length;
   useEffect(() => {
     if (!score || !order.length) return;
     setView((v) => {
-      const pos = Math.min(v?.pos ?? (show ? 0 : score.lastPage), order.length - 1);
-      return v && v.pos === pos ? v : { pos, half: false };
+      if (inRange(v)) return v;
+      if (v) return { pos: 0, half: false };
+      return { pos: Math.min(show ? 0 : score.lastPage, order.length - 1), half: false };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [score?.id, order.length]);
@@ -146,7 +149,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
         </button>
       </div>
     );
-  if (!score || !global || !Array.isArray(sizes) || !view)
+  if (!score || !global || !Array.isArray(sizes) || !view || view.pos >= order.length)
     return <div className="score-screen reader-message">{t.reader.loading}</div>;
 
   const prefs = resolveReading(global, score);
