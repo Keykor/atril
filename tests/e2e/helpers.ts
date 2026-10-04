@@ -13,10 +13,24 @@ export async function importFixtures(page: Page, files = FIXTURES, hints = false
   if (!hints) await hideHints(page);
 }
 
-/** Marca todas las pistas como vistas, escribiendo directo en IndexedDB. */
+export const ALL_HINTS = [
+  'reader',
+  'annotate',
+  'markers',
+  'page',
+  'practice',
+  'lists',
+  'library',
+  'backup',
+];
+
+/**
+ * Marca todas las pistas como vistas, escribiendo directo en IndexedDB, y recarga: lo que ya
+ * estaba en pantalla no se entera de escrituras hechas por fuera de Dexie.
+ */
 export async function hideHints(page: Page) {
   await page.evaluate(
-    () =>
+    (all) =>
       new Promise<void>((ok, fail) => {
         const open = indexedDB.open('atril');
         open.onerror = () => fail(open.error);
@@ -24,7 +38,7 @@ export async function hideHints(page: Page) {
           const tx = open.result.transaction('settings', 'readwrite');
           tx.objectStore('settings').put({
             key: 'hintsSeen',
-            value: ['reader', 'annotate', 'markers', 'lists'],
+            value: all,
           });
           tx.oncomplete = () => {
             open.result.close();
@@ -33,7 +47,10 @@ export async function hideHints(page: Page) {
           tx.onerror = () => fail(tx.error);
         };
       }),
+    ALL_HINTS,
   );
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Biblioteca' })).toBeVisible();
 }
 
 /** Toque en el centro del lector: muestra u oculta las barras. */
