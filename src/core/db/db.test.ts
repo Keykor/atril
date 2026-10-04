@@ -10,6 +10,9 @@ import {
   renameTag,
   duplicateSetList,
   emptyAnnotations,
+  initHints,
+  markHintSeen,
+  resetHints,
   saveAnnotations,
   setSetting,
   updateSetList,
@@ -19,6 +22,7 @@ import {
   getPageAnnotations,
   getScore,
   getGlobalReading,
+  getHintsSeen,
   getScoreMarkers,
   listTags,
   resolveReading,
@@ -136,4 +140,21 @@ test('consultas: valores por defecto, orden y PDFs pendientes', async () => {
   const markers = await getScoreMarkers(a.id);
   expect(markers.bookmarks.map((b) => b.label)).toEqual(['A', 'B', 'C']);
   expect(markers.links).toEqual([]);
+});
+
+test('pistas: solo instalaciones nuevas, se marcan de a una y se pueden volver a ver', async () => {
+  await initHints(['a', 'b']);
+  expect(await getHintsSeen()).toEqual([]); // biblioteca vacía: empieza de cero
+  await markHintSeen('a');
+  await markHintSeen('a');
+  expect(await getHintsSeen()).toEqual(['a']);
+  await initHints(['a', 'b']); // ya inicializado: no lo pisa
+  expect(await getHintsSeen()).toEqual(['a']);
+  await resetHints();
+  expect(await getHintsSeen()).toEqual([]);
+
+  await db.settings.clear();
+  await addScore({ pdfId: 'p', title: 'X' });
+  await initHints(['a', 'b']); // ya se venía usando: todas vistas
+  expect(await getHintsSeen()).toEqual(['a', 'b']);
 });

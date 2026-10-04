@@ -4,6 +4,14 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.7.0
+
+- Pistas para quien empieza: la primera vez que abrís una partitura, que anotás, que abrís
+  Marcadores o que armás una lista, aparece una explicación corta. Se cierra con "Entendido" y
+  no vuelve. En modo show no aparecen nunca. Si ya tenías partituras, no las vas a ver.
+- "Cómo se usa", en Ajustes: todas las funciones explicadas, y un botón para volver a mostrar
+  las pistas.
+
 ## 0.6.0
 
 Arreglos de la prueba en tablet.

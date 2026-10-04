@@ -32,6 +32,8 @@ servidor. Tus partituras y anotaciones quedan solo en tu dispositivo.
 
 ## Cómo se usa el lector
 
+La app trae la explicación completa en Ajustes → Cómo se usa.
+
 | Gesto                                        | Leyendo                                                   | Anotando                                                  |
 | -------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------- |
 | Toque en el tercio derecho o izquierdo       | Avanza o retrocede                                        | Dibuja                                                    |
