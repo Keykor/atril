@@ -32,7 +32,7 @@ servidor. Tus partituras y anotaciones quedan solo en tu dispositivo.
 
 ## Cómo se usa el lector
 
-La app trae la explicación completa en Ajustes → Cómo se usa.
+En la app, Ajustes → Cómo se usa muestra cada función en su lugar.
 
 | Gesto                                        | Leyendo                                                   | Anotando                                                  |
 | -------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------- |
