@@ -119,38 +119,37 @@ test('aviso de versión nueva: no se aplica sola y se actualiza con un toque', a
   }
 });
 
-test('tutorial: pista del lector una sola vez, y "Cómo se usa" la vuelve a mostrar', async ({
+test('tutorial: pistas de una sola vez y "Mostrame" las vuelve a mostrar en su lugar', async ({
   page,
 }) => {
   await importFixtures(page, undefined, true);
-  await page.getByRole('button', { name: 'Cancion de ejemplo', exact: true }).click();
-  const hint = page.getByRole('dialog', { name: 'Cómo se lee' });
-  await expect(hint).toBeVisible();
-  await expect(hint.locator('..')).toContainText('Página siguiente');
-  await hint.getByRole('button', { name: 'Entendido' }).click();
-  await expect(hint).toBeHidden();
+  const done = (name: string) =>
+    page.getByRole('dialog', { name }).getByRole('button', { name: 'Entendido' }).click();
 
+  await done('Tu biblioteca');
+  await page.getByRole('button', { name: 'Cancion de ejemplo', exact: true }).click();
+  const reader = page.getByRole('dialog', { name: 'Cómo se lee' });
+  await expect(reader.locator('..')).toContainText('Página siguiente');
+  await done('Cómo se lee');
+  await expect(reader).toBeHidden(); // ya quedó guardado
   await page.reload();
   await expect(page.locator('.page-indicator')).toHaveText('1 / 3');
-  await expect(hint).toBeHidden();
+  await expect(reader).toBeHidden();
 
   await page.goto('/#/settings');
+  await done('Backup');
+  await expect(page.getByRole('dialog', { name: 'Backup' })).toBeHidden();
   await page.getByRole('link', { name: 'Ver cómo se usa' }).click();
-  await expect(page.getByRole('heading', { name: 'Marcadores y saltos' })).toBeVisible();
-  await page.getByRole('button', { name: 'Volver a mostrar las pistas' }).click();
-  await expect(page.getByRole('status')).toContainText('van a aparecer de nuevo');
-
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Cancion de ejemplo', exact: true }).click();
-  await expect(hint).toBeVisible();
-  // "Ver más" lleva a la sección del lector y da la pista por vista.
-  await hint.getByRole('link', { name: 'Ver más' }).click();
-  await expect(page.getByRole('heading', { name: 'Lector' })).toBeInViewport();
+  await page.getByRole('button', { name: 'Mostrame: Ensayo' }).click();
+  // Abre la última partitura con el panel de ensayo y la pista encima.
+  await expect(page.getByRole('region', { name: 'Herramientas de ensayo' })).toBeVisible();
+  await done('Ensayo');
+  await expect(page.getByRole('dialog', { name: 'Ensayo' })).toBeHidden();
 });
 
 test('tutorial: quien ya tenía partituras no ve las pistas', async ({ page }) => {
   await importFixtures(page, undefined, true);
-  // Simula una instalación anterior: se borra la marca y se recarga con la biblioteca llena.
+  // Simula una instalación anterior: se borran las marcas y se recarga con la biblioteca llena.
   await page.evaluate(
     () =>
       new Promise<void>((ok) => {
@@ -158,6 +157,7 @@ test('tutorial: quien ya tenía partituras no ve las pistas', async ({ page }) =
         open.onsuccess = () => {
           const tx = open.result.transaction('settings', 'readwrite');
           tx.objectStore('settings').delete('hintsSeen');
+          tx.objectStore('settings').delete('hintsKnown');
           tx.oncomplete = () => {
             open.result.close();
             ok();
@@ -166,6 +166,8 @@ test('tutorial: quien ya tenía partituras no ve las pistas', async ({ page }) =
       }),
   );
   await page.reload();
+  await expect(page.getByRole('heading', { name: 'Biblioteca' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Tu biblioteca' })).toBeHidden();
   await page.getByRole('button', { name: 'Cancion de ejemplo', exact: true }).click();
   await expect(page.locator('.page-indicator')).toHaveText('1 / 3');
   await expect(page.getByRole('dialog', { name: 'Cómo se lee' })).toBeHidden();

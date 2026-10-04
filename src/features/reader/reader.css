@@ -22,6 +22,8 @@
   top: 0;
   width: 100%;
   height: 100%;
+  /* Lugar para desplazar la página por encima de un panel que tapa abajo (ensayo). */
+  padding-bottom: calc(var(--inset, 0) * 1px);
   overflow: auto;
   display: flex;
   scrollbar-width: none;
@@ -418,26 +420,28 @@
   min-height: var(--tap);
   border-radius: 999px;
 }
+/* Un slider por fila, a todo el ancho: largos, gruesos y separados para el dedo. */
 .crop-sliders {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 24px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 .crop-sliders label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
   font-size: 14px;
+  font-weight: 500;
 }
-.crop-sliders label span {
-  width: 72px;
-  flex-shrink: 0;
+.crop-sliders output {
+  grid-row: 1;
+  grid-column: 2;
 }
 .crop-sliders input {
-  flex: 1;
-  min-width: 0;
-  height: 32px;
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 44px;
+  margin: 0;
   accent-color: var(--accent);
 }
 .sheet .row {
@@ -508,10 +512,6 @@
   gap: 12px;
 }
 @media (max-width: 600px) {
-  .crop-sliders {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
 }
 
 .tap-hint {
@@ -548,4 +548,15 @@
   color: #fff;
   font-weight: 600;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Recortando: el lector ocupa el lado libre y la página entra entera (ver Reader.framed). */
+.score-screen.cropping .reader-stage {
+  right: var(--side-w);
+}
+@media (max-width: 600px) {
+  .score-screen.cropping .reader-stage {
+    right: 0;
+    bottom: 52dvh;
+  }
 }

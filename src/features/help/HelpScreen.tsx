@@ -1,35 +1,49 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { resetHints } from '../../core/db/repos';
+import { Icon } from '../../ui/Icon';
 import { t } from '../../app/strings';
 import './help.css';
 
-/** "Cómo se usa": todas las funciones explicadas, por sección. */
-export function HelpScreen({ section }: { section?: string }) {
+interface Props {
+  hints: { id: string; title: string }[];
+  needsScore: string[]; // pistas que no se pueden mostrar sin una partitura importada
+  onShow: (id: string) => void;
+}
+
+/** "Cómo se usa": las pistas de la app, cada una con "Mostrame" para verla en su lugar. */
+export function HelpScreen({ hints, needsScore, onShow }: Props) {
   const h = t.help;
   const [reset, setReset] = useState(false);
-
-  useEffect(() => {
-    if (section) document.getElementById(`help-${section}`)?.scrollIntoView();
-  }, [section]);
+  const blocked = (id: string) => needsScore.includes(id);
 
   return (
     <div className="help">
       <header className="screen-header">
         <h1>{h.title}</h1>
       </header>
-      {h.sections.map((s) => (
-        <section key={s.id} id={`help-${s.id}`} className="help-section">
-          <h2>{s.title}</h2>
-          <ul>
-            {s.items.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      <p className="help-intro">{h.intro}</p>
+      <ul className="help-list">
+        {hints.map((hint) => (
+          <li key={hint.id}>
+            <span>
+              <strong>{hint.title}</strong>
+              {blocked(hint.id) && <small>{h.needScore}</small>}
+            </span>
+            <button
+              className="btn"
+              aria-label={h.showOne(hint.title)}
+              disabled={blocked(hint.id)}
+              onClick={() => onShow(hint.id)}
+            >
+              <Icon name="play" size={16} />
+              {h.show}
+            </button>
+          </li>
+        ))}
+      </ul>
       <div className="help-reset">
         <button
-          className="btn"
+          className="btn ghost"
           onClick={async () => {
             await resetHints();
             setReset(true);

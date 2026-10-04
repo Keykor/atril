@@ -4,16 +4,15 @@ interface Props {
   title: string;
   text: string;
   doneLabel: string;
-  moreLabel: string;
-  moreHref: string; // sección de "Cómo se usa"
   onDone: () => void;
+  top?: boolean; // arriba, para no tapar un panel de abajo (ensayo)
 }
 
-/** Pista de una sola vez: un texto corto, "Entendido" y un link a la explicación completa. */
-export function Hint({ title, text, doneLabel, moreLabel, moreHref, onDone }: Props) {
+/** Pista de una sola vez: un texto corto y "Entendido". */
+export function Hint({ title, text, doneLabel, onDone, top }: Props) {
   return (
     <aside
-      className="hint"
+      className={`hint${top ? ' top' : ''}`}
       role="dialog"
       aria-label={title}
       onPointerDown={(e) => e.stopPropagation()}
@@ -21,9 +20,6 @@ export function Hint({ title, text, doneLabel, moreLabel, moreHref, onDone }: Pr
       <h2>{title}</h2>
       <p>{text}</p>
       <footer>
-        <a className="btn ghost" href={moreHref} onClick={onDone}>
-          {moreLabel}
-        </a>
         <button className="btn primary" onClick={onDone}>
           {doneLabel}
         </button>

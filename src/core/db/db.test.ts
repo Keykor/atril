@@ -12,6 +12,7 @@ import {
   emptyAnnotations,
   initHints,
   markHintSeen,
+  unmarkHint,
   resetHints,
   saveAnnotations,
   setSetting,
@@ -23,6 +24,7 @@ import {
   getScore,
   getGlobalReading,
   getHintsSeen,
+  getLastOpenedScore,
   getScoreMarkers,
   listTags,
   resolveReading,
@@ -157,4 +159,24 @@ test('pistas: solo instalaciones nuevas, se marcan de a una y se pueden volver a
   await addScore({ pdfId: 'p', title: 'X' });
   await initHints(['a', 'b']); // ya se venía usando: todas vistas
   expect(await getHintsSeen()).toEqual(['a', 'b']);
+});
+
+test('pistas nuevas de una versión: se dan por vistas si la app ya se usaba', async () => {
+  // Instalación de 0.7.0: había pistas vistas pero no la cuenta de las conocidas.
+  await setSetting('hintsSeen', ['a']);
+  await addScore({ pdfId: 'p', title: 'X' });
+  await initHints(['a', 'b', 'c'], ['a', 'b']);
+  expect(await getHintsSeen()).toEqual(['a', 'c']); // 'b' ya existía y no se vio: queda
+  await unmarkHint('c');
+  await initHints(['a', 'b', 'c'], ['a', 'b']); // ya conocidas: no las vuelve a marcar
+  expect(await getHintsSeen()).toEqual(['a']);
+});
+
+test('la última partitura abierta', async () => {
+  expect(await getLastOpenedScore()).toBeNull();
+  const a = await addScore({ pdfId: 'p', title: 'A' });
+  const b = await addScore({ pdfId: 'p', title: 'B' });
+  await db.scores.update(a.id, { lastOpenedAt: 10 });
+  await db.scores.update(b.id, { lastOpenedAt: 20 });
+  expect((await getLastOpenedScore())?.id).toBe(b.id);
 });

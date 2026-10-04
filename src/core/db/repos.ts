@@ -142,13 +142,21 @@ export const deleteLink = (id: string) => db.links.delete(id);
 export const setSetting = (key: string, value: unknown) => db.settings.put({ key, value });
 
 /**
- * Primer arranque con pistas: solo las ve quien empieza de cero. Si ya hay partituras, la app
- * ya se venía usando y todas se dan por vistas.
+ * Pistas al arrancar: solo las ve quien empieza de cero. Si ya hay partituras, la app ya se
+ * venía usando y las pistas que no conocía (todas, o las nuevas de esta versión) se dan por
+ * vistas. `legacy`: las pistas que existían antes de llevar la cuenta de las conocidas.
  */
-export const initHints = (all: string[]) =>
+export const initHints = (all: string[], legacy: string[] = []) =>
   db.transaction('rw', db.settings, db.scores, async () => {
-    if (await db.settings.get('hintsSeen')) return;
-    await setSetting('hintsSeen', (await db.scores.count()) ? all : []);
+    const seen = (await db.settings.get('hintsSeen'))?.value as string[] | undefined;
+    const known =
+      ((await db.settings.get('hintsKnown'))?.value as string[] | undefined) ??
+      (seen ? legacy : []);
+    const fresh = all.filter((id) => !known.includes(id));
+    const used = (await db.scores.count()) > 0;
+    if (!seen) await setSetting('hintsSeen', used ? all : []);
+    else if (fresh.length && used) await setSetting('hintsSeen', [...new Set([...seen, ...fresh])]);
+    await setSetting('hintsKnown', all);
   });
 
 export const markHintSeen = (id: string) =>
@@ -158,3 +166,13 @@ export const markHintSeen = (id: string) =>
   });
 
 export const resetHints = () => setSetting('hintsSeen', []);
+
+/** Para "Mostrame": la pista vuelve a aparecer la próxima vez que se llega a su lugar. */
+export const unmarkHint = (id: string) =>
+  db.transaction('rw', db.settings, async () => {
+    const seen = ((await db.settings.get('hintsSeen'))?.value as string[] | undefined) ?? [];
+    await setSetting(
+      'hintsSeen',
+      seen.filter((s) => s !== id),
+    );
+  });

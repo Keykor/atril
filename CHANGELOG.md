@@ -4,6 +4,19 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.8.0
+
+- "Cómo se usa" ahora es la lista de pistas: "Mostrame" te lleva al lugar (tu última partitura,
+  Listas, Biblioteca o Ajustes) y te muestra la pista ahí. Hay pistas nuevas de recorte y orden
+  de páginas, ensayo, biblioteca y backup.
+- Al recortar, la partitura se achica para verse entera al lado del panel, y los sliders son
+  más grandes y están más separados.
+- Con ensayo abierto se puede bajar la página hasta que el final quede arriba del panel.
+- Al pasar de hoja, la nueva arranca siempre arriba de todo, para adelante o para atrás.
+- Si sacás del orden de páginas la página en la que estás, vuelve a la primera en vez de quedar
+  la pantalla gris.
+- Después de tocar un salto ya no aparece el cartel "Saltaste a… · Volver".
+
 ## 0.7.0
 
 - Pistas para quien empieza: la primera vez que abrís una partitura, que anotás, que abrís

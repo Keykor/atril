@@ -27,15 +27,27 @@ interface Props {
   score: Score;
   onChange: (patch: Pick<Partial<Score>, 'bpm' | 'timeSignature' | 'startNotes'>) => void;
   onClose: () => void;
+  onHeight?: (px: number) => void; // alto del panel, para que el lector deje lugar abajo
 }
 
 /** Panel de ensayo sobre el lector: metrónomo y teclado. No tapa la partitura entera. */
-export function PracticePanel({ score, onChange, onClose }: Props) {
+export function PracticePanel({ score, onChange, onClose, onHeight }: Props) {
   // En el celular los dos no entran juntos: se muestra uno por vez con pestañas (solo CSS, así
   // el metrónomo sigue sonando al pasar al teclado). En tablet y compu se ven los dos.
   const [tab, setTab] = useState<'metronome' | 'keyboard'>('metronome');
+  const root = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!onHeight) return;
+    const ro = new ResizeObserver(() => onHeight(root.current!.offsetHeight));
+    ro.observe(root.current!);
+    return () => {
+      ro.disconnect();
+      onHeight(0);
+    };
+  }, [onHeight]);
   return (
     <section
+      ref={root}
       className="practice"
       role="region"
       aria-label={p.title}
