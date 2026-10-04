@@ -269,6 +269,32 @@ test('con zoom se sigue pasando de hoja, y el botón de ajuste lo saca', async (
   await expect.poll(zoom).toBe(1);
 });
 
+test('al ancho, la hoja nueva arranca arriba, para adelante y para atrás', async ({ page }) => {
+  // Celular apaisado: al ancho, la página es más alta que la pantalla.
+  await page.setViewportSize({ width: 844, height: 390 });
+  await openScore(page);
+  await clickBar(page, 'Ajustes de lectura');
+  await page.getByRole('button', { name: 'Al ancho' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Cerrar' }).click();
+  const slot = page.locator('.reader-slot[data-where="0"]');
+  const scrollTop = () => slot.evaluate((el) => el.scrollTop);
+
+  // Para adelante: primero recorre la página hasta abajo y después pasa.
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(250);
+    if ((await page.locator('.page-indicator').textContent()) === '2 / 3') break;
+  }
+  await expect(page.locator('.page-indicator')).toHaveText('2 / 3');
+  expect(await scrollTop()).toBe(0);
+
+  // Para atrás: la hoja anterior también arranca arriba, no donde había quedado.
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('.page-indicator')).toHaveText('1 / 3');
+  await page.waitForTimeout(300);
+  expect(await scrollTop()).toBe(0);
+});
+
 test('en el celular, metrónomo y teclado van en pestañas; en tablet se ven los dos', async ({
   page,
 }) => {

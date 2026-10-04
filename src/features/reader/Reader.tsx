@@ -177,6 +177,16 @@ export function Reader(p: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // Al cambiar de hoja, la nueva y sus vecinas arrancan arriba de todo (la anterior pudo quedar
+  // recorrida hasta abajo). En vertical no hay hojas: el scroll es uno solo.
+  useLayoutEffect(() => {
+    if (mode === 'vertical') return;
+    track.current?.querySelectorAll<HTMLElement>('.reader-slot').forEach((el) => {
+      el.scrollTop = 0;
+      el.scrollLeft = 0;
+    });
+  }, [p.view.pos, p.view.half, mode]);
+
   // Sin slots vecinos montados, la página siguiente se pre-renderiza igual.
   const next = mode === 'vertical' ? null : nextView(p.view, seq);
   useEffect(() => {
