@@ -69,7 +69,7 @@ test('orden virtual de páginas y marcadores', async ({ page }) => {
   await expect(indicator(page)).toHaveText('2 / 5'); // primera aparición de la página 2
 });
 
-test('saltos: tocar el origen lleva al destino y se puede volver', async ({ page }) => {
+test('saltos: tocar el origen lleva al destino, sin cartel encima', async ({ page }) => {
   await openScore(page);
   await clickBar(page, 'Marcadores y saltos');
   await page.getByRole('button', { name: 'Agregar salto' }).click();
@@ -79,8 +79,7 @@ test('saltos: tocar el origen lleva al destino y se puede volver', async ({ page
 
   await page.getByRole('button', { name: 'Saltar a página 3' }).click();
   await expect(indicator(page)).toHaveText('3 / 3');
-  await page.getByRole('button', { name: 'Volver' }).click();
-  await expect(indicator(page)).toHaveText('1 / 3');
+  await expect(page.getByRole('button', { name: 'Volver' })).toHaveCount(0);
 });
 
 test('recorte de márgenes: la página se agranda y las anotaciones siguen alineadas', async ({
@@ -184,7 +183,8 @@ test('un salto puede ir a un marcador, y en vertical el marcador lleva al punto 
   await page.getByRole('button', { name: 'Saltar a Coda' }).click();
   await expect(indicator(page)).toHaveText('3 / 3');
   await expect(page.locator('.bookmark-flag[data-highlight]')).toHaveText('Coda');
-  await page.getByRole('button', { name: 'Volver' }).click();
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
   await expect(indicator(page)).toHaveText('1 / 3');
 
   // En modo vertical, ir al marcador deja a la vista el punto marcado, no el tope de la página.

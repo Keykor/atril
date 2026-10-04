@@ -66,7 +66,6 @@ export function ScoreScreen({ scoreId, show }: Props) {
   const [draft, setDraft] = useState<{ kind: 'bookmark' | 'jump'; point: PagePoint }>();
   // Después de saltar: a dónde se fue (para el scroll y el parpadeo) y desde dónde (para volver).
   const [target, setTarget] = useState<{ pos: number; y: number; nonce: number; id?: string }>();
-  const [returnTo, setReturnTo] = useState<{ view: View; label: string }>();
   const history = useAnnotationHistory();
   const readerHint = useHint('reader');
   const annotateHint = useHint('annotate');
@@ -189,12 +188,9 @@ export function ScoreScreen({ scoreId, show }: Props) {
     setTarget({ pos: targetPos, y, nonce: Date.now(), id: bookmarkId });
     return true;
   };
-  const jump = (link: JumpLink) => {
-    const from = view;
-    const bookmark = bookmarkAt(bookmarks ?? [], link.to);
-    if (goTo(link.to.page, link.to.y, bookmark?.id))
-      setReturnTo({ view: from, label: bookmark?.label ?? t.bookmarks.pageLong(link.to.page + 1) });
-  };
+  // Sin cartel de "Volver": tapaba la partitura, y quien salta sabe a dónde fue.
+  const jump = (link: JumpLink) =>
+    void goTo(link.to.page, link.to.y, bookmarkAt(bookmarks ?? [], link.to)?.id);
 
   // --- Modo show ---
   // replace: "atrás" vuelve a la lista, no a la obra anterior.
@@ -297,21 +293,6 @@ export function ScoreScreen({ scoreId, show }: Props) {
           {placing === 'bookmark' ? t.bookmarks.placeBookmark : t.bookmarks.placeJump}
           <button className="btn" onClick={() => setPlacing(undefined)}>
             {t.cancel}
-          </button>
-        </div>
-      )}
-      {returnTo && !annotating && !placing && (
-        <div className="reader-float" onPointerDown={(e) => e.stopPropagation()}>
-          {t.bookmarks.jumped(returnTo.label)}
-          <button
-            className="btn"
-            onClick={() => {
-              setView(returnTo.view);
-              setReturnTo(undefined);
-            }}
-          >
-            <Icon name="undo" size={18} />
-            {t.bookmarks.jumpBack}
           </button>
         </div>
       )}

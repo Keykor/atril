@@ -246,8 +246,6 @@ export const t = {
     jumpToBookmark: (label: string) => `Destino: ${label}`,
     toPage: (n: number) => `A una página (1 a ${n})`,
     jumpTo: (target: string) => `Saltar a ${target}`,
-    jumpBack: 'Volver',
-    jumped: (target: string) => `Saltaste a ${target}`,
   },
   practice: {
     title: 'Herramientas de ensayo',
@@ -416,7 +414,7 @@ export const t = {
         title: 'Marcadores y saltos',
         items: [
           'Un marcador guarda un lugar ("Letra B") para ir directo desde Marcadores.',
-          'Un salto es un botón sobre la página que lleva a otra página o a un marcador: para D.S., coda y repeticiones. Después de saltar, aparece Volver.',
+          'Un salto es un botón sobre la página que lleva a otra página o a un marcador: para D.S., coda y repeticiones.',
           'Para crear uno, tocá Agregar y después el lugar exacto en la página.',
         ],
       },
