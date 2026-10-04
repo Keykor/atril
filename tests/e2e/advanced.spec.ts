@@ -69,7 +69,7 @@ test('orden virtual de páginas y marcadores', async ({ page }) => {
   await expect(indicator(page)).toHaveText('2 / 5'); // primera aparición de la página 2
 });
 
-test('saltos: tocar el origen lleva al destino y se puede volver', async ({ page }) => {
+test('saltos: tocar el origen lleva al destino, sin cartel encima', async ({ page }) => {
   await openScore(page);
   await clickBar(page, 'Marcadores y saltos');
   await page.getByRole('button', { name: 'Agregar salto' }).click();
@@ -79,8 +79,7 @@ test('saltos: tocar el origen lleva al destino y se puede volver', async ({ page
 
   await page.getByRole('button', { name: 'Saltar a página 3' }).click();
   await expect(indicator(page)).toHaveText('3 / 3');
-  await page.getByRole('button', { name: 'Volver' }).click();
-  await expect(indicator(page)).toHaveText('1 / 3');
+  await expect(page.getByRole('button', { name: 'Volver' })).toHaveCount(0);
 });
 
 test('recorte de márgenes: la página se agranda y las anotaciones siguen alineadas', async ({
@@ -91,6 +90,15 @@ test('recorte de márgenes: la página se agranda y las anotaciones siguen aline
   const before = (await full.boundingBox())!;
 
   await clickBar(page, 'Página');
+  // Con el panel abierto, la página entra entera en el lado libre: no queda nada debajo.
+  const panel = (await page.getByRole('dialog', { name: 'Página' }).boundingBox())!;
+  const shown = page.locator('.reader-slot[data-where="0"] .page');
+  await expect
+    .poll(async () => {
+      const b = (await shown.boundingBox())!;
+      return b.x + b.width <= panel.x + 1 && b.y + b.height <= panel.y + panel.height + 1;
+    })
+    .toBe(true);
   await page.getByRole('button', { name: 'Automático' }).click();
   await closeSheet(page);
   await expect.poll(async () => (await full.boundingBox())!.width).toBeGreaterThan(before.width);
@@ -175,7 +183,8 @@ test('un salto puede ir a un marcador, y en vertical el marcador lleva al punto 
   await page.getByRole('button', { name: 'Saltar a Coda' }).click();
   await expect(indicator(page)).toHaveText('3 / 3');
   await expect(page.locator('.bookmark-flag[data-highlight]')).toHaveText('Coda');
-  await page.getByRole('button', { name: 'Volver' }).click();
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
   await expect(indicator(page)).toHaveText('1 / 3');
 
   // En modo vertical, ir al marcador deja a la vista el punto marcado, no el tope de la página.
@@ -188,4 +197,19 @@ test('un salto puede ir a un marcador, y en vertical el marcador lleva al punto 
   await expect(flag).toBeInViewport();
   // La página 3 es la última: el scroll llega al fondo, con el punto marcado a la vista.
   expect(await page.locator('.reader-scroll').evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+});
+
+test('si el orden nuevo deja afuera la página a la vista, vuelve a la primera', async ({
+  page,
+}) => {
+  await openScore(page);
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await expect(indicator(page)).toHaveText('3 / 3');
+  await clickBar(page, 'Página');
+  await page.getByLabel('Orden de páginas').fill('1, 2');
+  await page.getByLabel('Orden de páginas').blur();
+  await closeSheet(page);
+  await expect(indicator(page)).toHaveText('1 / 2');
+  await expect(page.locator('.reader-slot[data-where="0"] canvas').first()).toBeVisible();
 });

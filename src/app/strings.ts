@@ -246,8 +246,6 @@ export const t = {
     jumpToBookmark: (label: string) => `Destino: ${label}`,
     toPage: (n: number) => `A una página (1 a ${n})`,
     jumpTo: (target: string) => `Saltar a ${target}`,
-    jumpBack: 'Volver',
-    jumped: (target: string) => `Saltaste a ${target}`,
   },
   practice: {
     title: 'Herramientas de ensayo',
@@ -351,14 +349,13 @@ export const t = {
   },
   hints: {
     done: 'Entendido',
-    more: 'Ver más',
     reader: {
       title: 'Cómo se lee',
       back: 'Página anterior',
       bars: 'Barras y opciones',
       barsLong: 'Toque largo: barras y opciones',
       next: 'Página siguiente',
-      text: 'Pellizcá para hacer zoom; con zoom, tocar un costado igual pasa de hoja. El botón de ajuste de la barra de arriba vuelve a la página entera.',
+      text: 'Pellizcá para hacer zoom; con zoom, tocar un costado igual pasa de hoja. El botón de ajuste de la barra de arriba vuelve a la página entera. Un pedal Bluetooth también pasa página.',
     },
     annotate: {
       title: 'Anotar',
@@ -368,86 +365,36 @@ export const t = {
       title: 'Marcadores y saltos',
       text: 'Un marcador guarda un lugar de la partitura para volver ahí. Un salto es un botón sobre la página que te lleva a otra página o a un marcador: sirve para D.S., coda y repeticiones. Para crear uno, tocá Agregar y después el lugar exacto en la página.',
     },
+    page: {
+      title: 'Recorte y orden',
+      text: 'Recortá los márgenes para que la música se vea más grande; "Automático" lo hace solo. En Orden de páginas podés repetir: "1, 2, 3, 2, 3" lee la 2 y la 3 dos veces, sin ir y volver.',
+    },
+    practice: {
+      title: 'Ensayo',
+      text: 'Metrónomo y teclado: la nota suena mientras mantenés la tecla. Grabá las notas de inicio de la obra con el teclado y después las das con un toque desde la barra.',
+    },
     lists: {
-      title: 'Armar la lista',
-      text: 'Agregá partituras y separadores, y arrastralos desde los puntitos para cambiar el orden. Modo show recorre la lista entera con toques: en la última página de cada obra, un toque pasa a la siguiente.',
+      title: 'Listas y modo show',
+      text: 'Una lista es el orden de un concierto: agregá partituras y separadores, y arrastralos desde los puntitos. Modo show la recorre con toques: en la última página de cada obra, un toque pasa a la siguiente.',
+    },
+    library: {
+      title: 'Tu biblioteca',
+      text: 'Importá tus PDFs con Importar PDF. Los tres puntitos de cada partitura abren sus datos: tonalidad, BPM, etiquetas y más. Buscá por título o compositor.',
+    },
+    backup: {
+      title: 'Backup',
+      text: 'Tus partituras viven en este dispositivo: hacé backup seguido. Conectá Google Drive para que se guarde solo, o exportá un archivo. El liviano no lleva los PDFs y se manda fácil por WhatsApp.',
     },
   },
   help: {
     title: 'Cómo se usa',
-    cardText: 'Gestos del lector, anotaciones, listas y el resto de las funciones.',
+    intro: 'Elegí qué querés ver: te llevamos al lugar y te lo mostramos ahí.',
+    cardText: 'Las pistas de cada parte de la app, para verlas de nuevo cuando quieras.',
     open: 'Ver cómo se usa',
-    reset: 'Volver a mostrar las pistas',
+    show: 'Mostrame',
+    showOne: (title: string) => `Mostrame: ${title}`,
+    needScore: 'Para ver esto, primero importá una partitura.',
+    reset: 'Volver a mostrar todas las pistas',
     resetDone: 'Listo: las pistas van a aparecer de nuevo.',
-    sections: [
-      {
-        id: 'library',
-        title: 'Biblioteca',
-        items: [
-          'Importá PDFs con Importar PDF. En Android también podés compartir un PDF a Atril desde otra app.',
-          'Buscá por título o compositor, y ordená y filtrá con etiquetas.',
-          'Tocá los tres puntitos de una partitura para editar sus datos: título, compositor, tonalidad, BPM, compás, notas de inicio y etiquetas.',
-        ],
-      },
-      {
-        id: 'reader',
-        title: 'Lector',
-        items: [
-          'Tocá el tercio derecho para avanzar y el izquierdo para volver; el centro muestra las barras. También podés deslizar la hoja.',
-          'Pellizcá para hacer zoom. Con zoom, tocar un costado o arrastrar más allá del borde pasa de hoja.',
-          'El botón de ajuste de la barra de arriba (o un doble toque al centro) alterna al ancho y página entera, y saca el zoom.',
-          'En Ajustes de lectura elegís el modo (una página, vertical o dos páginas), el tema, la media página y si el toque usa tercios o mitades.',
-          'En Página recortás los márgenes y cambiás el orden de las páginas, por ejemplo "1, 2, 3, 2, 3" para una repetición.',
-          'Las flechas del teclado, PageUp/PageDown y espacio pasan página: sirve para pedales Bluetooth.',
-        ],
-      },
-      {
-        id: 'annotate',
-        title: 'Anotar',
-        items: [
-          'Tocá Anotar, o apoyá el lápiz sobre la página.',
-          'Un dedo o el lápiz dibuja. Dos dedos mueven la página y hacen zoom; tocar con dos dedos sin moverlos deshace.',
-          'Hay lápiz, resaltador, texto, goma y símbolos musicales, que se pegan con un toque y se arrastran para acomodarlos.',
-          'El PDF original nunca se modifica.',
-        ],
-      },
-      {
-        id: 'markers',
-        title: 'Marcadores y saltos',
-        items: [
-          'Un marcador guarda un lugar ("Letra B") para ir directo desde Marcadores.',
-          'Un salto es un botón sobre la página que lleva a otra página o a un marcador: para D.S., coda y repeticiones. Después de saltar, aparece Volver.',
-          'Para crear uno, tocá Agregar y después el lugar exacto en la página.',
-        ],
-      },
-      {
-        id: 'lists',
-        title: 'Listas y modo show',
-        items: [
-          'Una lista es el orden de un concierto o un ensayo. Agregá partituras y separadores (por ejemplo, el intervalo) y arrastralos desde los puntitos para ordenarlos.',
-          'Modo show abre la primera obra y recorre la lista con toques: en la última página, un toque muestra la obra siguiente y otro pasa.',
-          'En escena la barra de abajo arranca bloqueada para no tocar nada sin querer: un toque la habilita.',
-          'Tocando el título arriba ves el índice de la lista y saltás a cualquier obra.',
-        ],
-      },
-      {
-        id: 'practice',
-        title: 'Ensayo',
-        items: [
-          'Ensayo abre el metrónomo y un teclado de dos octavas; la nota suena mientras mantenés la tecla.',
-          'Grabá las notas de inicio de cada obra con el teclado: después aparece un botón para dar el tono con un toque.',
-          'El tempo del metrónomo queda guardado en la partitura.',
-        ],
-      },
-      {
-        id: 'backup',
-        title: 'Backup',
-        items: [
-          'Exportá todo en un archivo .atril desde Ajustes, o conectá Google Drive para que se guarde solo.',
-          'El backup liviano no lleva los PDFs: pesa poco y sirve para mandarlo. Al importarlo en otro dispositivo, reimportá los PDFs y se reenganchan solos.',
-          'En iPhone y iPad, Safari puede borrar los datos si le falta espacio: hacé backup seguido.',
-        ],
-      },
-    ],
   },
 };

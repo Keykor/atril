@@ -79,6 +79,13 @@ export async function getSetting<T>(key: string, fallback: T): Promise<T> {
 /** Pistas del tutorial ya vistas en este dispositivo (no viajan en el backup). */
 export const getHintsSeen = () => getSetting<string[] | null>('hintsSeen', null);
 
+/** La última partitura abierta (o la primera importada si nunca se abrió ninguna). */
+export async function getLastOpenedScore(): Promise<Score | null> {
+  const scores = await db.scores.toArray();
+  const at = (s: Score) => s.lastOpenedAt ?? 0;
+  return scores.reduce<Score | null>((best, s) => (!best || at(s) > at(best) ? s : best), null);
+}
+
 export const getGlobalReading = async (): Promise<ReadingPrefs> => ({
   ...defaultReading,
   ...(await getSetting<Partial<ReadingPrefs>>('reading', {})),

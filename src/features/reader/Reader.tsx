@@ -34,6 +34,9 @@ interface Props {
   // la mueven y hacen zoom.
   manualPan?: boolean;
   fitToggle?: number; // cambia: alterna entre al ancho y página entera, y saca el zoom
+  framed?: boolean; // recortando: la página entera y sin zoom, para ver los cuatro bordes
+  // px tapados abajo por un panel (ensayo): se puede desplazar la página hasta arriba de él.
+  bottomInset?: number;
 }
 
 const TURN_MS = 180;
@@ -46,11 +49,12 @@ export function Reader(p: Props) {
   const track = useRef<HTMLDivElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
-  const [zoom, setZoom] = useState(1);
+  const [zoomState, setZoom] = useState(1);
   const [fitOverride, setFitOverride] = useState<ReadingPrefs['fit']>();
 
   const { mode } = p.prefs;
-  const fit = fitOverride ?? p.prefs.fit;
+  const zoom = p.framed ? 1 : zoomState;
+  const fit = p.framed ? 'page' : (fitOverride ?? p.prefs.fit);
   const count = p.order.length;
   const seq: Seq = {
     count,
@@ -177,6 +181,16 @@ export function Reader(p: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // Al cambiar de hoja, la nueva y sus vecinas arrancan arriba de todo (la anterior pudo quedar
+  // recorrida hasta abajo). En vertical no hay hojas: el scroll es uno solo.
+  useLayoutEffect(() => {
+    if (mode === 'vertical') return;
+    track.current?.querySelectorAll<HTMLElement>('.reader-slot').forEach((el) => {
+      el.scrollTop = 0;
+      el.scrollLeft = 0;
+    });
+  }, [p.view.pos, p.view.half, mode]);
+
   // Sin slots vecinos montados, la página siguiente se pre-renderiza igual.
   const next = mode === 'vertical' ? null : nextView(p.view, seq);
   useEffect(() => {
@@ -231,7 +245,7 @@ export function Reader(p: Props) {
   const onPointerDownCapture = (e: React.PointerEvent) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (g.pointers.size !== 2) return;
+    if (g.pointers.size !== 2 || p.framed) return;
     clearTimeout(g.longTimer);
     g.pinch = { dist: pinchDist(), zoom, mid: pinchMid() };
     g.z = zoom;
@@ -448,7 +462,7 @@ export function Reader(p: Props) {
         data-where={where}
         style={{
           left: `${where * 100}%`,
-          touchAction: !manualPan && fit === 'width' ? 'pan-y' : 'none',
+          touchAction: !manualPan && (fit === 'width' || p.bottomInset) ? 'pan-y' : 'none',
         }}
       >
         <div className="zoom-sizer" style={zoomVars(w, h)}>
@@ -472,7 +486,7 @@ export function Reader(p: Props) {
     <div
       ref={stage}
       className={`reader-stage theme-${p.prefs.theme}`}
-      style={{ '--z': zoom } as CSSProperties}
+      style={{ '--z': zoom, '--inset': p.bottomInset ?? 0 } as CSSProperties}
       onPointerDownCapture={onPointerDownCapture}
       onPointerMoveCapture={onPointerMoveCapture}
       onPointerUpCapture={onPointerEndCapture}

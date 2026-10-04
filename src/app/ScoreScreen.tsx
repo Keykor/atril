@@ -20,10 +20,9 @@ import { ReadingSheet } from '../features/reader/ReadingSheet';
 import { nextView, resolveOrder, type View } from '../features/reader/sequence';
 import { nextInShow, prevInShow, scoreNumber } from '../features/setlists/show';
 import { ShowIndex, ShowNext, ShowProgress } from '../features/setlists/ShowParts';
-import { Hint } from '../ui/Hint';
 import { Icon } from '../ui/Icon';
 import { TapZonesHint } from '../features/reader/TapZonesHint';
-import { helpHref, useHint } from './hints';
+import { PlaceHint, useHint, type HintId } from './hints';
 import { PlayStartNotes } from './reader-tools';
 import { back, navigate } from './router';
 import { t } from './strings';
@@ -33,10 +32,11 @@ type SheetName = 'reading' | 'meta' | 'index' | 'page' | 'markers' | null;
 interface Props {
   scoreId: string;
   show?: { list: SetList; index: number }; // modo show: la partitura es un ítem de una lista
+  tour?: HintId; // "Mostrame" de Cómo se usa: abre el lugar de esa pista
 }
 
 /** Pantalla de lectura: compone el lector con las barras y las hojas de cada feature. */
-export function ScoreScreen({ scoreId, show }: Props) {
+export function ScoreScreen({ scoreId, show, tour }: Props) {
   const score = useLiveQuery(() => getScore(scoreId), [scoreId]);
   const global = useLiveQuery(getGlobalReading, []);
   const bookmarks = useLiveQuery(() => getScoreMarkers(scoreId), [scoreId])?.bookmarks;
@@ -57,6 +57,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
     symbol: 'noteQuarterUp',
   });
   const [practice, setPractice] = useState(false);
+  const [practiceHeight, setPracticeHeight] = useState(0);
   const [fitToggle, setFitToggle] = useState(0);
   const [autoscrolling, setAutoscrolling] = useState(false);
   const [nextShown, setNextShown] = useState(false); // aviso de obra siguiente (modo show)
@@ -65,11 +66,8 @@ export function ScoreScreen({ scoreId, show }: Props) {
   const [draft, setDraft] = useState<{ kind: 'bookmark' | 'jump'; point: PagePoint }>();
   // Después de saltar: a dónde se fue (para el scroll y el parpadeo) y desde dónde (para volver).
   const [target, setTarget] = useState<{ pos: number; y: number; nonce: number; id?: string }>();
-  const [returnTo, setReturnTo] = useState<{ view: View; label: string }>();
   const history = useAnnotationHistory();
   const readerHint = useHint('reader');
-  const annotateHint = useHint('annotate');
-  const markersHint = useHint('markers');
 
   const pdfId = score?.pdfId;
   useEffect(() => {
@@ -86,18 +84,28 @@ export function ScoreScreen({ scoreId, show }: Props) {
 
   useEffect(() => keepAwake(), []);
 
+  // "Mostrame": se abre directo donde aparece la pista.
+  useEffect(() => {
+    if (tour === 'annotate') setAnnotating(true);
+    if (tour === 'markers' || tour === 'page') setSheet(tour);
+    if (tour === 'practice') setPractice(true);
+  }, [tour]);
+
   const pageCount = Array.isArray(sizes) ? sizes.length : 0;
   const order = useMemo(
     () => resolveOrder(score?.pageOrder, pageCount),
     [score?.pageOrder, pageCount],
   );
 
-  // Vista inicial: la última página leída. Si el orden virtual se achica, se acota.
+  // Vista inicial: la última página leída. Si el orden nuevo deja afuera la página a la vista,
+  // se vuelve a la primera de la obra.
+  const inRange = (v?: View) => !!v && v.pos < order.length;
   useEffect(() => {
     if (!score || !order.length) return;
     setView((v) => {
-      const pos = Math.min(v?.pos ?? (show ? 0 : score.lastPage), order.length - 1);
-      return v && v.pos === pos ? v : { pos, half: false };
+      if (inRange(v)) return v;
+      if (v) return { pos: 0, half: false };
+      return { pos: Math.min(show ? 0 : score.lastPage, order.length - 1), half: false };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [score?.id, order.length]);
@@ -146,7 +154,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
         </button>
       </div>
     );
-  if (!score || !global || !Array.isArray(sizes) || !view)
+  if (!score || !global || !Array.isArray(sizes) || !view || view.pos >= order.length)
     return <div className="score-screen reader-message">{t.reader.loading}</div>;
 
   const prefs = resolveReading(global, score);
@@ -185,12 +193,9 @@ export function ScoreScreen({ scoreId, show }: Props) {
     setTarget({ pos: targetPos, y, nonce: Date.now(), id: bookmarkId });
     return true;
   };
-  const jump = (link: JumpLink) => {
-    const from = view;
-    const bookmark = bookmarkAt(bookmarks ?? [], link.to);
-    if (goTo(link.to.page, link.to.y, bookmark?.id))
-      setReturnTo({ view: from, label: bookmark?.label ?? t.bookmarks.pageLong(link.to.page + 1) });
-  };
+  // Sin cartel de "Volver": tapaba la partitura, y quien salta sabe a dónde fue.
+  const jump = (link: JumpLink) =>
+    void goTo(link.to.page, link.to.y, bookmarkAt(bookmarks ?? [], link.to)?.id);
 
   // --- Modo show ---
   // replace: "atrás" vuelve a la lista, no a la obra anterior.
@@ -218,7 +223,9 @@ export function ScoreScreen({ scoreId, show }: Props) {
   const touchBars = () => setBarsTick((n) => n + 1);
 
   return (
-    <div className={`score-screen${annotationsVisible ? '' : ' annotations-hidden'}`}>
+    <div
+      className={`score-screen${annotationsVisible ? '' : ' annotations-hidden'}${sheet === 'page' ? ' cropping' : ''}`}
+    >
       <Reader
         pdfId={score.pdfId}
         sizes={sizes}
@@ -231,6 +238,8 @@ export function ScoreScreen({ scoreId, show }: Props) {
         onEdge={onEdge}
         manualPan={annotating}
         fitToggle={fitToggle}
+        framed={sheet === 'page'}
+        bottomInset={practice ? practiceHeight : 0}
         scrollTarget={target}
         autoscroll={autoscrolling && vertical ? (score.autoscrollSpeed ?? 30) : undefined}
         interceptTap={() => {
@@ -292,21 +301,6 @@ export function ScoreScreen({ scoreId, show }: Props) {
           </button>
         </div>
       )}
-      {returnTo && !annotating && !placing && (
-        <div className="reader-float" onPointerDown={(e) => e.stopPropagation()}>
-          {t.bookmarks.jumped(returnTo.label)}
-          <button
-            className="btn"
-            onClick={() => {
-              setView(returnTo.view);
-              setReturnTo(undefined);
-            }}
-          >
-            <Icon name="undo" size={18} />
-            {t.bookmarks.jumpBack}
-          </button>
-        </div>
-      )}
       {autoscrolling && vertical && (
         <div className="reader-float" style={{ pointerEvents: 'none', paddingRight: 16 }}>
           {t.page.autoscrollOn}
@@ -315,7 +309,12 @@ export function ScoreScreen({ scoreId, show }: Props) {
 
       {show && <ShowProgress list={show.list} index={show.index} />}
       {practice && (
-        <PracticePanel score={score} onChange={patch} onClose={() => setPractice(false)} />
+        <PracticePanel
+          score={score}
+          onChange={patch}
+          onClose={() => setPractice(false)}
+          onHeight={setPracticeHeight}
+        />
       )}
       {show && atEnd && nextShown && !bars && !annotating && !practice && (
         <ShowNext list={show.list} index={show.index} onNext={goShow} />
@@ -497,32 +496,17 @@ export function ScoreScreen({ scoreId, show }: Props) {
       )}
 
       {/* Pistas de una sola vez. Nunca en modo show: en escena nada tapa la música. */}
-      {!show && readerHint.show && !annotating && !sheet && (
+      {!show && readerHint.show && !annotating && !sheet && !practice && (
         <TapZonesHint
           zones={prefs.tapZones}
-          labels={{ ...t.hints.reader, done: t.hints.done, more: t.hints.more }}
-          moreHref={helpHref('reader')}
+          labels={{ ...t.hints.reader, done: t.hints.done }}
           onDone={readerHint.done}
         />
       )}
-      {!show && annotating && annotateHint.show && (
-        <Hint
-          {...t.hints.annotate}
-          doneLabel={t.hints.done}
-          moreLabel={t.hints.more}
-          moreHref={helpHref('annotate')}
-          onDone={annotateHint.done}
-        />
-      )}
-      {!show && sheet === 'markers' && markersHint.show && (
-        <Hint
-          {...t.hints.markers}
-          doneLabel={t.hints.done}
-          moreLabel={t.hints.more}
-          moreHref={helpHref('markers')}
-          onDone={markersHint.done}
-        />
-      )}
+      <PlaceHint id="annotate" when={!show && annotating} />
+      <PlaceHint id="markers" when={!show && sheet === 'markers'} />
+      <PlaceHint id="page" when={!show && sheet === 'page'} />
+      <PlaceHint id="practice" when={!show && practice} top />
     </div>
   );
 }
