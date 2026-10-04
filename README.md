@@ -32,16 +32,18 @@ servidor. Tus partituras y anotaciones quedan solo en tu dispositivo.
 
 ## Cómo se usa el lector
 
-| Gesto                                  | Leyendo                                     | Anotando                                                  |
-| -------------------------------------- | ------------------------------------------- | --------------------------------------------------------- |
-| Toque en el tercio derecho o izquierdo | Avanza o retrocede                          | Dibuja (salvo con "solo el lápiz dibuja")                 |
-| Toque al centro                        | Muestra u oculta las barras                 | —                                                         |
-| Deslizar de costado                    | Pasa la hoja                                | —                                                         |
-| Pellizco                               | Zoom                                        | Zoom                                                      |
-| Doble toque al centro                  | Alterna ajuste al ancho y a página entera   | —                                                         |
-| Apoyar el lápiz                        | Empieza a anotar                            | Dibuja                                                    |
-| Dos dedos                              | —                                           | Mueven la página y hacen zoom; tocar sin moverlos deshace |
-| Flechas, PageUp/PageDown, espacio      | Pasan página (sirve para pedales Bluetooth) | —                                                         |
+La app trae la explicación completa en Ajustes → Cómo se usa.
+
+| Gesto                                        | Leyendo                                                   | Anotando                                                  |
+| -------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------- |
+| Toque en el tercio derecho o izquierdo       | Avanza o retrocede                                        | Dibuja                                                    |
+| Toque al centro                              | Muestra u oculta las barras                               | —                                                         |
+| Deslizar de costado                          | Pasa la hoja (con zoom, al llegar al borde de la página)  | —                                                         |
+| Pellizco                                     | Zoom                                                      | Zoom                                                      |
+| Doble toque al centro (o el botón de ajuste) | Alterna ajuste al ancho y a página entera, y saca el zoom | —                                                         |
+| Apoyar el lápiz                              | Empieza a anotar                                          | Dibuja                                                    |
+| Dos dedos                                    | —                                                         | Mueven la página y hacen zoom; tocar sin moverlos deshace |
+| Flechas, PageUp/PageDown, espacio            | Pasan página (sirve para pedales Bluetooth)               | —                                                         |
 
 ## Instalarla
 

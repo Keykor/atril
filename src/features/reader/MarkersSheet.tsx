@@ -23,7 +23,7 @@ interface Props {
 export function MarkersSheet({ scoreId, onGo, onAdd, onClose }: Props) {
   const data = useMarkers(scoreId);
   return (
-    <Sheet title={b.title} closeLabel={t.close} onClose={onClose}>
+    <Sheet variant="side" title={b.title} closeLabel={t.close} onClose={onClose}>
       <div className="field">
         <span className="field-label">{b.bookmarks}</span>
         {data?.bookmarks.length === 0 && <span className="field-hint">{b.empty}</span>}
@@ -90,7 +90,7 @@ export function BookmarkNameSheet({
 }) {
   const [label, setLabel] = useState('');
   return (
-    <Sheet title={b.nameTitle} closeLabel={t.close} onClose={onClose}>
+    <Sheet variant="side" title={b.nameTitle} closeLabel={t.close} onClose={onClose}>
       <form
         className="row-form"
         onSubmit={(e) => {
@@ -132,7 +132,7 @@ export function JumpTargetSheet({
   const valid = Number.isInteger(page) && page >= 1 && page <= pageCount;
   const placed = data?.bookmarks.filter((bm) => bm.x !== undefined) ?? [];
   return (
-    <Sheet title={b.jumpTarget} closeLabel={t.close} onClose={onClose}>
+    <Sheet variant="side" title={b.jumpTarget} closeLabel={t.close} onClose={onClose}>
       {placed.length > 0 && (
         <div className="field">
           <span className="field-label">{b.toBookmark}</span>

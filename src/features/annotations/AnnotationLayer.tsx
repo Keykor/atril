@@ -21,7 +21,6 @@ interface Props {
   aspect: number; // alto / ancho de la página
   active: boolean; // modo anotar
   locked?: boolean; // modo show: no se dibuja
-  penOnly: boolean;
   tool: ToolState;
   label: string;
   textPlaceholder: string;
@@ -32,7 +31,7 @@ interface Props {
 
 /**
  * Capa de anotaciones de una página: SVG para lo guardado y un canvas para el trazo vivo.
- * Si un puntero no dibuja (dedo con "solo lápiz", o modo lectura), el evento sigue hacia
+ * Si un puntero no dibuja (modo lectura, o modo show), el evento sigue hacia
  * el lector, que lo usa para pasar página.
  */
 export function AnnotationLayer(p: Props) {
@@ -98,8 +97,7 @@ export function AnnotationLayer(p: Props) {
         return;
       }
     }
-    const draws =
-      !p.locked && (p.active ? e.pointerType !== 'touch' || !p.penOnly : e.pointerType === 'pen');
+    const draws = !p.locked && (p.active || e.pointerType === 'pen');
     if (!draws || g.id !== -1 || (e.pointerType === 'mouse' && e.button !== 0)) return;
     e.stopPropagation();
     // Con el lápiz apoyado mientras se lee, texto y símbolos no tienen sentido: dibuja.

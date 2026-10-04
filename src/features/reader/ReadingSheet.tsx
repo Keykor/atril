@@ -6,9 +6,7 @@ import { t } from '../../app/strings';
 
 interface Props {
   prefs: ReadingPrefs; // lo que se ve ahora (global + override de la partitura)
-  penOnly: boolean;
   onChange: (patch: Partial<ReadingPrefs>, scope: 'score' | 'all') => void;
-  onPenOnly: (value: boolean) => void;
   autoscrollSpeed: number; // px por segundo, de esta partitura
   onAutoscrollSpeed: (speed: number) => void;
   onClose: () => void;
@@ -16,9 +14,7 @@ interface Props {
 
 export function ReadingSheet({
   prefs,
-  penOnly,
   onChange,
-  onPenOnly,
   autoscrollSpeed,
   onAutoscrollSpeed,
   onClose,
@@ -28,7 +24,7 @@ export function ReadingSheet({
   const set = (patch: Partial<ReadingPrefs>) => onChange(patch, scope);
 
   return (
-    <Sheet title={r.title} closeLabel={t.close} onClose={onClose}>
+    <Sheet variant="side" title={r.title} closeLabel={t.close} onClose={onClose}>
       <Segmented
         label={r.applyTo}
         value={scope}
@@ -116,12 +112,6 @@ export function ReadingSheet({
           hint={r.halfPageHint}
           checked={prefs.halfPage}
           onChange={(halfPage) => set({ halfPage })}
-        />
-        <Switch
-          label={t.settings.penOnly}
-          hint={t.settings.penOnlyHint}
-          checked={penOnly}
-          onChange={onPenOnly}
         />
       </div>
       <div className="field">

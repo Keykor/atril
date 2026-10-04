@@ -62,10 +62,13 @@ export const t = {
     back: 'Biblioteca',
     backToList: 'Lista',
     page: 'Página',
+    fit: 'Ajuste de página',
     practice: 'Ensayo',
     loading: 'Abriendo…',
     missingPdf: 'Falta el PDF de esta partitura. Importalo de nuevo desde la biblioteca.',
     notFound: 'Esta partitura ya no existe.',
+    openFailed: 'No se pudo abrir la partitura.',
+    retry: 'Reintentar',
     settings: 'Ajustes de lectura',
     pages: 'Páginas',
     annotate: 'Anotar',
@@ -77,6 +80,8 @@ export const t = {
     all: 'Todas las listas',
     new: 'Nueva',
     newName: 'Lista nueva',
+    newTitle: 'Nueva lista',
+    create: 'Crear',
     empty: 'Todavía no hay listas. Creá una para armar un concierto o un ensayo.',
     count: (scores: number, breaks: number) =>
       `${scores} ${scores === 1 ? 'obra' : 'obras'}` +
@@ -343,7 +348,106 @@ export const t = {
   },
   settings: {
     title: 'Ajustes',
-    penOnly: 'Solo el lápiz dibuja',
-    penOnlyHint: 'El dedo sigue pasando páginas mientras anotás',
+  },
+  hints: {
+    done: 'Entendido',
+    more: 'Ver más',
+    reader: {
+      title: 'Cómo se lee',
+      back: 'Página anterior',
+      bars: 'Barras y opciones',
+      barsLong: 'Toque largo: barras y opciones',
+      next: 'Página siguiente',
+      text: 'Pellizcá para hacer zoom; con zoom, tocar un costado igual pasa de hoja. El botón de ajuste de la barra de arriba vuelve a la página entera.',
+    },
+    annotate: {
+      title: 'Anotar',
+      text: 'Un dedo o el lápiz dibuja. Dos dedos mueven la página y hacen zoom; tocar con dos dedos sin moverlos deshace. Color, grosor y símbolos están en la barra.',
+    },
+    markers: {
+      title: 'Marcadores y saltos',
+      text: 'Un marcador guarda un lugar de la partitura para volver ahí. Un salto es un botón sobre la página que te lleva a otra página o a un marcador: sirve para D.S., coda y repeticiones. Para crear uno, tocá Agregar y después el lugar exacto en la página.',
+    },
+    lists: {
+      title: 'Armar la lista',
+      text: 'Agregá partituras y separadores, y arrastralos desde los puntitos para cambiar el orden. Modo show recorre la lista entera con toques: en la última página de cada obra, un toque pasa a la siguiente.',
+    },
+  },
+  help: {
+    title: 'Cómo se usa',
+    cardText: 'Gestos del lector, anotaciones, listas y el resto de las funciones.',
+    open: 'Ver cómo se usa',
+    reset: 'Volver a mostrar las pistas',
+    resetDone: 'Listo: las pistas van a aparecer de nuevo.',
+    sections: [
+      {
+        id: 'library',
+        title: 'Biblioteca',
+        items: [
+          'Importá PDFs con Importar PDF. En Android también podés compartir un PDF a Atril desde otra app.',
+          'Buscá por título o compositor, y ordená y filtrá con etiquetas.',
+          'Tocá los tres puntitos de una partitura para editar sus datos: título, compositor, tonalidad, BPM, compás, notas de inicio y etiquetas.',
+        ],
+      },
+      {
+        id: 'reader',
+        title: 'Lector',
+        items: [
+          'Tocá el tercio derecho para avanzar y el izquierdo para volver; el centro muestra las barras. También podés deslizar la hoja.',
+          'Pellizcá para hacer zoom. Con zoom, tocar un costado o arrastrar más allá del borde pasa de hoja.',
+          'El botón de ajuste de la barra de arriba (o un doble toque al centro) alterna al ancho y página entera, y saca el zoom.',
+          'En Ajustes de lectura elegís el modo (una página, vertical o dos páginas), el tema, la media página y si el toque usa tercios o mitades.',
+          'En Página recortás los márgenes y cambiás el orden de las páginas, por ejemplo "1, 2, 3, 2, 3" para una repetición.',
+          'Las flechas del teclado, PageUp/PageDown y espacio pasan página: sirve para pedales Bluetooth.',
+        ],
+      },
+      {
+        id: 'annotate',
+        title: 'Anotar',
+        items: [
+          'Tocá Anotar, o apoyá el lápiz sobre la página.',
+          'Un dedo o el lápiz dibuja. Dos dedos mueven la página y hacen zoom; tocar con dos dedos sin moverlos deshace.',
+          'Hay lápiz, resaltador, texto, goma y símbolos musicales, que se pegan con un toque y se arrastran para acomodarlos.',
+          'El PDF original nunca se modifica.',
+        ],
+      },
+      {
+        id: 'markers',
+        title: 'Marcadores y saltos',
+        items: [
+          'Un marcador guarda un lugar ("Letra B") para ir directo desde Marcadores.',
+          'Un salto es un botón sobre la página que lleva a otra página o a un marcador: para D.S., coda y repeticiones. Después de saltar, aparece Volver.',
+          'Para crear uno, tocá Agregar y después el lugar exacto en la página.',
+        ],
+      },
+      {
+        id: 'lists',
+        title: 'Listas y modo show',
+        items: [
+          'Una lista es el orden de un concierto o un ensayo. Agregá partituras y separadores (por ejemplo, el intervalo) y arrastralos desde los puntitos para ordenarlos.',
+          'Modo show abre la primera obra y recorre la lista con toques: en la última página, un toque muestra la obra siguiente y otro pasa.',
+          'En escena la barra de abajo arranca bloqueada para no tocar nada sin querer: un toque la habilita.',
+          'Tocando el título arriba ves el índice de la lista y saltás a cualquier obra.',
+        ],
+      },
+      {
+        id: 'practice',
+        title: 'Ensayo',
+        items: [
+          'Ensayo abre el metrónomo y un teclado de dos octavas; la nota suena mientras mantenés la tecla.',
+          'Grabá las notas de inicio de cada obra con el teclado: después aparece un botón para dar el tono con un toque.',
+          'El tempo del metrónomo queda guardado en la partitura.',
+        ],
+      },
+      {
+        id: 'backup',
+        title: 'Backup',
+        items: [
+          'Exportá todo en un archivo .atril desde Ajustes, o conectá Google Drive para que se guarde solo.',
+          'El backup liviano no lleva los PDFs: pesa poco y sirve para mandarlo. Al importarlo en otro dispositivo, reimportá los PDFs y se reenganchan solos.',
+          'En iPhone y iPad, Safari puede borrar los datos si le falta espacio: hacé backup seguido.',
+        ],
+      },
+    ],
   },
 };

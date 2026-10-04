@@ -24,10 +24,16 @@ test('buscar y editar metadatos', async ({ page }) => {
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Compositor').fill('W. A. Mozart');
   await dialog.getByLabel('Tonalidad').fill('Re M');
-  await dialog.getByLabel('Tonalidad').blur();
-  await dialog.getByRole('button', { name: 'Cerrar' }).click();
+  await dialog.getByRole('button', { name: 'Guardar' }).click();
+  await expect(dialog).toBeHidden();
   await expect(grid.getByText('W. A. Mozart')).toBeVisible();
   await expect(grid.getByText('Re M')).toBeVisible();
+
+  // Cancelar descarta lo escrito.
+  await page.getByRole('button', { name: 'Editar Ave verum corpus' }).click();
+  await dialog.getByLabel('Compositor').fill('Otro');
+  await dialog.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(grid.getByText('W. A. Mozart')).toBeVisible();
 });
 
 test('funciona sin conexión después de la primera carga', async ({
@@ -111,4 +117,56 @@ test('aviso de versión nueva: no se aplica sola y se actualiza con un toque', a
   } finally {
     await writeFile(swPath, original);
   }
+});
+
+test('tutorial: pista del lector una sola vez, y "Cómo se usa" la vuelve a mostrar', async ({
+  page,
+}) => {
+  await importFixtures(page, undefined, true);
+  await page.getByRole('button', { name: 'Cancion de ejemplo', exact: true }).click();
+  const hint = page.getByRole('dialog', { name: 'Cómo se lee' });
+  await expect(hint).toBeVisible();
+  await expect(hint.locator('..')).toContainText('Página siguiente');
+  await hint.getByRole('button', { name: 'Entendido' }).click();
+  await expect(hint).toBeHidden();
+
+  await page.reload();
+  await expect(page.locator('.page-indicator')).toHaveText('1 / 3');
+  await expect(hint).toBeHidden();
+
+  await page.goto('/#/settings');
+  await page.getByRole('link', { name: 'Ver cómo se usa' }).click();
+  await expect(page.getByRole('heading', { name: 'Marcadores y saltos' })).toBeVisible();
+  await page.getByRole('button', { name: 'Volver a mostrar las pistas' }).click();
+  await expect(page.getByRole('status')).toContainText('van a aparecer de nuevo');
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Cancion de ejemplo', exact: true }).click();
+  await expect(hint).toBeVisible();
+  // "Ver más" lleva a la sección del lector y da la pista por vista.
+  await hint.getByRole('link', { name: 'Ver más' }).click();
+  await expect(page.getByRole('heading', { name: 'Lector' })).toBeInViewport();
+});
+
+test('tutorial: quien ya tenía partituras no ve las pistas', async ({ page }) => {
+  await importFixtures(page, undefined, true);
+  // Simula una instalación anterior: se borra la marca y se recarga con la biblioteca llena.
+  await page.evaluate(
+    () =>
+      new Promise<void>((ok) => {
+        const open = indexedDB.open('atril');
+        open.onsuccess = () => {
+          const tx = open.result.transaction('settings', 'readwrite');
+          tx.objectStore('settings').delete('hintsSeen');
+          tx.oncomplete = () => {
+            open.result.close();
+            ok();
+          };
+        };
+      }),
+  );
+  await page.reload();
+  await page.getByRole('button', { name: 'Cancion de ejemplo', exact: true }).click();
+  await expect(page.locator('.page-indicator')).toHaveText('1 / 3');
+  await expect(page.getByRole('dialog', { name: 'Cómo se lee' })).toBeHidden();
 });

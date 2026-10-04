@@ -108,24 +108,6 @@
   border-radius: 999px;
   background: #fff;
 }
-.at-penonly {
-  height: 40px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 999px;
-  background: transparent;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.at-penonly[aria-checked='true'] {
-  background: rgba(110, 139, 234, 0.35);
-  border-color: transparent;
-}
 .annotation-toolbar .btn.primary {
   min-height: 40px;
   margin-left: 2px;

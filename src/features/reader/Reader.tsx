@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { flushSync } from 'react-dom';
 import type { Crop, ReadingPrefs } from '../../core/db/types';
 import { renderPage } from '../../core/pdf/render';
@@ -23,8 +31,9 @@ interface Props {
   // página ya se ve entera, así que solo se usa en modo vertical.
   scrollTarget?: { pos: number; y: number; nonce: number };
   // Anotando: el navegador no desplaza la página con el dedo (así el dedo dibuja). Dos dedos
-  // la mueven y hacen zoom; con "solo el lápiz dibuja", un dedo también la mueve.
+  // la mueven y hacen zoom.
   manualPan?: boolean;
+  fitToggle?: number; // cambia: alterna entre al ancho y página entera, y saca el zoom
 }
 
 const TURN_MS = 180;
@@ -52,6 +61,20 @@ export function Reader(p: Props) {
   // ponytail: la hoja solo sigue al dedo en paginado de una página; con media página o dos
   // páginas el cambio es instantáneo (montar vecinos ahí pasaría de los 5 bitmaps de la cache).
   const sliding = mode === 'paged' && p.prefs.pageTurn === 'slide' && !seq.halfPage && zoom === 1;
+  // Con zoom, un dedo mueve la página a mano: así se sabe cuándo llegó al borde y hay que pasar.
+  const manualPan = !!p.manualPan || zoom > 1;
+
+  const toggleFit = () => {
+    setFitOverride(fit === 'page' ? 'width' : 'page');
+    setZoom(1);
+  };
+  const fitToggle = useRef(p.fitToggle);
+  useEffect(() => {
+    if (p.fitToggle === fitToggle.current) return;
+    fitToggle.current = p.fitToggle;
+    toggleFit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.fitToggle]);
 
   useEffect(() => {
     const el = stage.current!;
@@ -124,9 +147,10 @@ export function Reader(p: Props) {
       if (dir === 1 ? atEnd : el.scrollTop <= 0) return p.onEdge?.(dir);
       return el.scrollBy({ top: dir * box.h * 0.85, behavior: 'smooth' });
     }
-    // Ajuste al ancho: la página es más alta que la pantalla, primero se recorre.
+    // Ajuste al ancho: la página es más alta que la pantalla, primero se recorre. Con zoom no:
+    // el toque al costado pasa de hoja y la nueva arranca arriba a la izquierda.
     const slot = track.current?.querySelector<HTMLElement>('[data-where="0"]');
-    if (slot && slot.scrollHeight > slot.clientHeight + 4) {
+    if (zoom === 1 && slot && slot.scrollHeight > slot.clientHeight + 4) {
       const more =
         dir === 1 ? slot.scrollTop + slot.clientHeight < slot.scrollHeight - 4 : slot.scrollTop > 4;
       if (more) return slot.scrollBy({ top: dir * box.h * 0.85, behavior: 'smooth' });
@@ -140,7 +164,8 @@ export function Reader(p: Props) {
   goRef.current = go;
 
   // Teclado: flechas, PageUp/PageDown y espacio. Los pedales Bluetooth mandan estas teclas.
-  useEffect(() => {
+  // useLayoutEffect: escucha desde que la página se ve, no un instante después.
+  useLayoutEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).closest?.('input, textarea, [role="dialog"]')) return;
       const dir = FORWARD.includes(e.key) ? 1 : BACK.includes(e.key) ? -1 : 0;
@@ -173,6 +198,7 @@ export function Reader(p: Props) {
     swiping: false,
     panning: false,
     dx: 0,
+    over: 0, // con zoom: lo que el dedo siguió de largo contra el borde horizontal
     pinch: null as { dist: number; zoom: number; mid: { x: number; y: number } } | null,
     z: 1,
     longTimer: 0,
@@ -221,10 +247,10 @@ export function Reader(p: Props) {
     g.z = Math.min(4, Math.max(1, (g.pinch.zoom * pinchDist()) / g.pinch.dist));
     stage.current!.style.setProperty('--z', String(g.z));
     // Con touch-action normal el navegador ya mueve la página con dos dedos; acá solo hace
-    // falta cuando lo tenemos desactivado (anotando).
+    // falta cuando lo tenemos desactivado (anotando o con zoom).
     const mid = pinchMid();
     const el = panTarget();
-    if (p.manualPan && el) {
+    if (manualPan && el) {
       el.scrollLeft -= mid.x - g.pinch.mid.x;
       el.scrollTop -= mid.y - g.pinch.mid.y;
     }
@@ -246,6 +272,7 @@ export function Reader(p: Props) {
     g.start = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now() };
     g.last = { x: e.clientX, y: e.clientY };
     g.moved = g.swiping = g.panning = false;
+    g.over = 0;
     if (p.prefs.tapZones === 'halves')
       g.longTimer = window.setTimeout(() => {
         g.start = null;
@@ -260,13 +287,16 @@ export function Reader(p: Props) {
     if (!g.moved && Math.hypot(dx, dy) > 10) {
       g.moved = true;
       clearTimeout(g.longTimer);
-      g.panning = !!p.manualPan && e.pointerType !== 'mouse' && canPan(panTarget());
+      g.panning = manualPan && e.pointerType !== 'mouse' && canPan(panTarget());
       g.swiping = !g.panning && sliding && Math.abs(dx) > Math.abs(dy);
     }
     if (g.panning) {
       const el = panTarget()!;
-      el.scrollLeft -= e.clientX - g.last.x;
+      const mx = e.clientX - g.last.x;
+      const left = el.scrollLeft;
+      el.scrollLeft -= mx;
       el.scrollTop -= e.clientY - g.last.y;
+      g.over += mx - (left - el.scrollLeft);
     } else if (g.swiping) {
       const view = latest.current.view;
       const hasTarget = dx < 0 ? nextView(view, seq) : prevView(view, seq);
@@ -283,6 +313,14 @@ export function Reader(p: Props) {
     g.start = null;
     if (g.panning) {
       g.panning = false;
+      // Con zoom, arrastrar más allá del borde de la página pasa de hoja.
+      if (zoom > 1 && mode !== 'vertical' && Math.abs(g.over) > box.w * 0.15) {
+        const dir = g.over < 0 ? 1 : -1;
+        const view = latest.current.view;
+        const target = dir === 1 ? nextView(view, seq) : prevView(view, seq);
+        if (target) turn(dir, target);
+        else p.onEdge?.(dir);
+      }
       return;
     }
     if (g.swiping) {
@@ -321,8 +359,7 @@ export function Reader(p: Props) {
     clearTimeout(g.tapTimer);
     if (now - g.lastCenterTap < 300) {
       g.lastCenterTap = -Infinity;
-      setFitOverride(fit === 'page' ? 'width' : 'page');
-      setZoom(1);
+      toggleFit();
     } else {
       g.lastCenterTap = now;
       g.tapTimer = window.setTimeout(p.onCenterTap, 300);
@@ -411,13 +448,7 @@ export function Reader(p: Props) {
         data-where={where}
         style={{
           left: `${where * 100}%`,
-          touchAction: p.manualPan
-            ? 'none'
-            : zoom > 1
-              ? 'pan-x pan-y'
-              : fit === 'width'
-                ? 'pan-y'
-                : 'none',
+          touchAction: !manualPan && fit === 'width' ? 'pan-y' : 'none',
         }}
       >
         <div className="zoom-sizer" style={zoomVars(w, h)}>
@@ -457,7 +488,7 @@ export function Reader(p: Props) {
             ref={scroller}
             className="reader-scroll"
             onScroll={onScroll}
-            style={{ touchAction: p.manualPan ? 'none' : zoom > 1 ? 'pan-x pan-y' : 'pan-y' }}
+            style={{ touchAction: manualPan ? 'none' : 'pan-y' }}
           >
             <div className="zoom-sizer" style={zoomVars(box.w, vertical.total)}>
               <div className="zoom-inner vertical">

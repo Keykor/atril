@@ -76,6 +76,9 @@ export async function getSetting<T>(key: string, fallback: T): Promise<T> {
   return ((await db.settings.get(key))?.value as T | undefined) ?? fallback;
 }
 
+/** Pistas del tutorial ya vistas en este dispositivo (no viajan en el backup). */
+export const getHintsSeen = () => getSetting<string[] | null>('hintsSeen', null);
+
 export const getGlobalReading = async (): Promise<ReadingPrefs> => ({
   ...defaultReading,
   ...(await getSetting<Partial<ReadingPrefs>>('reading', {})),
