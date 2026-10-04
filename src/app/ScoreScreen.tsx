@@ -506,7 +506,7 @@ export function ScoreScreen({ scoreId, show, tour }: Props) {
       <PlaceHint id="annotate" when={!show && annotating} />
       <PlaceHint id="markers" when={!show && sheet === 'markers'} />
       <PlaceHint id="page" when={!show && sheet === 'page'} />
-      <PlaceHint id="practice" when={!show && practice} />
+      <PlaceHint id="practice" when={!show && practice} top />
     </div>
   );
 }

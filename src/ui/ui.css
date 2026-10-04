@@ -309,6 +309,10 @@
   flex-direction: column;
   gap: 8px;
 }
+.hint.top {
+  top: calc(24px + env(safe-area-inset-top));
+  bottom: auto;
+}
 .hint h2 {
   font-size: 18px;
 }

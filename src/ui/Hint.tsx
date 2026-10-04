@@ -5,13 +5,14 @@ interface Props {
   text: string;
   doneLabel: string;
   onDone: () => void;
+  top?: boolean; // arriba, para no tapar un panel de abajo (ensayo)
 }
 
 /** Pista de una sola vez: un texto corto y "Entendido". */
-export function Hint({ title, text, doneLabel, onDone }: Props) {
+export function Hint({ title, text, doneLabel, onDone, top }: Props) {
   return (
     <aside
-      className="hint"
+      className={`hint${top ? ' top' : ''}`}
       role="dialog"
       aria-label={title}
       onPointerDown={(e) => e.stopPropagation()}

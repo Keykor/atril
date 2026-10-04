@@ -25,8 +25,16 @@ export function useHint(id: HintId) {
 }
 
 /** La tarjeta de una pista, si no se vio. La del lector es otra (TapZonesHint). */
-export function PlaceHint({ id, when = true }: { id: Exclude<HintId, 'reader'>; when?: boolean }) {
+export function PlaceHint({
+  id,
+  when = true,
+  top,
+}: {
+  id: Exclude<HintId, 'reader'>;
+  when?: boolean;
+  top?: boolean;
+}) {
   const hint = useHint(id);
   if (!when || !hint.show) return null;
-  return <Hint {...t.hints[id]} doneLabel={t.hints.done} onDone={hint.done} />;
+  return <Hint {...t.hints[id]} doneLabel={t.hints.done} onDone={hint.done} top={top} />;
 }
