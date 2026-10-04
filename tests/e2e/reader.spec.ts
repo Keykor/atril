@@ -295,6 +295,18 @@ test('al ancho, la hoja nueva arranca arriba, para adelante y para atrás', asyn
   expect(await scrollTop()).toBe(0);
 });
 
+test('con ensayo abierto se puede bajar la página hasta que no quede nada tapado', async ({
+  page,
+}) => {
+  await openScore(page);
+  await clickBar(page, 'Ensayo');
+  const panel = (await page.getByRole('region', { name: 'Herramientas de ensayo' }).boundingBox())!;
+  const slot = page.locator('.reader-slot[data-where="0"]');
+  await slot.evaluate((el) => (el.scrollTop = el.scrollHeight));
+  const shown = (await slot.locator('.page').first().boundingBox())!;
+  expect(shown.y + shown.height).toBeLessThanOrEqual(panel.y + 1);
+});
+
 test('en el celular, metrónomo y teclado van en pestañas; en tablet se ven los dos', async ({
   page,
 }) => {

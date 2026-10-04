@@ -35,6 +35,8 @@ interface Props {
   manualPan?: boolean;
   fitToggle?: number; // cambia: alterna entre al ancho y página entera, y saca el zoom
   framed?: boolean; // recortando: la página entera y sin zoom, para ver los cuatro bordes
+  // px tapados abajo por un panel (ensayo): se puede desplazar la página hasta arriba de él.
+  bottomInset?: number;
 }
 
 const TURN_MS = 180;
@@ -460,7 +462,7 @@ export function Reader(p: Props) {
         data-where={where}
         style={{
           left: `${where * 100}%`,
-          touchAction: !manualPan && fit === 'width' ? 'pan-y' : 'none',
+          touchAction: !manualPan && (fit === 'width' || p.bottomInset) ? 'pan-y' : 'none',
         }}
       >
         <div className="zoom-sizer" style={zoomVars(w, h)}>
@@ -484,7 +486,7 @@ export function Reader(p: Props) {
     <div
       ref={stage}
       className={`reader-stage theme-${p.prefs.theme}`}
-      style={{ '--z': zoom } as CSSProperties}
+      style={{ '--z': zoom, '--inset': p.bottomInset ?? 0 } as CSSProperties}
       onPointerDownCapture={onPointerDownCapture}
       onPointerMoveCapture={onPointerMoveCapture}
       onPointerUpCapture={onPointerEndCapture}

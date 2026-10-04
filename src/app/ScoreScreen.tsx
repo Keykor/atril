@@ -57,6 +57,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
     symbol: 'noteQuarterUp',
   });
   const [practice, setPractice] = useState(false);
+  const [practiceHeight, setPracticeHeight] = useState(0);
   const [fitToggle, setFitToggle] = useState(0);
   const [autoscrolling, setAutoscrolling] = useState(false);
   const [nextShown, setNextShown] = useState(false); // aviso de obra siguiente (modo show)
@@ -237,6 +238,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
         manualPan={annotating}
         fitToggle={fitToggle}
         framed={sheet === 'page'}
+        bottomInset={practice ? practiceHeight : 0}
         scrollTarget={target}
         autoscroll={autoscrolling && vertical ? (score.autoscrollSpeed ?? 30) : undefined}
         interceptTap={() => {
@@ -321,7 +323,12 @@ export function ScoreScreen({ scoreId, show }: Props) {
 
       {show && <ShowProgress list={show.list} index={show.index} />}
       {practice && (
-        <PracticePanel score={score} onChange={patch} onClose={() => setPractice(false)} />
+        <PracticePanel
+          score={score}
+          onChange={patch}
+          onClose={() => setPractice(false)}
+          onHeight={setPracticeHeight}
+        />
       )}
       {show && atEnd && nextShown && !bars && !annotating && !practice && (
         <ShowNext list={show.list} index={show.index} onNext={goShow} />
