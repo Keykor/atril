@@ -168,7 +168,7 @@
   border-radius: 20px;
 }
 .side .sheet {
-  width: min(100%, clamp(340px, 50vw, 440px));
+  width: min(100%, var(--side-w));
   height: 100%;
   padding: calc(12px + env(safe-area-inset-top)) 24px calc(16px + env(safe-area-inset-bottom));
   border-radius: 20px 0 0 20px;

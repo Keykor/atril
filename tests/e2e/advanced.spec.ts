@@ -91,6 +91,15 @@ test('recorte de márgenes: la página se agranda y las anotaciones siguen aline
   const before = (await full.boundingBox())!;
 
   await clickBar(page, 'Página');
+  // Con el panel abierto, la página entra entera en el lado libre: no queda nada debajo.
+  const panel = (await page.getByRole('dialog', { name: 'Página' }).boundingBox())!;
+  const shown = page.locator('.reader-slot[data-where="0"] .page');
+  await expect
+    .poll(async () => {
+      const b = (await shown.boundingBox())!;
+      return b.x + b.width <= panel.x + 1 && b.y + b.height <= panel.y + panel.height + 1;
+    })
+    .toBe(true);
   await page.getByRole('button', { name: 'Automático' }).click();
   await closeSheet(page);
   await expect.poll(async () => (await full.boundingBox())!.width).toBeGreaterThan(before.width);

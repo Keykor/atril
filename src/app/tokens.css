@@ -1,5 +1,6 @@
 /* Tokens sacados de los diseños de referencia (Atril — pantallas). */
 :root {
+  --side-w: clamp(340px, 50vw, 440px); /* panel lateral del lector */
   --bg: #f4f4f1;
   --surface: #ffffff;
   --border: #e2e2de;

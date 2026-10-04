@@ -221,7 +221,9 @@ export function ScoreScreen({ scoreId, show }: Props) {
   const touchBars = () => setBarsTick((n) => n + 1);
 
   return (
-    <div className={`score-screen${annotationsVisible ? '' : ' annotations-hidden'}`}>
+    <div
+      className={`score-screen${annotationsVisible ? '' : ' annotations-hidden'}${sheet === 'page' ? ' cropping' : ''}`}
+    >
       <Reader
         pdfId={score.pdfId}
         sizes={sizes}
@@ -234,6 +236,7 @@ export function ScoreScreen({ scoreId, show }: Props) {
         onEdge={onEdge}
         manualPan={annotating}
         fitToggle={fitToggle}
+        framed={sheet === 'page'}
         scrollTarget={target}
         autoscroll={autoscrolling && vertical ? (score.autoscrollSpeed ?? 30) : undefined}
         interceptTap={() => {

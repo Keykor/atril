@@ -34,6 +34,7 @@ interface Props {
   // la mueven y hacen zoom.
   manualPan?: boolean;
   fitToggle?: number; // cambia: alterna entre al ancho y página entera, y saca el zoom
+  framed?: boolean; // recortando: la página entera y sin zoom, para ver los cuatro bordes
 }
 
 const TURN_MS = 180;
@@ -46,11 +47,12 @@ export function Reader(p: Props) {
   const track = useRef<HTMLDivElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
-  const [zoom, setZoom] = useState(1);
+  const [zoomState, setZoom] = useState(1);
   const [fitOverride, setFitOverride] = useState<ReadingPrefs['fit']>();
 
   const { mode } = p.prefs;
-  const fit = fitOverride ?? p.prefs.fit;
+  const zoom = p.framed ? 1 : zoomState;
+  const fit = p.framed ? 'page' : (fitOverride ?? p.prefs.fit);
   const count = p.order.length;
   const seq: Seq = {
     count,
@@ -241,7 +243,7 @@ export function Reader(p: Props) {
   const onPointerDownCapture = (e: React.PointerEvent) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (g.pointers.size !== 2) return;
+    if (g.pointers.size !== 2 || p.framed) return;
     clearTimeout(g.longTimer);
     g.pinch = { dist: pinchDist(), zoom, mid: pinchMid() };
     g.z = zoom;
