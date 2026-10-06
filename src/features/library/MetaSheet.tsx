@@ -4,6 +4,7 @@ import { formatStartNotes, parseStartNotes } from '../../core/audio/notes';
 import { getScore, listTags } from '../../core/db/queries';
 import { deleteScore, updateScore } from '../../core/db/repos';
 import type { Score } from '../../core/db/types';
+import { Icon } from '../../ui/Icon';
 import { Sheet } from '../../ui/Sheet';
 import { t } from '../../app/strings';
 import './library.css';
@@ -12,6 +13,9 @@ interface Props {
   scoreId: string;
   onClose: () => void;
   onDeleted?: () => void;
+  // Exportar el PDF con anotaciones. Viene de afuera (src/app compone): las anotaciones son
+  // otra feature.
+  onExport?: () => Promise<unknown>;
 }
 
 const FORM_ID = 'meta-form';
@@ -20,7 +24,7 @@ const FORM_ID = 'meta-form';
  * Editor de metadatos. Se usa desde la biblioteca y desde el lector. Solo "Guardar" escribe:
  * cerrar o cancelar descarta los cambios.
  */
-export function MetaSheet({ scoreId, onClose, onDeleted }: Props) {
+export function MetaSheet({ scoreId, onClose, onDeleted, onExport }: Props) {
   const score = useLiveQuery(() => getScore(scoreId), [scoreId]);
   const tags = useLiveQuery(listTags, []) ?? [];
   if (!score) return null;
@@ -51,6 +55,7 @@ export function MetaSheet({ scoreId, onClose, onDeleted }: Props) {
       }
     >
       <Form key={score.id} score={score} tags={tags} onSaved={onClose} />
+      {onExport && <ExportSection onExport={onExport} />}
     </Sheet>
   );
 }
@@ -164,5 +169,35 @@ function Form({
         </div>
       )}
     </form>
+  );
+}
+
+/** Imprimir o compartir: arma el PDF con las anotaciones. Aparte del formulario: no guarda nada. */
+function ExportSection({ onExport }: { onExport: () => Promise<unknown> }) {
+  const [state, setState] = useState<'idle' | 'working' | 'error' | 'missing'>('idle');
+  const run = async () => {
+    setState('working');
+    try {
+      await onExport();
+      setState('idle');
+    } catch (e) {
+      console.error(e);
+      setState((e as Error).message === 'missing-pdf' ? 'missing' : 'error');
+    }
+  };
+  return (
+    <section className="meta-export">
+      <h3>{t.meta.exportTitle}</h3>
+      <p className="field-hint">{t.meta.exportHint}</p>
+      <button type="button" className="btn" disabled={state === 'working'} onClick={run}>
+        <Icon name="download" size={18} />
+        {state === 'working' ? t.meta.exporting : t.meta.export}
+      </button>
+      {(state === 'error' || state === 'missing') && (
+        <p role="status" className="meta-export-error">
+          {state === 'missing' ? t.meta.exportMissing : t.meta.exportError}
+        </p>
+      )}
+    </section>
   );
 }

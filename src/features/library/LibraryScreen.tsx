@@ -16,9 +16,10 @@ interface Props {
   onTag: (tagId?: string) => void;
   onOpen: (scoreId: string) => void;
   banner?: React.ReactNode;
+  onExport?: (scoreId: string) => Promise<unknown>; // PDF con anotaciones, desde los datos
 }
 
-export function LibraryScreen({ tagId, onTag, onOpen, banner }: Props) {
+export function LibraryScreen({ tagId, onTag, onOpen, banner, onExport }: Props) {
   const scores = useLiveQuery(listScores, []);
   const tags = useLiveQuery(listTags, []);
   const missing = useLiveQuery(missingPdfIds, []);
@@ -141,7 +142,13 @@ export function LibraryScreen({ tagId, onTag, onOpen, banner }: Props) {
           {status}
         </div>
       )}
-      {editing && <MetaSheet scoreId={editing} onClose={() => setEditing(undefined)} />}
+      {editing && (
+        <MetaSheet
+          scoreId={editing}
+          onClose={() => setEditing(undefined)}
+          onExport={onExport && (() => onExport(editing))}
+        />
+      )}
     </>
   );
 }

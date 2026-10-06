@@ -27,6 +27,8 @@ servidor. Tus partituras y anotaciones quedan solo en tu dispositivo.
   obra a la siguiente sin salir del lector.
 - **Ensayo:** metrónomo y teclado de dos octavas; las notas de inicio de cada obra quedan
   guardadas para dar el tono con un toque.
+- **Imprimir o compartir:** desde los datos de la partitura exportás un PDF con la partitura
+  original y encima lo que dibujaste, escribiste y los símbolos que pegaste.
 - **Backup:** exportás todo en un archivo `.atril`, o lo conectás a tu Google Drive para que se
   guarde solo.
 
