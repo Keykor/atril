@@ -6,9 +6,9 @@ nuevas y el último con arreglos o cambios internos.
 
 ## 0.9.1
 
-- Las pistas se cierran al instante al tocar "Entendido"; en el celular a veces parecía que el
-  botón no respondía. La pista del lector también se cierra tocando cualquier parte de la
-  pantalla.
+- Las pistas se cierran al instante al tocar "Entendido", y también tocando cualquier parte de
+  la pantalla: con la app instalada en algunos celulares el botón a veces no respondía y la
+  pista quedaba trabada. Ese primer toque solo cierra la pista.
 
 ## 0.9.0
 

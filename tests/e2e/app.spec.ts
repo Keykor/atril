@@ -106,6 +106,10 @@ test('aviso de versión nueva: no se aplica sola y se actualiza con un toque', a
 }) => {
   test.skip(browserName === 'webkit', 'El WebKit de Playwright no sirve desde el service worker');
   await page.goto('/');
+  await page
+    .getByRole('dialog', { name: 'Tu biblioteca' })
+    .getByRole('button', { name: 'Entendido' })
+    .click();
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
   const banner = page.getByText('Hay una versión nueva de Atril.');
   await expect(banner).toHaveCount(0);
@@ -164,18 +168,20 @@ test('tutorial: pistas de una sola vez y "Mostrame" las vuelve a mostrar en su l
   await expect(page.getByRole('dialog', { name: 'Ensayo' })).toBeHidden();
 });
 
-test('tutorial: la pista del lector también se cierra tocando cualquier parte', async ({
-  page,
-}) => {
+test('tutorial: las pistas también se cierran tocando cualquier parte', async ({ page }) => {
   await importFixtures(page, undefined, true);
+  // Tocar otra cosa con la pista abierta solo la cierra: no abre la partitura de abajo.
+  const library = page.getByRole('dialog', { name: 'Tu biblioteca' });
+  await expect(library).toBeVisible();
   await page
-    .getByRole('dialog', { name: 'Tu biblioteca' })
-    .getByRole('button', { name: 'Entendido' })
-    .click();
+    .getByRole('button', { name: 'Cancion de ejemplo', exact: true })
+    .click({ force: true });
+  await expect(library).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Biblioteca' })).toBeVisible();
   await page.getByRole('button', { name: 'Cancion de ejemplo', exact: true }).click();
   const reader = page.getByRole('dialog', { name: 'Cómo se lee' });
   await expect(reader).toBeVisible();
-  await page.getByText('Página siguiente').click();
+  await page.getByText('Página siguiente').click({ force: true });
   await expect(reader).toBeHidden();
   // El toque solo cerró la pista: no pasó de página.
   await expect(page.locator('.page-indicator')).toHaveText('1 / 3');

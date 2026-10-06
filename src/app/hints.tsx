@@ -26,11 +26,12 @@ export const LEGACY_HINTS: HintId[] = ['reader', 'annotate', 'markers', 'lists']
  */
 export function useHint(id: HintId) {
   const seen = useLiveQuery(getHintsSeen, []);
-  const [closed, setClosed] = useState(false);
+  // Cuál se cerró, no solo "una": React reusa el componente al pasar de una pantalla a otra.
+  const [closed, setClosed] = useState<HintId>();
   return {
-    show: !closed && !!seen && !seen.includes(id),
+    show: closed !== id && !!seen && !seen.includes(id),
     done: () => {
-      setClosed(true);
+      setClosed(id);
       void markHintSeen(id);
     },
   };
