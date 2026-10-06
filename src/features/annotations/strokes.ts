@@ -19,9 +19,9 @@ export const ERASER_RADIUS = 0.012;
 
 export const VB = 1000; // ancho del viewBox del SVG de cada página
 
-/** Trazo -> path SVG en un viewBox de VB de ancho y VB*aspect de alto. */
-export function strokePath(stroke: Stroke, aspect: number) {
-  const outline = getStroke(
+/** Contorno del trazo (un polígono) en un viewBox de VB de ancho y VB*aspect de alto. */
+export function strokeOutline(stroke: Stroke, aspect: number) {
+  return getStroke(
     stroke.points.map(([x, y, p]) => [x * VB, y * VB * aspect, p]),
     {
       size: stroke.width * VB,
@@ -32,6 +32,11 @@ export function strokePath(stroke: Stroke, aspect: number) {
       simulatePressure: stroke.points.every(([, , p]) => p === stroke.points[0][2]),
     },
   );
+}
+
+/** Trazo -> path SVG en un viewBox de VB de ancho y VB*aspect de alto. */
+export function strokePath(stroke: Stroke, aspect: number) {
+  const outline = strokeOutline(stroke, aspect);
   if (!outline.length) return '';
   const d = outline.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`);
   return `${d.join('')}Z`;

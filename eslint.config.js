@@ -37,8 +37,18 @@ export default tseslint.config(
     },
   },
   // src/app/ compone features, así que puede importarlas.
-  { files: ['src/app/**', 'src/ui/**'], rules: restrict(...noCoreInternals) },
-  { files: ['src/features/**'], rules: restrict(...noCoreInternals, noOtherFeature) },
+  // Los tests quedan afuera: verifican el resultado con herramientas propias (p. ej. pdf.js para
+  // leer el PDF exportado).
+  {
+    files: ['src/app/**', 'src/ui/**'],
+    ignores: ['**/*.test.ts'],
+    rules: restrict(...noCoreInternals),
+  },
+  {
+    files: ['src/features/**'],
+    ignores: ['**/*.test.ts'],
+    rules: restrict(...noCoreInternals, noOtherFeature),
+  },
   {
     files: ['src/core/**'],
     rules: restrict({ regex: '(^|/)(features|app|ui)/', message: 'core/ no importa de la UI.' }),
