@@ -4,6 +4,16 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.9.0
+
+- Imprimir o compartir con las correcciones: en Datos de la partitura (el botón ⋯ en el lector,
+  o desde la biblioteca) está "Exportar PDF con anotaciones". Arma un PDF con la partitura
+  original y encima lo que dibujaste, resaltaste, escribiste y los símbolos que pegaste. En el
+  celular o la tablet se abre Compartir (WhatsApp, mail, imprimir, guardar); en la compu se
+  descarga.
+- El PDF no lleva marcadores ni saltos, y no aplica el recorte ni el orden de páginas: van todas
+  las páginas de la partitura, en su orden.
+
 ## 0.8.0
 
 - "Cómo se usa" ahora es la lista de pistas: "Mostrame" te lleva al lugar (tu última partitura,
