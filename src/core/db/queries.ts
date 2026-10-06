@@ -48,6 +48,13 @@ export const listTags = async (): Promise<Tag[]> => byName(await db.tags.toArray
 export const getPageAnnotations = async (scoreId: string, page: number) =>
   (await db.annotations.get(annotationId(scoreId, page))) ?? emptyAnnotations(scoreId, page);
 
+/** Todas las anotaciones de una partitura (una entrada por página que tenga algo). */
+export const listScoreAnnotations = (scoreId: string) =>
+  db.annotations.where('scoreId').equals(scoreId).toArray();
+
+/** Los bytes del PDF; undefined si falta (vino de un backup liviano). */
+export const getPdfBytes = async (pdfId: string) => (await db.pdfData.get(pdfId))?.data;
+
 // --- Marcadores y saltos ---
 
 export interface ScoreMarkers {
