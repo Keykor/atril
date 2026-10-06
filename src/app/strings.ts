@@ -57,6 +57,14 @@ export const t = {
     delete: 'Eliminar partitura',
     confirmDelete: (title: string) =>
       `¿Eliminar "${title}"? Se borran también sus anotaciones. No se puede deshacer.`,
+    exportTitle: 'Imprimir o compartir',
+    export: 'Exportar PDF con anotaciones',
+    exporting: 'Armando el PDF…',
+    exportHint:
+      'Arma un PDF con la partitura original y encima lo que dibujaste, resaltaste, escribiste y los símbolos que pegaste. No lleva los marcadores ni los saltos, y no aplica el recorte ni el orden de páginas: van todas las páginas, en su orden.',
+    exportError: 'No se pudo armar el PDF. Probá de nuevo.',
+    exportMissing: 'Falta el PDF de esta partitura: importalo de nuevo desde la biblioteca.',
+    exportSuffix: '(con anotaciones)',
   },
   reader: {
     back: 'Biblioteca',

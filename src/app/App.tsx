@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { getLastOpenedScore, getSetList } from '../core/db/queries';
 import { initHints, unmarkHint } from '../core/db/repos';
 import { HelpCard, HelpScreen } from '../features/help/HelpScreen';
+import { exportAnnotatedPdf } from '../features/annotations/exportPdf';
 import { LibraryScreen } from '../features/library/LibraryScreen';
 import { TagNav } from '../features/library/TagNav';
 import { ListsScreen } from '../features/setlists/ListsScreen';
@@ -87,6 +88,7 @@ export function App() {
         tagId={tagId}
         onTag={setTagId}
         onOpen={(sid) => navigate(`/score/${sid}`)}
+        onExport={(sid) => exportAnnotatedPdf(sid, t.meta.exportSuffix)}
         banner={
           <>
             <InstallBanner />

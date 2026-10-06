@@ -7,6 +7,7 @@ import { MissingPdfError, pageSizes } from '../core/pdf/render';
 import { keepAwake } from '../core/wakeLock';
 import { AnnotationLayer } from '../features/annotations/AnnotationLayer';
 import { AnnotationToolbar } from '../features/annotations/AnnotationToolbar';
+import { exportAnnotatedPdf } from '../features/annotations/exportPdf';
 import { COLORS, type ToolState } from '../features/annotations/strokes';
 import { useAnnotationHistory } from '../features/annotations/useHistory';
 import { MetaSheet } from '../features/library/MetaSheet';
@@ -492,7 +493,12 @@ export function ScoreScreen({ scoreId, show, tour }: Props) {
         />
       )}
       {sheet === 'meta' && (
-        <MetaSheet scoreId={score.id} onClose={() => setSheet(null)} onDeleted={back} />
+        <MetaSheet
+          scoreId={score.id}
+          onClose={() => setSheet(null)}
+          onDeleted={back}
+          onExport={() => exportAnnotatedPdf(score.id, t.meta.exportSuffix)}
+        />
       )}
 
       {/* Pistas de una sola vez. Nunca en modo show: en escena nada tapa la música. */}
