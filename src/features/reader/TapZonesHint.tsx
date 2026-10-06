@@ -14,10 +14,15 @@ interface Props {
   onDone: () => void;
 }
 
-/** Pista del lector: marca sobre la página qué hace un toque en cada zona. */
+/** Pista del lector: marca sobre la página qué hace un toque en cada zona. Un toque en cualquier
+ * lugar la cierra, no solo "Entendido". */
 export function TapZonesHint({ zones, labels, onDone }: Props) {
   return (
-    <div className={`tap-hint ${zones}`} onPointerDown={(e) => e.stopPropagation()}>
+    <div
+      className={`tap-hint ${zones}`}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={onDone}
+    >
       <div className="tap-hint-zone">← {labels.back}</div>
       {zones === 'thirds' && <div className="tap-hint-zone">{labels.bars}</div>}
       <div className="tap-hint-zone">{labels.next} →</div>
