@@ -1,6 +1,22 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { FIXTURES, importFixtures } from './helpers';
+
+/** Las pistas guardadas como vistas, leídas directo de IndexedDB. */
+const hintsSeen = (page: Page) =>
+  page.evaluate(
+    () =>
+      new Promise<string[]>((ok) => {
+        const open = indexedDB.open('atril');
+        open.onsuccess = () => {
+          const get = open.result.transaction('settings').objectStore('settings').get('hintsSeen');
+          get.onsuccess = () => {
+            open.result.close();
+            ok(get.result?.value ?? []);
+          };
+        };
+      }),
+  );
 
 test('importar PDFs, verlos en la biblioteca y no duplicar al reimportar', async ({ page }) => {
   await importFixtures(page);
@@ -90,6 +106,10 @@ test('aviso de versión nueva: no se aplica sola y se actualiza con un toque', a
 }) => {
   test.skip(browserName === 'webkit', 'El WebKit de Playwright no sirve desde el service worker');
   await page.goto('/');
+  await page
+    .getByRole('dialog', { name: 'Tu biblioteca' })
+    .getByRole('button', { name: 'Entendido' })
+    .click();
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
   const banner = page.getByText('Hay una versión nueva de Atril.');
   await expect(banner).toHaveCount(0);
@@ -131,20 +151,41 @@ test('tutorial: pistas de una sola vez y "Mostrame" las vuelve a mostrar en su l
   const reader = page.getByRole('dialog', { name: 'Cómo se lee' });
   await expect(reader.locator('..')).toContainText('Página siguiente');
   await done('Cómo se lee');
-  await expect(reader).toBeHidden(); // ya quedó guardado
+  await expect(reader).toBeHidden();
+  await expect.poll(() => hintsSeen(page)).toContain('reader'); // ya quedó guardado
   await page.reload();
   await expect(page.locator('.page-indicator')).toHaveText('1 / 3');
   await expect(reader).toBeHidden();
 
   await page.goto('/#/settings');
   await done('Backup');
-  await expect(page.getByRole('dialog', { name: 'Backup' })).toBeHidden();
+  await expect.poll(() => hintsSeen(page)).toContain('backup');
   await page.getByRole('link', { name: 'Ver cómo se usa' }).click();
   await page.getByRole('button', { name: 'Mostrame: Ensayo' }).click();
   // Abre la última partitura con el panel de ensayo y la pista encima.
   await expect(page.getByRole('region', { name: 'Herramientas de ensayo' })).toBeVisible();
   await done('Ensayo');
   await expect(page.getByRole('dialog', { name: 'Ensayo' })).toBeHidden();
+});
+
+test('tutorial: las pistas también se cierran tocando cualquier parte', async ({ page }) => {
+  await importFixtures(page, undefined, true);
+  // Tocar otra cosa con la pista abierta solo la cierra: no abre la partitura de abajo.
+  const library = page.getByRole('dialog', { name: 'Tu biblioteca' });
+  await expect(library).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Cancion de ejemplo', exact: true })
+    .click({ force: true });
+  await expect(library).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Biblioteca' })).toBeVisible();
+  await page.getByRole('button', { name: 'Cancion de ejemplo', exact: true }).click();
+  const reader = page.getByRole('dialog', { name: 'Cómo se lee' });
+  await expect(reader).toBeVisible();
+  await page.getByText('Página siguiente').click({ force: true });
+  await expect(reader).toBeHidden();
+  // El toque solo cerró la pista: no pasó de página.
+  await expect(page.locator('.page-indicator')).toHaveText('1 / 3');
+  await expect.poll(() => hintsSeen(page)).toContain('reader');
 });
 
 test('tutorial: quien ya tenía partituras no ve las pistas', async ({ page }) => {
