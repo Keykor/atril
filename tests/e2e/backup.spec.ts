@@ -21,10 +21,19 @@ test('exportar, borrar todo e importar deja la biblioteca igual', async ({ page 
       }),
   );
   await page.reload();
+  // Dispositivo nuevo: aparecen las pistas. Mientras haya una abierta, el primer toque la cierra.
+  await page
+    .getByRole('dialog', { name: 'Backup' })
+    .getByRole('button', { name: 'Entendido' })
+    .click();
   await page.getByTestId('backup-input').setInputFiles(path);
   await expect(page.getByRole('status')).toContainText('Backup importado: 2 partituras.');
 
   await page.getByRole('link', { name: 'Biblioteca' }).click();
+  await page
+    .getByRole('dialog', { name: 'Tu biblioteca' })
+    .getByRole('button', { name: 'Entendido' })
+    .click();
   const grid = page.getByRole('list', { name: 'Partituras' });
   await expect(grid.getByRole('listitem')).toHaveCount(2);
   await expect(grid.locator('img')).toHaveCount(2); // miniaturas regeneradas

@@ -4,6 +4,12 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.9.1
+
+- Las pistas se cierran al instante al tocar "Entendido", y también tocando cualquier parte de
+  la pantalla: con la app instalada en algunos celulares el botón a veces no respondía y la
+  pista quedaba trabada. Ese primer toque solo cierra la pista.
+
 ## 0.9.0
 
 - Imprimir o compartir con las correcciones: en Datos de la partitura (el botón ⋯ en el lector,
