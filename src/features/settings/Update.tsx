@@ -1,5 +1,12 @@
-import { useSyncExternalStore } from 'react';
-import { applyUpdate, dismissUpdate, hasUpdate, onUpdateChange } from '../../core/update';
+import { useState, useSyncExternalStore } from 'react';
+import {
+  applyUpdate,
+  checkForUpdate,
+  dismissUpdate,
+  hasUpdate,
+  onUpdateChange,
+  showUpdateBanner,
+} from '../../core/update';
 import { Icon } from '../../ui/Icon';
 import { t } from '../../app/strings';
 import './settings.css';
@@ -14,7 +21,7 @@ const buildDate = new Date(__BUILD_DATE__).toLocaleString('es', {
 
 /** Aviso de versión nueva. No aparece dentro del lector: ahí no se interrumpe. */
 export function UpdateBanner() {
-  if (!useUpdate()) return null;
+  if (!useSyncExternalStore(onUpdateChange, showUpdateBanner)) return null;
   return (
     <div className="reminder info update-banner" role="status">
       <Icon name="download" />
@@ -32,6 +39,7 @@ export function UpdateBanner() {
 /** Versión instalada en Ajustes, con el botón de actualizar si hay una nueva esperando. */
 export function VersionCard() {
   const available = useUpdate();
+  const [check, setCheck] = useState<'checking' | 'latest' | 'found' | 'offline'>();
   return (
     <section className="card pad">
       <h2>{u.title}</h2>
@@ -44,7 +52,30 @@ export function VersionCard() {
           </button>
         </div>
       ) : (
-        <p>{u.upToDate}</p>
+        <>
+          <p role="status">
+            {check === 'latest'
+              ? u.latest
+              : check === 'found'
+                ? u.found
+                : check === 'offline'
+                  ? u.offline
+                  : u.upToDate}
+          </p>
+          <div className="row">
+            <button
+              className="btn"
+              disabled={check === 'checking'}
+              onClick={async () => {
+                setCheck('checking');
+                const found = await checkForUpdate();
+                setCheck(found === undefined ? 'offline' : found ? 'found' : 'latest');
+              }}
+            >
+              {check === 'checking' ? u.checking : u.check}
+            </button>
+          </div>
+        </>
       )}
     </section>
   );

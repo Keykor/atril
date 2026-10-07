@@ -357,6 +357,11 @@ export const t = {
       `Atril ${version} · publicada el ${date}${sha === 'local' ? '' : ` · ${sha}`}`,
     upToDate:
       'Atril busca versiones nuevas sola al abrirla. Si hay una, te avisa acá y en la biblioteca.',
+    check: 'Buscar actualización',
+    checking: 'Buscando…',
+    latest: 'Tenés la última versión.',
+    found: 'Hay una versión nueva: se está descargando y en un momento aparece "Actualizar".',
+    offline: 'No se pudo buscar: revisá la conexión.',
   },
   settings: {
     title: 'Ajustes',

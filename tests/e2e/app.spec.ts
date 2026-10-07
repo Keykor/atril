@@ -122,6 +122,15 @@ test('aviso de versión nueva: no se aplica sola y se actualiza con un toque', a
     await writeFile(swPath, `${original}\n// versión nueva ${Date.now()}`);
     await page.reload();
     await expect(banner).toBeVisible();
+    // "Más tarde" oculta el aviso, pero Actualizar sigue en Ajustes → Versión.
+    await page.getByRole('button', { name: 'Más tarde' }).click();
+    await expect(banner).toHaveCount(0);
+    await page.getByRole('link', { name: 'Ajustes' }).click();
+    await page
+      .getByRole('dialog', { name: 'Backup' })
+      .getByRole('button', { name: 'Entendido' })
+      .click();
+    await expect(page.getByRole('button', { name: 'Actualizar' })).toBeVisible();
     // Queda esperando: no se activa sola.
     const waiting = () =>
       page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => !!r?.waiting));
@@ -134,6 +143,9 @@ test('aviso de versión nueva: no se aplica sola y se actualiza con un toque', a
     ]);
     await expect.poll(waiting).toBe(false);
     await expect(banner).toHaveCount(0);
+    // Ya actualizada: buscar a mano dice que es la última.
+    await page.getByRole('button', { name: 'Buscar actualización' }).click();
+    await expect(page.getByText('Tenés la última versión.')).toBeVisible();
   } finally {
     await writeFile(swPath, original);
   }
