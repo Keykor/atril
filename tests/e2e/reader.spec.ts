@@ -104,12 +104,24 @@ test('metrónomo y teclado: el panel abre, marca los tiempos y guarda el tempo',
   await expect(panel.locator('.metro-beats span[data-on]')).toHaveCount(1);
   await panel.getByRole('button', { name: 'Detener' }).click();
   await panel.getByRole('button', { name: 'Do4', exact: true }).dispatchEvent('pointerdown');
+  // Pedal y volumen del teclado: quedan guardados en el dispositivo.
+  const pedal = panel.getByRole('button', { name: 'Pedal' });
+  await pedal.click();
+  await expect(pedal).toHaveAttribute('aria-pressed', 'true');
+  await panel.getByLabel('Volumen del teclado').fill('0.5');
 
   // El tempo quedó en la partitura.
   await page.waitForTimeout(700);
   await panel.getByRole('button', { name: 'Cerrar herramientas' }).click();
   await clickBar(page, 'Datos de la partitura');
   await expect(page.getByRole('dialog').getByLabel('BPM')).toHaveValue('73');
+  await page.reload();
+  await clickBar(page, 'Ensayo');
+  await expect(panel.getByRole('button', { name: 'Pedal' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(panel.getByLabel('Volumen del teclado')).toHaveValue('0.5');
 });
 
 test('las notas de inicio se graban con el teclado y aparece el botón para dar el tono', async ({

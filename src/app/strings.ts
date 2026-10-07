@@ -300,6 +300,9 @@ export const t = {
     recordAgain: 'Cambiar',
     recordHint: 'Tocá las teclas en el orden en que querés dar las notas',
     clearStartNotes: 'Borrar',
+    sustain: 'Pedal',
+    sustainHint: 'Con el pedal, la nota sigue sonando al soltar la tecla',
+    volume: 'Volumen del teclado',
   },
   backup: {
     title: 'Backup',
