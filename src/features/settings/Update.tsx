@@ -7,6 +7,7 @@ import {
   onUpdateChange,
   showUpdateBanner,
 } from '../../core/update';
+import { language } from '../../core/language';
 import { Icon } from '../../ui/Icon';
 import { t } from '../../app/strings';
 import './settings.css';
@@ -14,7 +15,7 @@ import './settings.css';
 const u = t.update;
 const useUpdate = () => useSyncExternalStore(onUpdateChange, hasUpdate);
 
-const buildDate = new Date(__BUILD_DATE__).toLocaleString('es', {
+const buildDate = new Date(__BUILD_DATE__).toLocaleString(language, {
   dateStyle: 'long',
   timeStyle: 'short',
 });

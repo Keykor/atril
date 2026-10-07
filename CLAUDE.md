@@ -51,8 +51,11 @@ Arquitectura (la hace cumplir ESLint, no la desactives con `eslint-disable`):
 
 Además:
 
-- Todo texto de interfaz va en `src/app/strings.ts`, en español rioplatense (voseo). Nada de
-  textos sueltos en componentes.
+- Todo texto de interfaz va en `src/app/strings.ts` (español rioplatense, voseo) **y** en
+  `src/app/strings.en.ts` (inglés), con la misma clave. Si falta en uno, no compila. Nada de
+  textos sueltos en componentes. Fechas y orden alfabético usan `language` de
+  `core/language.ts`, nunca un `'es'` fijo. Los nombres de notas no van en los diccionarios:
+  salen de `core/audio/notes.ts` según el cifrado elegido (Do Re Mi o C D E).
 - Estilos: CSS plano por feature, con las variables de `src/app/tokens.css`. No agregues
   frameworks de CSS. Objetivos táctiles de 44–48 px como mínimo.
 - Accesibilidad: `<button>` y `<a>` reales, `aria-label` en botones de solo ícono. Los e2e
@@ -121,5 +124,10 @@ Agregá la etiqueta `needs-human` al PR si toca:
   toca "Actualizar" (`core/update.ts` manda `SKIP_WAITING`). No agregues `skipWaiting()` al
   instalar ni recargas automáticas: podría recargarse en medio de un concierto. El aviso no se
   muestra dentro del lector.
+- **Idioma y cifrado:** se resuelven una vez al abrir (preferencia en `localStorage`; si no,
+  el idioma del dispositivo, y el cifrado según el idioma) y cambiarlos recarga la app; por eso los `const x = t.algo` a nivel de módulo
+  valen. Los e2e corren con `locale: 'es-AR'` y buscan textos en español; el de idioma usa
+  `en-US`. El README principal está en inglés (`README.md`) con su par `README.es.md`: un
+  cambio que se note para el usuario se cuenta en los dos.
 - La documentación vigente es `docs/arquitectura.md` y el código. Si un cambio la contradice,
   actualizala en el mismo PR.

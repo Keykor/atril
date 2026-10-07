@@ -28,7 +28,7 @@ export const ALL_HINTS = [
  * Marca todas las pistas como vistas, escribiendo directo en IndexedDB, y recarga: lo que ya
  * estaba en pantalla no se entera de escrituras hechas por fuera de Dexie.
  */
-export async function hideHints(page: Page) {
+export async function hideHints(page: Page, library = 'Biblioteca') {
   await page.evaluate(
     (all) =>
       new Promise<void>((ok, fail) => {
@@ -50,7 +50,7 @@ export async function hideHints(page: Page) {
     ALL_HINTS,
   );
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Biblioteca' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: library })).toBeVisible();
 }
 
 /** Toque en el centro del lector: muestra u oculta las barras. */

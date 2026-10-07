@@ -10,7 +10,8 @@ test('parsea notas en solfeo y en letras', () => {
   expect(parseNote('B3')).toBe(59);
   expect(parseNote('fa')).toBe(65);
   expect(parseNote('hola')).toBeUndefined();
-  expect(midiToLabel(53)).toBe('Fa3');
+  expect(midiToLabel(53, 'solfege')).toBe('Fa3');
+  expect(midiToLabel(54, 'letters')).toBe('F♯3');
   expect(midiToFreq(69)).toBe(440);
 });
 
@@ -22,7 +23,10 @@ test('notas de inicio por voz o como acorde, ida y vuelta', () => {
     { label: 'T', notes: ['A3'] },
     { label: 'B', notes: ['F3'] },
   ]);
-  expect(formatStartNotes(satb)).toBe('S: Fa4, A: Do4, T: La3, B: Fa3');
+  expect(formatStartNotes(satb, 'solfege')).toBe('S: Fa4, A: Do4, T: La3, B: Fa3');
+  expect(formatStartNotes(satb, 'letters')).toBe('S: F4, A: C4, T: A3, B: F3');
+  // Lo mostrado en cualquier cifrado se vuelve a leer igual.
+  expect(parseStartNotes(formatStartNotes(satb, 'letters'))).toEqual(satb);
   expect(parseStartNotes('Fa3 La3 Do4')).toEqual([{ label: undefined, notes: ['F3', 'A3', 'C4'] }]);
   expect(parseStartNotes('')).toEqual([]);
 });

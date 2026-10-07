@@ -11,6 +11,7 @@ import {
   restoreFromDrive,
   type DriveBackup,
 } from '../../core/backup/drive';
+import { language } from '../../core/language';
 import { Icon } from '../../ui/Icon';
 import { ago } from '../../ui/time';
 import { t } from '../../app/strings';
@@ -95,7 +96,7 @@ export function DriveCard() {
                 <li key={b.id}>
                   <span>
                     {b.name}
-                    <small>{new Date(b.modifiedTime).toLocaleString('es')}</small>
+                    <small>{new Date(b.modifiedTime).toLocaleString(language)}</small>
                   </span>
                   <button
                     className="btn"

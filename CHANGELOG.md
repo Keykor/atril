@@ -4,6 +4,23 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.15.0
+
+- Elegí cómo se nombran las notas: Do Re Mi o C D E, en Ajustes, junto al idioma. Cambia el
+  teclado de Ensayo, el botón para dar el tono y las notas de inicio de cada partitura. Por
+  defecto va según el idioma (español, Do Re Mi; inglés, C D E). Al escribir las notas de inicio
+  sirven los dos.
+
+## 0.14.0
+
+- Atril en inglés: toma el idioma del teléfono, la tablet o el navegador (español si lo pide
+  primero; inglés en cualquier otro caso). Se cambia en Ajustes → Idioma: Automático, Español o
+  English. Al cambiarlo, la app se vuelve a abrir.
+- Fechas, "hace x minutos", el orden alfabético, los nombres de los símbolos y el nombre del PDF
+  exportado siguen el idioma. Las notas siguen siendo Do, Re, Mi en los dos.
+- En el editor de listas la fecha se ve entera y un nombre largo ya no se corta.
+- En tablet, la X para cerrar Ensayo ya no tapa "Tempo guardado en esta partitura".
+
 ## 0.13.0
 
 - Listas en filas, una abajo de otra como una tabla: nombre (con el comienzo de las notas),

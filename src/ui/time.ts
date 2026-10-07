@@ -1,4 +1,6 @@
-const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
+import { language } from '../core/language';
+
+const rtf = new Intl.RelativeTimeFormat(language, { numeric: 'auto' });
 
 /** "hace 2 minutos", "ayer". */
 export function ago(timestamp: number, now = Date.now()) {
