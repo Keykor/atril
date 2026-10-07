@@ -4,6 +4,25 @@
   gap: 32px;
   align-items: start;
 }
+/* Sin lista abierta, el índice ocupa todo el ancho: tarjetas en grilla y filtros en una fila. */
+.lists:not(.has-selection) {
+  grid-template-columns: 1fr;
+}
+.lists:not(.has-selection) .lists-index ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  align-items: start;
+}
+.lists:not(.has-selection) .lists-filters {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) auto;
+  align-items: end;
+  gap: 10px 16px;
+}
+.lists:not(.has-selection) .lists-filters .list-tags {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
 .lists-index ul {
   list-style: none;
   margin: 0;
@@ -162,6 +181,9 @@
   overflow: hidden;
   min-height: 48px;
 }
+.dnd-text {
+  font-size: 15px;
+}
 .dnd-reminder {
   padding: 10px 14px;
   border-radius: 12px;
@@ -169,25 +191,43 @@
   font-size: 14px;
 }
 .dnd-reminder summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   min-height: 28px;
-  cursor: pointer;
-  list-style: none;
-}
-.dnd-reminder summary::-webkit-details-marker {
-  display: none;
-}
-.dnd-how {
-  margin-left: auto;
-  flex-shrink: 0;
   font-weight: 600;
   color: var(--accent-dark);
+  cursor: pointer;
 }
 .dnd-reminder p {
   margin: 8px 0 0;
   color: var(--text-2);
+}
+.dnd-off {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 15px;
+}
+.dnd-off input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent);
+}
+.list-tag-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent-dark);
+  font-size: 14px;
+  font-weight: 500;
+}
+.list-tag-input {
+  height: 36px;
+  width: 180px;
 }
 .list-order-head {
   display: flex;
@@ -243,7 +283,6 @@
   display: flex;
   flex-direction: column;
 }
-.list-note,
 .list-break {
   min-width: 0;
   height: 40px;
@@ -253,17 +292,11 @@
   background: transparent;
   outline: 0;
 }
-.list-note {
-  width: 30%;
-  font-size: 13px;
-  color: var(--text-2);
-}
 .list-break {
   flex: 1;
   font-weight: 600;
   color: var(--text-2);
 }
-.list-note:focus,
 .list-break:focus {
   border-color: var(--accent);
   background: var(--surface);
@@ -411,8 +444,5 @@
   }
   .list-editor {
     padding: 16px;
-  }
-  .list-note {
-    display: none;
   }
 }

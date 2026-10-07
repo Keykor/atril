@@ -195,9 +195,15 @@ function KeyboardBox({
   const [recording, setRecording] = useState<number[]>();
   // Tecla apretada -> cómo soltarla, por dedo (se pueden tocar varias a la vez).
   const held = useRef(new Map<number, () => void>());
+  // Con el pedal, las notas soltadas siguen sonando: se guardan para cortarlas al sacar el pedal.
+  const sustained = useRef(new Set<() => void>());
   useEffect(() => {
     const keys = held.current;
-    return () => keys.forEach((stop) => stop());
+    const ringing = sustained.current;
+    return () => {
+      keys.forEach((stop) => stop());
+      ringing.forEach((stop) => stop());
+    };
   }, []);
   const press = (e: React.PointerEvent, midi: number) => {
     // El soltar llega a esta tecla aunque el dedo se haya corrido.
@@ -208,7 +214,7 @@ function KeyboardBox({
     }
     held.current.get(e.pointerId)?.();
     const stop = holdNote(midi);
-    held.current.set(e.pointerId, piano.sustain ? () => {} : stop);
+    held.current.set(e.pointerId, piano.sustain ? () => sustained.current.add(stop) : stop);
     if (recording) setRecording([...recording, midi]);
   };
   const release = (e: React.PointerEvent) => {
@@ -260,20 +266,31 @@ function KeyboardBox({
           className="kb-sustain"
           aria-pressed={piano.sustain}
           title={p.sustainHint}
-          onClick={() => setPiano({ sustain: !piano.sustain })}
+          onClick={() => {
+            // Sacar el pedal corta lo que estaba sonando, como en un piano.
+            if (piano.sustain) {
+              sustained.current.forEach((stop) => stop());
+              sustained.current.clear();
+            }
+            setPiano({ sustain: !piano.sustain });
+          }}
         >
           {p.sustain}
         </button>
-        <input
-          type="range"
-          className="range"
-          aria-label={p.volume}
-          min={0}
-          max={1}
-          step={0.05}
-          value={piano.volume}
-          onChange={(e) => setPiano({ volume: Number(e.target.value) })}
-        />
+        <label className="kb-volume">
+          <Icon name="volume" size={20} />
+          <span>{p.volumeShort}</span>
+          <input
+            type="range"
+            className="range"
+            aria-label={p.volume}
+            min={0}
+            max={1}
+            step={0.05}
+            value={piano.volume}
+            onChange={(e) => setPiano({ volume: Number(e.target.value) })}
+          />
+        </label>
       </div>
       <div className="kb" role="group" aria-label={p.keyboardLabel}>
         {whites.map((midi) => (
