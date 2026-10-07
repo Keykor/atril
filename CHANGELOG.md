@@ -4,6 +4,14 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.10.1
+
+- El pellizco hace zoom desde donde tenés los dedos, no desde arriba a la izquierda.
+- Ajustes → Versión tiene "Buscar actualización" para preguntar en el momento si hay una
+  versión nueva.
+- Si tocabas la X del aviso de versión nueva, el botón "Actualizar" desaparecía también de
+  Ajustes; ahora sigue ahí.
+
 ## 0.10.0
 
 - Recordatorio de "No molestar": al lado de Modo show, en cada lista, Atril te recuerda silenciar
