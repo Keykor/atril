@@ -225,3 +225,20 @@ test('tutorial: quien ya tenía partituras no ve las pistas', async ({ page }) =
   await expect(page.locator('.page-indicator')).toHaveText('1 / 3');
   await expect(page.getByRole('dialog', { name: 'Cómo se lee' })).toBeHidden();
 });
+
+test('destacar una partitura la pone primero y queda guardado', async ({ page }) => {
+  await importFixtures(page);
+  const pinned = page.getByRole('list', { name: 'Destacadas' });
+  await expect(pinned).toHaveCount(0);
+  await page.getByRole('button', { name: 'Destacar Cancion de ejemplo' }).click();
+  await expect(pinned.getByRole('listitem')).toHaveCount(1);
+  await expect(pinned).toContainText('Cancion de ejemplo');
+  await expect(page.getByRole('list', { name: 'Partituras' }).getByRole('listitem')).toHaveCount(1);
+  await page.reload();
+  await expect(pinned.getByRole('button', { name: 'Destacar Cancion de ejemplo' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await pinned.getByRole('button', { name: 'Destacar Cancion de ejemplo' }).click();
+  await expect(pinned).toHaveCount(0);
+});

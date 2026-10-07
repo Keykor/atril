@@ -1,7 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { listScores, listTags, missingPdfIds } from '../../core/db/queries';
+import { updateScore } from '../../core/db/repos';
 import { filterScores } from '../../core/db/search';
+import type { Score } from '../../core/db/types';
 import { importFiles } from '../../core/pdf/import';
 import { takeSharedFiles } from '../../core/pdf/shared';
 import { Icon } from '../../ui/Icon';
@@ -57,6 +59,48 @@ export function LibraryScreen({ tagId, onTag, onOpen, banner, onExport }: Props)
     void takeSharedFiles().then(importAll);
   }, []);
 
+  // Destacadas primero, con cualquier orden o filtro.
+  const pinned = shown.filter((s) => s.pinned);
+  const others = shown.filter((s) => !s.pinned);
+  const card = (s: Score) => (
+    <li key={s.id} className="score-card">
+      <button className="score-open" onClick={() => onOpen(s.id)}>
+        <span className="score-thumb">
+          <Thumb scoreId={s.id} />
+        </span>
+        <span className="score-info">
+          <span className="score-title">{s.title}</span>
+          <span className="score-composer">
+            {missing?.has(s.pdfId) ? t.library.missingPdf : (s.composer ?? ' ')}
+          </span>
+          <span className="score-chips">
+            {s.tagIds.slice(0, 1).map((id) => (
+              <span key={id} className="chip">
+                {tagById.get(id)?.name}
+              </span>
+            ))}
+            {s.key && <span className="chip outline">{s.key}</span>}
+          </span>
+        </span>
+      </button>
+      <button
+        className="icon-btn score-pin"
+        aria-label={t.library.pin(s.title)}
+        aria-pressed={!!s.pinned}
+        onClick={() => void updateScore(s.id, { pinned: !s.pinned || undefined })}
+      >
+        <Icon name="star" size={18} />
+      </button>
+      <button
+        className="icon-btn score-edit"
+        aria-label={t.library.edit(s.title)}
+        onClick={() => setEditing(s.id)}
+      >
+        <Icon name="more" />
+      </button>
+    </li>
+  );
+
   return (
     <>
       <header className="screen-header">
@@ -103,38 +147,22 @@ export function LibraryScreen({ tagId, onTag, onOpen, banner, onExport }: Props)
       {scores && shown.length === 0 ? (
         <p className="empty">{scores.length ? t.library.noResults : t.library.empty}</p>
       ) : (
-        <ul className="score-grid" aria-label={t.library.scores}>
-          {shown.map((s) => (
-            <li key={s.id} className="score-card">
-              <button className="score-open" onClick={() => onOpen(s.id)}>
-                <span className="score-thumb">
-                  <Thumb scoreId={s.id} />
-                </span>
-                <span className="score-info">
-                  <span className="score-title">{s.title}</span>
-                  <span className="score-composer">
-                    {missing?.has(s.pdfId) ? t.library.missingPdf : (s.composer ?? ' ')}
-                  </span>
-                  <span className="score-chips">
-                    {s.tagIds.slice(0, 1).map((id) => (
-                      <span key={id} className="chip">
-                        {tagById.get(id)?.name}
-                      </span>
-                    ))}
-                    {s.key && <span className="chip outline">{s.key}</span>}
-                  </span>
-                </span>
-              </button>
-              <button
-                className="icon-btn score-edit"
-                aria-label={t.library.edit(s.title)}
-                onClick={() => setEditing(s.id)}
-              >
-                <Icon name="more" />
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          {pinned.length > 0 && (
+            <>
+              <h2 className="library-section">{t.library.pinned}</h2>
+              <ul className="score-grid" aria-label={t.library.pinned}>
+                {pinned.map(card)}
+              </ul>
+              {others.length > 0 && <h2 className="library-section">{t.library.others}</h2>}
+            </>
+          )}
+          {others.length > 0 && (
+            <ul className="score-grid" aria-label={t.library.scores}>
+              {others.map(card)}
+            </ul>
+          )}
+        </>
       )}
 
       {status && (

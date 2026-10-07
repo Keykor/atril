@@ -31,6 +31,9 @@ export const t = {
     noResults: 'Ninguna partitura coincide con la búsqueda.',
     missingPdf: 'Falta el PDF',
     edit: (title: string) => `Editar ${title}`,
+    pin: (title: string) => `Destacar ${title}`,
+    pinned: 'Destacadas',
+    others: 'Todas las partituras',
   },
   tags: {
     title: 'Etiquetas',
