@@ -398,6 +398,10 @@ export const en: Strings = {
     languageHint: (device: string) =>
       `Automatic follows your device’s language (now ${device}). Atril reopens when you change it.`,
     languageNames: { es: 'Español', en: 'English' },
+    notationNames: { solfege: 'Do Re Mi', letters: 'C D E' },
+    notation: 'Note names',
+    notationHint:
+      'How notes show on the keyboard and in starting notes. You can type either one. Atril reopens when you change it.',
   },
   hints: {
     done: 'Got it',

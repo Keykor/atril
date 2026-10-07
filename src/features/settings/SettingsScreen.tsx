@@ -5,6 +5,7 @@ import {
   setLanguagePref,
   type LanguagePref,
 } from '../../core/language';
+import { notation, setNotationPref, type Notation } from '../../core/audio/notes';
 import { Segmented } from '../../ui/controls';
 import { t } from '../../app/strings';
 import './settings.css';
@@ -22,10 +23,14 @@ export function SettingsScreen({ children }: { children?: ReactNode }) {
 
 const s = t.settings;
 
-/** Idioma de la app. Cambiarlo recarga: los textos se eligen una vez, al abrir. */
+/** Idioma y cifrado. Cambiarlos recarga: textos y nombres de notas se eligen una vez, al abrir. */
 export function LanguageCard() {
   const change = (pref: LanguagePref) => {
     setLanguagePref(pref);
+    location.reload();
+  };
+  const changeNotation = (n: Notation) => {
+    setNotationPref(n);
     location.reload();
   };
   return (
@@ -41,6 +46,16 @@ export function LanguageCard() {
         onChange={change}
       />
       <p>{s.languageHint(s.languageNames[deviceLanguage])}</p>
+      <Segmented
+        label={s.notation}
+        value={notation}
+        options={[
+          { value: 'solfege', label: s.notationNames.solfege },
+          { value: 'letters', label: s.notationNames.letters },
+        ]}
+        onChange={changeNotation}
+      />
+      <p>{s.notationHint}</p>
     </section>
   );
 }

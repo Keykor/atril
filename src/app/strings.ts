@@ -400,6 +400,10 @@ const es = {
     languageHint: (device: string) =>
       `Automático usa el idioma del dispositivo (ahora, ${device}). Al cambiarlo, Atril se vuelve a abrir.`,
     languageNames: { es: 'Español', en: 'English' },
+    notationNames: { solfege: 'Do Re Mi', letters: 'C D E' },
+    notation: 'Nombres de las notas',
+    notationHint:
+      'Cómo se ven las notas en el teclado y en las notas de inicio. Al escribirlas sirven los dos. Al cambiarlo, Atril se vuelve a abrir.',
   },
   hints: {
     done: 'Entendido',
