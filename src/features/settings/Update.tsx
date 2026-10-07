@@ -53,7 +53,7 @@ export function VersionCard() {
         </div>
       ) : (
         <>
-          <p role="status">
+          <p aria-live="polite">
             {check === 'latest'
               ? u.latest
               : check === 'found'
