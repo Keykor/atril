@@ -217,3 +217,14 @@ test('borrar una etiqueta la saca también de las listas', async () => {
   await deleteTag(tag.id);
   expect((await db.setlists.get(list.id))!.tagIds).toEqual([]);
 });
+
+test('pistas que cambiaron se vuelven a mostrar una sola vez', async () => {
+  await setSetting('hintsSeen', ['a', 'b']);
+  await setSetting('hintsKnown', ['a', 'b']);
+  await addScore({ pdfId: 'p', title: 'X' });
+  await initHints(['a', 'b'], [], ['b']);
+  expect(await getHintsSeen()).toEqual(['a']);
+  await markHintSeen('b');
+  await initHints(['a', 'b'], [], ['b']); // ya se volvió a mostrar: no otra vez
+  expect(await getHintsSeen()).toEqual(['a', 'b']);
+});

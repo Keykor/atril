@@ -154,7 +154,7 @@ export const setSetting = (key: string, value: unknown) => db.settings.put({ key
  * venía usando y las pistas que no conocía (todas, o las nuevas de esta versión) se dan por
  * vistas. `legacy`: las pistas que existían antes de llevar la cuenta de las conocidas.
  */
-export const initHints = (all: string[], legacy: string[] = []) =>
+export const initHints = (all: string[], legacy: string[] = [], reshow: string[] = []) =>
   db.transaction('rw', db.settings, db.scores, async () => {
     const seen = (await db.settings.get('hintsSeen'))?.value as string[] | undefined;
     const known =
@@ -162,9 +162,20 @@ export const initHints = (all: string[], legacy: string[] = []) =>
       (seen ? legacy : []);
     const fresh = all.filter((id) => !known.includes(id));
     const used = (await db.scores.count()) > 0;
-    if (!seen) await setSetting('hintsSeen', used ? all : []);
-    else if (fresh.length && used) await setSetting('hintsSeen', [...new Set([...seen, ...fresh])]);
+    let next = !seen
+      ? used
+        ? all
+        : []
+      : fresh.length && used
+        ? [...new Set([...seen, ...fresh])]
+        : seen;
+    // Pistas que cambiaron con novedades: se vuelven a mostrar una vez, también a quien ya las vio.
+    const reshown = ((await db.settings.get('hintsReshown'))?.value as string[] | undefined) ?? [];
+    const again = seen ? reshow.filter((id) => !reshown.includes(id)) : [];
+    next = next.filter((id) => !again.includes(id));
+    if (next !== seen) await setSetting('hintsSeen', next);
     await setSetting('hintsKnown', all);
+    await setSetting('hintsReshown', [...new Set([...reshown, ...reshow])]);
   });
 
 export const markHintSeen = (id: string) =>

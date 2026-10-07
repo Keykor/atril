@@ -407,15 +407,15 @@ export const t = {
     },
     practice: {
       title: 'Ensayo',
-      text: 'Metrónomo y teclado: la nota suena mientras mantenés la tecla. Grabá las notas de inicio de la obra con el teclado y después las das con un toque desde la barra.',
+      text: 'Metrónomo y teclado: la nota suena mientras mantenés la tecla, y con "Pedal" sigue sonando al soltarla. Grabá las notas de inicio de la obra con el teclado y después las das con un toque desde la barra.',
     },
     lists: {
       title: 'Listas y modo show',
-      text: 'Una lista es el orden de un concierto: agregá partituras y separadores, y arrastralos desde los puntitos. Modo show la recorre con toques: en la última página de cada obra, un toque pasa a la siguiente.',
+      text: 'Una lista es el orden de un concierto: ponele fecha y etiquetas, agregá partituras y separadores, y arrastralos desde los puntitos. Arriba están las próximas; filtrá por nombre, etiqueta o fechas. "Duplicar" copia la lista para otro día. Modo show la recorre con toques.',
     },
     library: {
       title: 'Tu biblioteca',
-      text: 'Importá tus PDFs con Importar PDF. Los tres puntitos de cada partitura abren sus datos: tonalidad, BPM, etiquetas y más. Buscá por título o compositor.',
+      text: 'Importá tus PDFs con Importar PDF. Tocá la estrella para destacar una partitura: las destacadas van siempre primero. Los tres puntitos abren sus datos: tonalidad, BPM, etiquetas y más.',
     },
     backup: {
       title: 'Backup',
