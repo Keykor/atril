@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { holdNote, playNote, setPianoVolume } from '../../core/audio/engine';
 import { beatsOf, Metronome, tapTempo } from '../../core/audio/metronome';
-import { midiToLabel, midiToSci, parseNote } from '../../core/audio/notes';
+import { midiToLabel, midiToName, midiToSci, parseNote } from '../../core/audio/notes';
 import { getSetting } from '../../core/db/queries';
 import { setSetting } from '../../core/db/repos';
 import type { Score, StartNotes } from '../../core/db/types';
@@ -13,7 +13,6 @@ import './practice.css';
 const p = t.practice;
 const SIGNATURES = ['2/4', '3/4', '4/4', '6/8'];
 const BLACK = new Set([1, 3, 6, 8, 10]);
-const SHARP_NAMES: Record<number, string> = { 1: 'Do', 3: 'Re', 6: 'Fa', 8: 'Sol', 10: 'La' };
 const PIANO = { sustain: false, volume: 0.8 };
 const clampBpm = (n: number) => Math.min(250, Math.max(30, Math.round(n)));
 
@@ -233,7 +232,7 @@ function KeyboardBox({
   const whites = keys.filter((m) => !BLACK.has(m % 12));
   const label = (midi: number) =>
     BLACK.has(midi % 12)
-      ? p.sharp(SHARP_NAMES[midi % 12], Math.floor(midi / 12) - 1)
+      ? p.sharp(midiToName(midi - 1), Math.floor(midi / 12) - 1)
       : midiToLabel(midi);
 
   return (
