@@ -8,20 +8,19 @@
 .lists:not(.has-selection) {
   grid-template-columns: 1fr;
 }
-.lists:not(.has-selection) .lists-index ul {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  align-items: start;
-}
-.lists:not(.has-selection) .lists-filters {
-  display: grid;
-  grid-template-columns: minmax(200px, 1fr) auto;
-  align-items: end;
-  gap: 10px 16px;
-}
-.lists:not(.has-selection) .lists-filters .list-tags {
-  grid-column: 1 / -1;
-  grid-row: 2;
+/* Filtros en una fila solo con lugar; en el celular, uno abajo del otro (si no, las fechas
+   empujaban la pantalla más allá del ancho y tapaban "Nueva" y las columnas). */
+@media (min-width: 700px) {
+  .lists:not(.has-selection) .lists-filters {
+    display: grid;
+    grid-template-columns: minmax(200px, 1fr) auto;
+    align-items: end;
+    gap: 10px 16px;
+  }
+  .lists:not(.has-selection) .lists-filters .list-tags {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
 }
 .lists-index ul {
   list-style: none;
@@ -31,63 +30,111 @@
   flex-direction: column;
   gap: 4px;
 }
-.list-card {
+/* Índice como tabla: una lista por fila. Sin lista abierta: columnas Nombre, Fecha, Obras y
+   Etiquetas. Con una abierta (índice al costado) o en el celular: dos renglones por fila. */
+.lists-index ul.lists-table {
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+.list-row {
   width: 100%;
-  min-height: 64px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface);
+  min-height: 56px;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
   text-align: left;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name date'
+    'tags count';
+  align-items: center;
+  gap: 2px 12px;
 }
-.list-card[aria-current] {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+.list-row:hover {
+  background: var(--surface);
 }
-.list-card.past {
+.list-row[aria-current] {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.list-row.past {
   opacity: 0.6;
 }
-.list-card-top {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.list-card-top strong {
-  flex: 1;
+.list-row-name {
+  grid-area: name;
   min-width: 0;
-  font-size: 16px;
+  display: flex;
+  flex-direction: column;
 }
-.list-card-top time {
-  flex-shrink: 0;
+.list-row-name strong {
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.list-row-name small {
+  font-size: 13px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.list-row-date {
+  grid-area: date;
   font-size: 13px;
   font-weight: 600;
   color: var(--accent-dark);
+  white-space: nowrap;
 }
-.list-card-tags {
+.list-row-date .muted {
+  font-weight: 400;
+  color: var(--text-3);
+}
+.list-row-count {
+  grid-area: count;
+  font-size: 13px;
+  color: var(--text-2);
+  white-space: nowrap;
+  justify-self: end;
+}
+.list-row-tags {
+  grid-area: tags;
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 10px;
+  gap: 2px 10px;
+  font-size: 13px;
+  color: var(--text-2);
 }
-.list-card-tags > span {
+.list-row-tags > span {
   display: inline-flex;
   align-items: center;
   gap: 5px;
 }
-.list-card-count {
-  font-weight: 400;
-  color: var(--text-2);
+.lists-table-head {
+  display: none;
 }
-.list-card-notes {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.lists-index ul {
-  gap: 8px;
+@media (min-width: 700px) {
+  .lists:not(.has-selection) .lists-table-head,
+  .lists:not(.has-selection) .list-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) 170px 80px minmax(0, 1.4fr);
+    grid-template-areas: 'name date count tags';
+    gap: 0 16px;
+  }
+  .lists:not(.has-selection) .lists-table-head {
+    padding: 0 12px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .lists:not(.has-selection) .list-row-count {
+    justify-self: start;
+  }
 }
 .lists-filters {
   display: flex;
@@ -103,6 +150,7 @@
 .lists-dates label {
   flex: 1;
   min-width: 0;
+  max-width: 220px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -449,4 +497,9 @@
   .list-editor {
     padding: 16px;
   }
+}
+
+.lists-dates .input {
+  min-width: 0;
+  width: 100%;
 }
