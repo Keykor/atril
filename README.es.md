@@ -12,7 +12,8 @@ publicidad, gratis.
 
 **Abrila en https://keykor.github.io/atril/** e instalala desde ahí (ver
 [Instalarla](#instalarla)). La app está en español y en inglés y sigue el idioma del dispositivo;
-lo cambiás en Ajustes → Idioma.
+lo cambiás en Ajustes → Idioma. Las notas pueden verse como Do Re Mi o C D E, el cifrado que
+uses, sin importar el idioma.
 
 | Biblioteca                                                                   | Lector con anotaciones                                                        |
 | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
