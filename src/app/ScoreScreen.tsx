@@ -22,6 +22,7 @@ import { nextView, resolveOrder, type View } from '../features/reader/sequence';
 import { nextInShow, prevInShow, scoreNumber } from '../features/setlists/show';
 import { ShowIndex, ShowNext, ShowProgress } from '../features/setlists/ShowParts';
 import { Icon } from '../ui/Icon';
+import { Menu } from '../ui/Menu';
 import { TapZonesHint } from '../features/reader/TapZonesHint';
 import { PlaceHint, useHint, type HintId } from './hints';
 import { PlayStartNotes } from './reader-tools';
@@ -59,7 +60,11 @@ export function ScoreScreen({ scoreId, show, tour }: Props) {
   });
   const [practice, setPractice] = useState(false);
   const [practiceHeight, setPracticeHeight] = useState(0);
-  const [fitToggle, setFitToggle] = useState(0);
+  // Ajuste de página: el lector informa en cuál está y el menú le pide uno.
+  const [fit, setFit] = useState<ReadingPrefs['fit']>('page');
+  const [fitRequest, setFitRequest] = useState<{ fit: ReadingPrefs['fit']; nonce: number }>();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [exporting, setExporting] = useState<'working' | 'error'>();
   const [autoscrolling, setAutoscrolling] = useState(false);
   const [nextShown, setNextShown] = useState(false); // aviso de obra siguiente (modo show)
   // Marcador o salto nuevo: primero se toca el punto en la página, después se completa.
@@ -122,10 +127,10 @@ export function ScoreScreen({ scoreId, show, tour }: Props) {
 
   // Las barras se van solas a los 3 s, salvo que haya una hoja abierta o se las esté usando.
   useEffect(() => {
-    if (!bars || sheet) return;
+    if (!bars || sheet || menuOpen) return;
     const id = setTimeout(() => setBars(false), 3000);
     return () => clearTimeout(id);
-  }, [bars, sheet, barsTick]);
+  }, [bars, sheet, menuOpen, barsTick]);
 
   // El parpadeo de la banderita dura un par de segundos.
   useEffect(() => {
@@ -238,7 +243,8 @@ export function ScoreScreen({ scoreId, show, tour }: Props) {
         onCenterTap={() => !annotating && !placing && setBars((b) => !b)}
         onEdge={onEdge}
         manualPan={annotating}
-        fitToggle={fitToggle}
+        fitRequest={fitRequest}
+        onFitChange={setFit}
         framed={sheet === 'page'}
         bottomInset={practice ? practiceHeight : 0}
         scrollTarget={target}
@@ -302,6 +308,16 @@ export function ScoreScreen({ scoreId, show, tour }: Props) {
           </button>
         </div>
       )}
+      {exporting && (
+        <div className="reader-float" role="status" onPointerDown={(e) => e.stopPropagation()}>
+          {exporting === 'working' ? t.meta.exporting : t.meta.exportError}
+          {exporting === 'error' && (
+            <button className="btn" onClick={() => setExporting(undefined)}>
+              {t.close}
+            </button>
+          )}
+        </div>
+      )}
       {autoscrolling && vertical && (
         <div className="reader-float" style={{ pointerEvents: 'none', paddingRight: 16 }}>
           {t.page.autoscrollOn}
@@ -343,40 +359,84 @@ export function ScoreScreen({ scoreId, show, tour }: Props) {
                 </>
               )}
             </div>
-            <button
-              className="icon-btn"
-              aria-label={t.reader.fit}
-              onClick={() => setFitToggle((n) => n + 1)}
-            >
-              <Icon name="fit" size={22} />
+            {/* Con ancho de sobra (tablet acostada, compu) estas dos van a la vista con su
+                nombre; si no, viven en el menú ⋯ (patrón "Priority+"). */}
+            <button className="bar-btn wide-only" onClick={() => setSheet('reading')}>
+              <Icon name="sliders" size={20} />
+              {t.reader.readingShort}
             </button>
             <button
-              className="icon-btn"
-              aria-label={t.reader.settings}
-              onClick={() => setSheet('reading')}
-            >
-              <Icon name="sliders" size={22} />
-            </button>
-            <button
-              className="icon-btn"
-              aria-label={t.reader.page}
+              className="bar-btn wide-only"
               onClick={() => {
                 setSheet('page');
                 setBars(false);
               }}
             >
-              <Icon name="crop" size={22} />
+              <Icon name="crop" size={20} />
+              {t.reader.page}
             </button>
-            <button
-              className="icon-btn"
-              aria-label={t.bookmarks.title}
-              onClick={() => setSheet('markers')}
-            >
-              <Icon name="bookmark" size={22} />
-            </button>
-            <button className="icon-btn" aria-label={t.meta.title} onClick={() => setSheet('meta')}>
-              <Icon name="more" size={22} />
-            </button>
+            <div className="menu-anchor">
+              <button
+                className="icon-btn"
+                aria-label={t.reader.more}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((o) => !o)}
+              >
+                <Icon name="more" size={22} />
+              </button>
+              {menuOpen && (
+                <Menu
+                  label={t.reader.more}
+                  onClose={() => setMenuOpen(false)}
+                  groups={[
+                    {
+                      label: t.reader.fit,
+                      items: (['page', 'width'] as const).map((f) => ({
+                        label: f === 'page' ? t.reading.fitPage : t.reading.fitWidth,
+                        checked: fit === f,
+                        onSelect: () => setFitRequest({ fit: f, nonce: Date.now() }),
+                      })),
+                    },
+                    {
+                      items: [
+                        {
+                          label: t.reader.settings,
+                          icon: 'sliders',
+                          className: 'wide-hidden',
+                          onSelect: () => setSheet('reading'),
+                        },
+                        {
+                          label: t.reader.pageMenu,
+                          icon: 'crop',
+                          className: 'wide-hidden',
+                          onSelect: () => {
+                            setSheet('page');
+                            setBars(false);
+                          },
+                        },
+                        { label: t.meta.title, icon: 'edit', onSelect: () => setSheet('meta') },
+                        {
+                          label: t.meta.export,
+                          hint: t.reader.exportHint,
+                          icon: 'download',
+                          onSelect: () => {
+                            setExporting('working');
+                            exportAnnotatedPdf(score.id, t.meta.exportSuffix).then(
+                              () => setExporting(undefined),
+                              (e) => {
+                                console.error(e);
+                                setExporting('error');
+                              },
+                            );
+                          },
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              )}
+            </div>
           </header>
           <footer className="reader-bottom" onPointerDown={touchBars}>
             {locked ? (
@@ -416,6 +476,10 @@ export function ScoreScreen({ scoreId, show, tour }: Props) {
                   >
                     <Icon name="metronome" size={26} />
                     {t.reader.practice}
+                  </button>
+                  <button onClick={() => setSheet('markers')}>
+                    <Icon name="bookmark" size={26} />
+                    {t.reader.bookmarks}
                   </button>
                   <PlayStartNotes startNotes={score.startNotes} />
                   <button onClick={startAnnotating}>

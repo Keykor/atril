@@ -4,6 +4,15 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.12.0
+
+- Barras del lector más claras en pantallas chicas: arriba quedan volver, el título (que ahora se
+  lee entero) y ⋯ Más opciones; abajo, Ensayo, Marcadores y Anotar, cada uno con su nombre.
+- En ⋯ Más opciones están el ajuste de página (Página entera o Al ancho, con un tilde en el que
+  está activo), Ajustes de lectura, Recorte y orden de páginas, Datos de la partitura y
+  Exportar PDF con anotaciones.
+- Con la tablet acostada o en la compu, Lectura y Página también aparecen arriba con su nombre.
+
 ## 0.11.1
 
 - El volumen del teclado tiene un parlante y dice "Volumen", para que se entienda.

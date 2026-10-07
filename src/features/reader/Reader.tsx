@@ -33,7 +33,10 @@ interface Props {
   // Anotando: el navegador no desplaza la página con el dedo (así el dedo dibuja). Dos dedos
   // la mueven y hacen zoom.
   manualPan?: boolean;
-  fitToggle?: number; // cambia: alterna entre al ancho y página entera, y saca el zoom
+  // Pedido de ajuste (al ancho o página entera); cambia el nonce cada vez. Saca el zoom.
+  fitRequest?: { fit: ReadingPrefs['fit']; nonce: number };
+  onFitChange?: (fit: ReadingPrefs['fit']) => void; // para mostrar en qué ajuste está
+
   framed?: boolean; // recortando: la página entera y sin zoom, para ver los cuatro bordes
   // px tapados abajo por un panel (ensayo): se puede desplazar la página hasta arriba de él.
   bottomInset?: number;
@@ -72,13 +75,15 @@ export function Reader(p: Props) {
     setFitOverride(fit === 'page' ? 'width' : 'page');
     setZoom(1);
   };
-  const fitToggle = useRef(p.fitToggle);
+  const fitNonce = useRef(p.fitRequest?.nonce);
   useEffect(() => {
-    if (p.fitToggle === fitToggle.current) return;
-    fitToggle.current = p.fitToggle;
-    toggleFit();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [p.fitToggle]);
+    if (!p.fitRequest || p.fitRequest.nonce === fitNonce.current) return;
+    fitNonce.current = p.fitRequest.nonce;
+    setFitOverride(p.fitRequest.fit);
+    setZoom(1);
+  }, [p.fitRequest]);
+  const onFitChange = p.onFitChange;
+  useEffect(() => onFitChange?.(fit), [fit, onFitChange]);
 
   useEffect(() => {
     const el = stage.current!;
