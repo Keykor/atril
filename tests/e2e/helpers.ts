@@ -60,16 +60,24 @@ export async function tapCenter(page: Page) {
 }
 
 /**
- * Toca un botón de las barras del lector, mostrándolas si hace falta. Las barras se ocultan
- * solas a los 3 s: en un CI lento pueden irse antes del click, así que se reintenta.
+ * Toca un botón de las barras del lector (o una opción de su menú "Más opciones"), mostrándolas
+ * si hace falta. Las barras se ocultan solas a los 3 s: en un CI lento pueden irse antes del
+ * click, así que se reintenta.
  * El intervalo es de 1 s para que dos toques al centro no cuenten como doble toque.
  */
 export async function clickBar(page: Page, name: string) {
-  const button = page
-    .locator('.reader-top, .reader-bottom')
-    .getByRole('button', { name, exact: true });
+  const bars = page.locator('.reader-top, .reader-bottom');
+  const button = bars.getByRole('button', { name, exact: true });
+  // Lo que no está a la vista en las barras vive en el menú "Más opciones".
+  const menu = page.getByRole('menu');
+  const item = menu
+    .getByRole('menuitem', { name, exact: true })
+    .or(menu.getByRole('menuitemradio', { name, exact: true }));
   await expect(async () => {
-    if (!(await button.isVisible())) await tapCenter(page);
-    await button.click({ force: true, timeout: 1000 });
+    if (await item.isVisible()) return await item.click({ timeout: 1000 });
+    if (!(await bars.first().isVisible())) await tapCenter(page);
+    if (await button.isVisible()) return await button.click({ force: true, timeout: 1000 });
+    await bars.getByRole('button', { name: 'Más opciones' }).click({ force: true, timeout: 1000 });
+    await item.click({ timeout: 1000 });
   }).toPass({ intervals: [1000] });
 }

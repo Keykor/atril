@@ -560,3 +560,39 @@
     bottom: 52dvh;
   }
 }
+
+/* Barra de arriba: volver, título, y "Más". Con ancho de sobra, Lectura y Página a la vista con
+   su nombre; si no, viven en el menú. */
+.menu-anchor {
+  position: relative;
+  flex-shrink: 0;
+}
+.menu-anchor .menu {
+  top: calc(100% + 6px);
+  right: 0;
+}
+.bar-btn {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.bar-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+@media (min-width: 1000px) {
+  .reader-top .bar-btn.wide-only {
+    display: flex;
+  }
+  .menu .wide-hidden {
+    display: none;
+  }
+}
