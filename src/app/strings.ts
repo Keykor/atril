@@ -99,6 +99,12 @@ export const t = {
     duplicate: 'Duplicar',
     copySuffix: '(copia)',
     show: 'Modo show',
+    dnd: 'Antes de tocar, activá "No molestar" en el teléfono: Atril no puede frenar las notificaciones.',
+    dndHow: 'Cómo',
+    dndAndroid:
+      'Android: bajá la cortina de arriba y tocá "No molestar". En Xiaomi, apagá también las notificaciones flotantes.',
+    dndIos:
+      'iPhone y iPad: Centro de control → Concentración → No molestar. Con Atajos → Automatización → "Al abrir la app" se puede activar solo al abrir Atril.',
     order: 'Orden',
     orderLabel: 'Orden de la lista',
     addScores: 'Agregar partituras',
