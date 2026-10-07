@@ -269,6 +269,42 @@ test('con zoom se sigue pasando de hoja, y el botón de ajuste lo saca', async (
   await expect.poll(zoom).toBe(1);
 });
 
+test('el pellizco hace zoom desde donde están los dedos', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'Los toques multidedo se simulan con CDP (solo Chromium)');
+  await openScore(page);
+  const cdp = await page.context().newCDPSession(page);
+  type P = { x: number; y: number };
+  const touch = async (type: 'touchStart' | 'touchMove' | 'touchEnd', points: P[]) =>
+    cdp.send('Input.dispatchTouchEvent', {
+      type,
+      touchPoints: points.map((p, id) => ({ ...p, id })),
+    });
+  const pageBox = page.locator('.reader-slot[data-where="0"] .page').first();
+  const b = (await pageBox.boundingBox())!;
+  // Los dedos sobre un punto de abajo a la derecha de la página.
+  const c = { x: b.x + b.width * 0.8, y: b.y + b.height * 0.8 };
+  const at = (box: { x: number; y: number; width: number; height: number }) => ({
+    fx: (c.x - box.x) / box.width,
+    fy: (c.y - box.y) / box.height,
+  });
+  const before = at(b);
+  await touch('touchStart', [
+    { x: c.x - 30, y: c.y },
+    { x: c.x + 30, y: c.y },
+  ]);
+  for (let i = 1; i <= 8; i++)
+    await touch('touchMove', [
+      { x: c.x - 30 - i * 10, y: c.y },
+      { x: c.x + 30 + i * 10, y: c.y },
+    ]);
+  await touch('touchEnd', []);
+  // Después del zoom, bajo los dedos sigue el mismo punto de la página.
+  const after = at((await pageBox.boundingBox())!);
+  expect(after.fx).toBeCloseTo(before.fx, 1);
+  expect(after.fy).toBeCloseTo(before.fy, 1);
+  expect((await pageBox.boundingBox())!.width).toBeGreaterThan(b.width * 1.5);
+});
+
 test('al ancho, la hoja nueva arranca arriba, para adelante y para atrás', async ({ page }) => {
   // Celular apaisado: al ancho, la página es más alta que la pantalla.
   await page.setViewportSize({ width: 844, height: 390 });

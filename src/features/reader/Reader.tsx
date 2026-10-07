@@ -258,15 +258,21 @@ export function Reader(p: Props) {
     if (!g.pointers.has(e.pointerId)) return;
     g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (!g.pinch || g.pointers.size < 2) return;
+    const prevZ = g.z;
     g.z = Math.min(4, Math.max(1, (g.pinch.zoom * pinchDist()) / g.pinch.dist));
-    stage.current!.style.setProperty('--z', String(g.z));
-    // Con touch-action normal el navegador ya mueve la página con dos dedos; acá solo hace
-    // falta cuando lo tenemos desactivado (anotando o con zoom).
+    // El punto de la página que estaba entre los dedos queda entre los dedos: el zoom se hace
+    // desde ahí (no desde arriba a la izquierda) y, si los dedos se mueven, la página los sigue.
     const mid = pinchMid();
     const el = panTarget();
-    if (manualPan && el) {
-      el.scrollLeft -= mid.x - g.pinch.mid.x;
-      el.scrollTop -= mid.y - g.pinch.mid.y;
+    const sizer = el?.firstElementChild;
+    const before = sizer?.getBoundingClientRect();
+    stage.current!.style.setProperty('--z', String(g.z));
+    if (el && sizer && before) {
+      const after = sizer.getBoundingClientRect();
+      const px = (g.pinch.mid.x - before.left) / prevZ;
+      const py = (g.pinch.mid.y - before.top) / prevZ;
+      el.scrollLeft += after.left + px * g.z - mid.x;
+      el.scrollTop += after.top + py * g.z - mid.y;
     }
     g.pinch.mid = mid;
   };
