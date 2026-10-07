@@ -193,7 +193,8 @@
   gap: 16px;
 }
 .list-date {
-  width: 200px;
+  width: 300px; /* la fecha entera y "Sin fecha" al lado */
+  max-width: 100%;
 }
 .new-list {
   display: flex;
@@ -220,7 +221,7 @@
 }
 .list-name {
   flex: 1;
-  min-width: 160px;
+  min-width: min(100%, 320px); /* si no entra, los botones bajan y el nombre se lee */
   border: 0;
   outline: 0;
   background: transparent;

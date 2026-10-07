@@ -1,3 +1,4 @@
+import { language } from '../language';
 import type { Score, SetList } from './types';
 
 // Sin acentos ni mayúsculas, para que "faure" encuentre "Fauré".
@@ -19,7 +20,7 @@ export function filterScores(scores: Score[], { query = '', tagId, sort = 'recen
   );
   return out.sort(
     sort === 'az'
-      ? (a, b) => a.title.localeCompare(b.title, 'es')
+      ? (a, b) => a.title.localeCompare(b.title, language)
       : (a, b) => (b.lastOpenedAt ?? b.createdAt) - (a.lastOpenedAt ?? a.createdAt),
   );
 }
@@ -55,6 +56,6 @@ export function filterSetLists(
       rank(a) - rank(b) ||
       (rank(a) === 0 ? a.date!.localeCompare(b.date!) : 0) ||
       (rank(a) === 1 ? b.date!.localeCompare(a.date!) : 0) ||
-      a.name.localeCompare(b.name, 'es'),
+      a.name.localeCompare(b.name, language),
   );
 }

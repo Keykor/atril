@@ -197,6 +197,9 @@
     top: 16px;
     z-index: 1;
   }
+  .practice-box.metronome header {
+    padding-right: 52px; /* lugar para la X de cerrar */
+  }
   .metro-bpm strong {
     font-size: 44px;
   }

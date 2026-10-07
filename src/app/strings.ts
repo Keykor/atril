@@ -1,5 +1,8 @@
-// Todos los textos de la interfaz viven acá, listos para traducir.
-export const t = {
+import { language } from '../core/language';
+import { en } from './strings.en';
+
+// Todos los textos de la interfaz: en español acá y en inglés en strings.en.ts, con la misma forma.
+const es = {
   appName: 'Atril',
   close: 'Cerrar',
   cancel: 'Cancelar',
@@ -392,6 +395,11 @@ export const t = {
   },
   settings: {
     title: 'Ajustes',
+    language: 'Idioma',
+    languageAuto: 'Automático',
+    languageHint: (device: string) =>
+      `Automático usa el idioma del dispositivo (ahora, ${device}). Al cambiarlo, Atril se vuelve a abrir.`,
+    languageNames: { es: 'Español', en: 'English' },
   },
   hints: {
     done: 'Entendido',
@@ -444,3 +452,8 @@ export const t = {
     resetDone: 'Listo: las pistas van a aparecer de nuevo.',
   },
 };
+
+export type Strings = typeof es;
+
+/** Los textos del idioma de esta carga: cambiar el idioma recarga la app. */
+export const t: Strings = language === 'en' ? en : es;

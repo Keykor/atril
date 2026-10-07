@@ -1,6 +1,7 @@
 // Lecturas de la base para las pantallas. Se usan dentro de useLiveQuery, que vuelve a
 // ejecutarlas sola cuando cambian las tablas que tocan: la reactividad no depende de que la
 // consulta viva en la pantalla. Las escrituras están en repos.ts.
+import { language } from '../language';
 import { db } from './db';
 import { emptyAnnotations, annotationId } from './repos';
 import {
@@ -14,7 +15,7 @@ import {
 } from './types';
 
 const byName = <T extends { name: string }>(rows: T[]) =>
-  rows.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  rows.sort((a, b) => a.name.localeCompare(b.name, language));
 
 // --- Partituras ---
 
