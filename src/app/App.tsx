@@ -5,7 +5,6 @@ import { initHints, unmarkHint } from '../core/db/repos';
 import { HelpCard, HelpScreen } from '../features/help/HelpScreen';
 import { exportAnnotatedPdf } from '../features/annotations/exportPdf';
 import { LibraryScreen } from '../features/library/LibraryScreen';
-import { TagNav } from '../features/library/TagNav';
 import { ListsScreen } from '../features/setlists/ListsScreen';
 import { BackupCard, BackupReminder } from '../features/settings/Backup';
 import { BackupStatus, DriveCard, useDriveState } from '../features/settings/Drive';
@@ -79,11 +78,7 @@ export function App() {
       </Shell>
     );
   return (
-    <Shell
-      section="library"
-      footer={footer}
-      sidebar={<TagNav tagId={tagId} onSelect={setTagId} variant="sidebar" />}
-    >
+    <Shell section="library" footer={footer}>
       <LibraryScreen
         tagId={tagId}
         onTag={setTagId}

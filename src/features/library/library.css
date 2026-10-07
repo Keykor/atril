@@ -24,9 +24,6 @@
   text-align: center;
   color: var(--text-3);
 }
-.only-narrow {
-  display: none;
-}
 
 .score-grid {
   list-style: none;
@@ -146,19 +143,6 @@
   color: var(--text-2);
 }
 
-.tagnav.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.tagnav-title {
-  padding: 0 12px 6px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
 .tag-row {
   display: flex;
   align-items: center;
@@ -242,9 +226,15 @@
   color: var(--text-3);
 }
 
+/* Tablet parada: título e Importar arriba, búsqueda y orden abajo a todo el ancho. */
 @media (max-width: 899px) {
-  .only-narrow {
-    display: block;
+  .search {
+    order: 5;
+    flex: 1 1 calc(100% - 200px); /* no entra junto al título: baja a su propia fila */
+    width: auto;
+  }
+  .screen-header select {
+    order: 6;
   }
 }
 @media (max-width: 600px) {

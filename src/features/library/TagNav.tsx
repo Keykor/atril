@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { listTags } from '../../core/db/queries';
 import { addTag, deleteTag, renameTag } from '../../core/db/repos';
 import { Icon } from '../../ui/Icon';
@@ -7,30 +7,31 @@ import { Sheet } from '../../ui/Sheet';
 import { t } from '../../app/strings';
 import './library.css';
 
-const COLORS = ['#2950C7', '#C2410C', '#15803D', '#7E22CE', '#B45309', '#0E7490', '#BE185D'];
-
 interface Props {
   tagId?: string;
   onSelect: (tagId?: string) => void;
-  variant: 'sidebar' | 'chips';
 }
 
-/** Filtro por etiqueta: lista en la barra lateral o chips en celular. */
-export function TagNav({ tagId, onSelect, variant }: Props) {
+/** Filtro por etiqueta: chips arriba de las partituras. */
+export function TagNav({ tagId, onSelect }: Props) {
   const tags = useLiveQuery(listTags, []) ?? [];
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
 
-  const create = async () => {
-    if (name.trim()) await addTag(name.trim(), COLORS[tags.length % COLORS.length]);
+  // Enter y el blur del campo llaman los dos: se crea una sola vez por apertura del campo.
+  const created = useRef(false);
+  const create = () => {
+    if (created.current) return;
+    created.current = true;
+    const value = name.trim();
     setName('');
     setAdding(false);
+    if (value) void addTag(value);
   };
 
   return (
-    <div className={`tagnav ${variant}`}>
-      {variant === 'sidebar' && <div className="tagnav-title">{t.tags.title}</div>}
+    <div className="tagnav chips">
       <button className="tag-item" aria-pressed={!tagId} onClick={() => onSelect(undefined)}>
         <span className="tag-dot hollow" />
         {t.tags.all}
@@ -51,7 +52,7 @@ export function TagNav({ tagId, onSelect, variant }: Props) {
           className="tag-form"
           onSubmit={(e) => {
             e.preventDefault();
-            void create();
+            create();
           }}
         >
           <input
@@ -61,11 +62,17 @@ export function TagNav({ tagId, onSelect, variant }: Props) {
             placeholder={t.tags.namePlaceholder}
             aria-label={t.tags.namePlaceholder}
             onChange={(e) => setName(e.target.value)}
-            onBlur={() => void create()}
+            onBlur={create}
           />
         </form>
       ) : (
-        <button className="tag-item tag-new" onClick={() => setAdding(true)}>
+        <button
+          className="tag-item tag-new"
+          onClick={() => {
+            created.current = false;
+            setAdding(true);
+          }}
+        >
           <Icon name="plus" size={14} />
           {t.tags.new}
         </button>

@@ -140,9 +140,7 @@ export function LibraryScreen({ tagId, onTag, onOpen, banner, onExport }: Props)
       </header>
 
       {banner}
-      <div className="only-narrow">
-        <TagNav tagId={tagId} onSelect={onTag} variant="chips" />
-      </div>
+      <TagNav tagId={tagId} onSelect={onTag} />
 
       {scores && shown.length === 0 ? (
         <p className="empty">{scores.length ? t.library.noResults : t.library.empty}</p>
