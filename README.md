@@ -11,7 +11,8 @@ there is no server: your scores and annotations stay on your device. No account,
 
 **Open it at https://keykor.github.io/atril/** and install it from there (see
 [Install it](#install-it)). The app is in English and Spanish and follows your device's language;
-you can change it in Settings → Language.
+you can change it in Settings → Language. Note names can be Do Re Mi or C D E, whichever you
+read, regardless of the language.
 
 | Library                                                          | Reader with annotations                                                      |
 | ---------------------------------------------------------------- | ---------------------------------------------------------------------------- |
