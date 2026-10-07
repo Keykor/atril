@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { holdNote, playNote } from '../../core/audio/engine';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { holdNote, playNote, setPianoVolume } from '../../core/audio/engine';
 import { beatsOf, Metronome, tapTempo } from '../../core/audio/metronome';
 import { midiToLabel, midiToSci, parseNote } from '../../core/audio/notes';
+import { getSetting } from '../../core/db/queries';
+import { setSetting } from '../../core/db/repos';
 import type { Score, StartNotes } from '../../core/db/types';
 import { Icon } from '../../ui/Icon';
 import { t } from '../../app/strings';
@@ -11,6 +14,7 @@ const p = t.practice;
 const SIGNATURES = ['2/4', '3/4', '4/4', '6/8'];
 const BLACK = new Set([1, 3, 6, 8, 10]);
 const SHARP_NAMES: Record<number, string> = { 1: 'Do', 3: 'Re', 6: 'Fa', 8: 'Sol', 10: 'La' };
+const PIANO = { sustain: false, volume: 0.8 };
 const clampBpm = (n: number) => Math.min(250, Math.max(30, Math.round(n)));
 
 /** Toca las notas de inicio: cada grupo (voz) en secuencia, sus notas juntas. */
@@ -182,6 +186,11 @@ function KeyboardBox({
   onStartNotes: (notes: StartNotes[] | undefined) => void;
 }) {
   const [octave, setOctave] = useState(4);
+  // Pedal y volumen: ajustes de este dispositivo (no viajan en el backup).
+  const piano = useLiveQuery(() => getSetting('piano', PIANO), []) ?? PIANO;
+  const setPiano = (patch: Partial<typeof PIANO>) =>
+    void setSetting('piano', { ...piano, ...patch });
+  useEffect(() => setPianoVolume(piano.volume), [piano.volume]);
   // Grabando: las teclas que se tocan pasan a ser las notas de inicio de la partitura.
   const [recording, setRecording] = useState<number[]>();
   // Tecla apretada -> cómo soltarla, por dedo (se pueden tocar varias a la vez).
@@ -198,7 +207,8 @@ function KeyboardBox({
       // Puntero sintético o ya suelto: sin captura, igual suena.
     }
     held.current.get(e.pointerId)?.();
-    held.current.set(e.pointerId, holdNote(midi));
+    const stop = holdNote(midi);
+    held.current.set(e.pointerId, piano.sustain ? () => {} : stop);
     if (recording) setRecording([...recording, midi]);
   };
   const release = (e: React.PointerEvent) => {
@@ -244,6 +254,27 @@ function KeyboardBox({
           </button>
         </div>
       </header>
+      <div className="kb-controls">
+        <button
+          type="button"
+          className="kb-sustain"
+          aria-pressed={piano.sustain}
+          title={p.sustainHint}
+          onClick={() => setPiano({ sustain: !piano.sustain })}
+        >
+          {p.sustain}
+        </button>
+        <input
+          type="range"
+          className="range"
+          aria-label={p.volume}
+          min={0}
+          max={1}
+          step={0.05}
+          value={piano.volume}
+          onChange={(e) => setPiano({ volume: Number(e.target.value) })}
+        />
+      </div>
       <div className="kb" role="group" aria-label={p.keyboardLabel}>
         {whites.map((midi) => (
           <button key={midi} className="kb-white" {...keyProps(midi)}>

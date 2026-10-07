@@ -4,6 +4,24 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.11.0
+
+- Listas con fecha y etiquetas: al crear una lista le ponés la fecha del concierto o ensayo, y
+  le podés poner las mismas etiquetas que a las partituras (coro, voz…). La lista general
+  muestra cada una como tarjeta, con las próximas arriba y las pasadas más apagadas, y se puede
+  filtrar por nombre, etiqueta y rango de fechas.
+- "Duplicar" una lista pide el nombre y la fecha de la copia: el mismo show para otro día.
+- Partituras destacadas: tocá la estrella y la partitura va siempre primero en la biblioteca.
+- El teclado ya no satura con varias notas juntas y suena más a piano. Tiene "Pedal" (la nota
+  sigue sonando al soltar la tecla) y volumen.
+- Las pistas de Listas y Biblioteca cuentan las novedades y aparecen una vez más.
+- El pellizco hace zoom desde donde tenés los dedos, no desde arriba a la izquierda.
+- Ajustes → Versión tiene "Buscar actualización" para preguntar en el momento si hay una
+  versión nueva.
+- Si tocabas la X del aviso de versión nueva, el botón "Actualizar" desaparecía también de
+  Ajustes; ahora sigue ahí.
+- Las notas de una lista ya no tienen manija para estirarlas: el campo crece solo con el texto.
+
 ## 0.10.0
 
 - Recordatorio de "No molestar": al lado de Modo show, en cada lista, Atril te recuerda silenciar

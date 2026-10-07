@@ -18,6 +18,9 @@ export const HINTS = [
 export type HintId = (typeof HINTS)[number];
 // Las que había en 0.7.0, antes de llevar la cuenta de las conocidas (ver initHints).
 export const LEGACY_HINTS: HintId[] = ['reader', 'annotate', 'markers', 'lists'];
+// Pistas que cambiaron con una novedad: se vuelven a mostrar una vez (0.11.0: fechas, etiquetas y
+// filtros en las listas; estrella en la biblioteca).
+export const RESHOW_HINTS: HintId[] = ['lists', 'library'];
 
 /**
  * Si la pista todavía no se vio en este dispositivo, y cómo darla por vista. Se cierra al

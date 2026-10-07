@@ -4,6 +4,8 @@ import { registerSW } from 'virtual:pwa-register';
 const CHECK_EVERY_MS = 60 * 60 * 1000;
 
 let waiting = false;
+let dismissed = false; // "Más tarde" oculta el aviso, no el botón de Ajustes
+let registration: ServiceWorkerRegistration | undefined;
 let apply: ((reload?: boolean) => Promise<void>) | undefined;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
@@ -19,10 +21,11 @@ export function startUpdates() {
       waiting = true;
       emit();
     },
-    onRegisteredSW(_url, registration) {
-      if (!registration) return;
+    onRegisteredSW(_url, reg) {
+      if (!reg) return;
+      registration = reg;
       const check = () => {
-        if (navigator.onLine) registration.update().catch(() => {});
+        if (navigator.onLine) reg.update().catch(() => {});
       };
       setInterval(check, CHECK_EVERY_MS);
       document.addEventListener('visibilitychange', () => {
@@ -32,14 +35,32 @@ export function startUpdates() {
   });
 }
 
+/** Hay una versión nueva descargada esperando (Ajustes la muestra aunque se haya dicho "Más tarde"). */
 export const hasUpdate = () => waiting;
+/** Para el aviso de arriba: hay versión nueva y no se dijo "Más tarde". */
+export const showUpdateBanner = () => waiting && !dismissed;
+
+/**
+ * Busca versión nueva ya. true si hay una (descargada o bajándose: el aviso aparece cuando
+ * termina), false si esta es la última, undefined si no se pudo preguntar (sin conexión).
+ */
+export async function checkForUpdate(): Promise<boolean | undefined> {
+  if (waiting) return true;
+  if (!registration || !navigator.onLine) return undefined;
+  try {
+    await registration.update();
+  } catch {
+    return undefined;
+  }
+  return !!(registration.installing || registration.waiting);
+}
 
 /** Activa la versión nueva y recarga la página. */
 export const applyUpdate = () => apply?.(true);
 
-/** "Más tarde": se oculta el aviso; la versión nueva se usa la próxima vez que se abra la app. */
+/** "Más tarde": se oculta el aviso. Actualizar sigue en Ajustes → Versión. */
 export function dismissUpdate() {
-  waiting = false;
+  dismissed = true;
   emit();
 }
 

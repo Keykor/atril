@@ -12,22 +12,122 @@
   flex-direction: column;
   gap: 4px;
 }
-.lists-index li button {
+.list-card {
   width: 100%;
   min-height: 64px;
-  padding: 10px 14px;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
   text-align: left;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
+  gap: 4px;
 }
-.lists-index li button[aria-current] {
+.list-card[aria-current] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.list-card.past {
+  opacity: 0.6;
+}
+.list-card-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.list-card-top strong {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+}
+.list-card-top time {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-dark);
+}
+.list-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.list-card-tags > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.list-card-works {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lists-index ul {
+  gap: 8px;
+}
+.lists-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.lists-dates {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.lists-dates label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.list-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.list-tags button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
   background: var(--surface);
-  box-shadow: 0 1px 3px rgba(23, 24, 28, 0.08);
+  font-size: 14px;
+  font-weight: 500;
+}
+.list-tags button[aria-pressed='true'] {
+  border-color: var(--text);
+  background: var(--text);
+  color: #fff;
+}
+.tag-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 999px;
+}
+.list-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+}
+.list-date {
+  width: 200px;
+}
+.new-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 .lists-index li span,
 .list-item-main span,
@@ -56,6 +156,11 @@
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+.list-notes {
+  resize: none;
+  overflow: hidden;
+  min-height: 48px;
 }
 .dnd-reminder {
   padding: 10px 14px;

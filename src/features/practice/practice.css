@@ -104,6 +104,29 @@
   font-size: 14px;
   font-weight: 600;
 }
+.kb-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.kb-controls .range {
+  flex: 1;
+  min-width: 0;
+}
+.kb-sustain {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+}
+.kb-sustain[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
 .kb {
   position: relative;
   display: flex;

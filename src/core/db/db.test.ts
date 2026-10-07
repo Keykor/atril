@@ -30,8 +30,8 @@ import {
   resolveReading,
   missingPdfIds,
 } from './queries';
-import { filterScores } from './search';
-import type { Score } from './types';
+import { filterScores, filterSetLists } from './search';
+import type { Score, SetList } from './types';
 
 const pdf = (id: string) => ({ id, sha256: id, size: 1, pageCount: 2 });
 
@@ -84,8 +84,9 @@ test('borrar una etiqueta la saca de las partituras', async () => {
 test('duplicar una lista copia los ítems con ids nuevos', async () => {
   const list = await addSetList('Navidad');
   await updateSetList(list.id, { items: [{ id: '1', type: 'break', label: 'Intervalo' }] });
-  const copy = await duplicateSetList(list.id, '(copia)');
+  const copy = await duplicateSetList(list.id, 'Navidad (copia)', '2026-12-24');
   expect(copy!.name).toBe('Navidad (copia)');
+  expect(copy!.date).toBe('2026-12-24');
   expect(copy!.items[0].id).not.toBe('1');
 });
 
@@ -179,4 +180,51 @@ test('la última partitura abierta', async () => {
   await db.scores.update(a.id, { lastOpenedAt: 10 });
   await db.scores.update(b.id, { lastOpenedAt: 20 });
   expect((await getLastOpenedScore())?.id).toBe(b.id);
+});
+
+test('listas: próximas primero, después pasadas y al final sin fecha; filtros', () => {
+  const l = (name: string, date?: string, tagIds?: string[]) =>
+    ({ id: name, name, date, tagIds, items: [], createdAt: 0, updatedAt: 0 }) as SetList;
+  const lists = [
+    l('Sin fecha'),
+    l('Pasada vieja', '2026-01-10'),
+    l('Próxima lejos', '2026-12-20', ['coro']),
+    l('Hoy', '2026-10-06'),
+    l('Pasada reciente', '2026-09-30', ['coro']),
+  ];
+  const names = (ls: SetList[]) => ls.map((x) => x.name);
+  expect(names(filterSetLists(lists, {}, '2026-10-06'))).toEqual([
+    'Hoy',
+    'Próxima lejos',
+    'Pasada reciente',
+    'Pasada vieja',
+    'Sin fecha',
+  ]);
+  expect(names(filterSetLists(lists, { tagId: 'coro' }, '2026-10-06'))).toEqual([
+    'Próxima lejos',
+    'Pasada reciente',
+  ]);
+  expect(names(filterSetLists(lists, { query: 'pasada' }, '2026-10-06'))).toHaveLength(2);
+  expect(
+    names(filterSetLists(lists, { from: '2026-09-01', to: '2026-10-31' }, '2026-10-06')),
+  ).toEqual(['Hoy', 'Pasada reciente']);
+});
+
+test('borrar una etiqueta la saca también de las listas', async () => {
+  const tag = await addTag('Coro', '#000');
+  const list = await addSetList('Gala');
+  await updateSetList(list.id, { tagIds: [tag.id] });
+  await deleteTag(tag.id);
+  expect((await db.setlists.get(list.id))!.tagIds).toEqual([]);
+});
+
+test('pistas que cambiaron se vuelven a mostrar una sola vez', async () => {
+  await setSetting('hintsSeen', ['a', 'b']);
+  await setSetting('hintsKnown', ['a', 'b']);
+  await addScore({ pdfId: 'p', title: 'X' });
+  await initHints(['a', 'b'], [], ['b']);
+  expect(await getHintsSeen()).toEqual(['a']);
+  await markHintSeen('b');
+  await initHints(['a', 'b'], [], ['b']); // ya se volvió a mostrar: no otra vez
+  expect(await getHintsSeen()).toEqual(['a', 'b']);
 });
