@@ -73,3 +73,66 @@ test('armar una lista, reordenarla y recorrerla en modo show solo con toques', a
   await expect(tools.getByRole('button', { name: 'Anotar' })).toBeVisible();
   await expect(tools.getByRole('button', { name: 'Ensayo' })).toBeVisible();
 });
+
+test('listas con fecha y etiquetas: orden, filtros y duplicar con fecha nueva', async ({
+  page,
+}) => {
+  await importFixtures(page);
+  // Una etiqueta para usar en listas (las mismas de las partituras).
+  const chips = page.locator('.tagnav.chips');
+  await chips.getByRole('button', { name: 'Nueva etiqueta' }).click();
+  await chips.getByLabel('Nombre de la etiqueta').fill('Coro');
+  await page.keyboard.press('Enter');
+  await page.getByRole('link', { name: 'Listas' }).click();
+
+  const create = async (name: string, date: string) => {
+    await page.getByRole('button', { name: 'Nueva', exact: true }).click();
+    const d = page.getByRole('dialog', { name: 'Nueva lista' });
+    await d.getByLabel('Nombre de la lista').fill(name);
+    await d.getByLabel('Fecha').fill(date);
+    await d.getByRole('button', { name: 'Crear' }).click();
+    await expect(d).toBeHidden();
+  };
+  await create('Pasada', '2020-05-01');
+  // En tablet parada la lista abierta tapa el índice: se vuelve con la flecha.
+  await page.getByRole('button', { name: 'Todas las listas' }).click();
+  await create('Gala', '2099-12-24');
+  // La lista abierta (Gala) lleva la etiqueta Coro.
+  await page.locator('.list-editor').getByRole('button', { name: 'Coro' }).click();
+
+  const cards = page.getByRole('list', { name: 'Todas las listas' }).getByRole('listitem');
+  await page.getByRole('button', { name: 'Todas las listas' }).click();
+  await expect(cards).toHaveCount(2);
+  await expect(cards.nth(0)).toContainText('Gala'); // próxima primero
+  await expect(cards.nth(0)).toContainText('Coro');
+  await expect(cards.nth(1)).toContainText('Pasada');
+
+  // Filtro por etiqueta y por rango de fechas.
+  await page
+    .getByRole('group', { name: 'Etiquetas' })
+    .first()
+    .getByRole('button', { name: 'Coro' })
+    .click();
+  await expect(cards).toHaveCount(1);
+  await page
+    .getByRole('group', { name: 'Etiquetas' })
+    .first()
+    .getByRole('button', { name: 'Todas' })
+    .click();
+  await page.getByLabel('Hasta').fill('2021-01-01');
+  await expect(cards).toHaveCount(1);
+  await expect(cards.nth(0)).toContainText('Pasada');
+  await page.getByRole('button', { name: 'Borrar fechas' }).click();
+  await expect(cards).toHaveCount(2);
+
+  // Duplicar pide nombre y fecha nueva.
+  await cards.nth(0).click();
+  await page.getByRole('button', { name: 'Duplicar', exact: true }).click();
+  const dup = page.getByRole('dialog', { name: 'Duplicar lista' });
+  await expect(dup.getByLabel('Nombre de la lista')).toHaveValue('Gala (copia)');
+  await dup.getByLabel('Fecha').fill('2099-12-31');
+  await dup.getByRole('button', { name: 'Duplicar' }).click();
+  await expect(page.getByLabel('Nombre de la lista')).toHaveValue('Gala (copia)');
+  await page.getByRole('button', { name: 'Todas las listas' }).click();
+  await expect(cards).toHaveCount(3);
+});

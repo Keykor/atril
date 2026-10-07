@@ -90,6 +90,17 @@ export const t = {
     newName: 'Lista nueva',
     newTitle: 'Nueva lista',
     create: 'Crear',
+    duplicateTitle: 'Duplicar lista',
+    date: 'Fecha',
+    today: 'Hoy',
+    tags: 'Etiquetas',
+    allTags: 'Todas',
+    search: 'Buscar lista',
+    from: 'Desde',
+    to: 'Hasta',
+    clearDates: 'Borrar fechas',
+    noResults: 'Ninguna lista coincide con los filtros.',
+    more: (n: number) => `y ${n} más`,
     empty: 'Todavía no hay listas. Creá una para armar un concierto o un ensayo.',
     count: (scores: number, breaks: number) =>
       `${scores} ${scores === 1 ? 'obra' : 'obras'}` +
