@@ -113,8 +113,13 @@ export const t = {
     duplicate: 'Duplicar',
     copySuffix: '(copia)',
     show: 'Modo show',
-    dnd: 'Antes de tocar, activá "No molestar" en el teléfono: Atril no puede frenar las notificaciones.',
-    dndHow: 'Cómo',
+    dndTitle: 'Antes de empezar',
+    dnd: 'Activá "No molestar" en el teléfono: Atril no puede frenar las notificaciones.',
+    dndHow: 'Cómo se hace',
+    dndOff: 'No volver a recordarme',
+    dndStart: 'Empezar',
+    newTag: 'Nueva etiqueta',
+    newTagName: 'Nombre de la etiqueta nueva',
     dndAndroid:
       'Android: bajá la cortina de arriba y tocá "No molestar". En Xiaomi, apagá también las notificaciones flotantes.',
     dndIos:
@@ -130,8 +135,6 @@ export const t = {
     emptyList: 'La lista está vacía. Agregá partituras de la biblioteca.',
     move: (name: string) => `Mover ${name}`,
     remove: (name: string) => `Quitar ${name}`,
-    itemNote: (name: string) => `Nota para ${name}`,
-    itemNotePlaceholder: 'Nota',
     missingScore: 'Partitura eliminada',
     delete: 'Eliminar lista',
     confirmDelete: (name: string) => `¿Eliminar la lista "${name}"? Las partituras no se borran.`,
@@ -303,6 +306,7 @@ export const t = {
     sustain: 'Pedal',
     sustainHint: 'Con el pedal, la nota sigue sonando al soltar la tecla',
     volume: 'Volumen del teclado',
+    volumeShort: 'Volumen',
   },
   backup: {
     title: 'Backup',

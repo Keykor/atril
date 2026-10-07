@@ -34,9 +34,6 @@ test('armar una lista, reordenarla y recorrerla en modo show solo con toques', a
   await notes.fill(['Afinar antes.', 'Salida por la izquierda.', 'Bis: Ave verum.'].join('\n'));
   await expect.poll(async () => (await notes.boundingBox())!.height).toBeGreaterThan(h0 + 20);
   expect(await notes.evaluate((el) => getComputedStyle(el).resize)).toBe('none');
-  // Recordatorio de "No molestar" al lado de Modo show, con el cómo plegado.
-  await page.getByText('Antes de tocar, activá "No molestar"').click();
-  await expect(page.getByText(/^Android: bajá la cortina/)).toBeVisible();
   await expect(items.nth(0)).toContainText('Ave verum corpus');
 
   // Reordenar con el teclado (dnd-kit): el separador sube al medio.
@@ -50,6 +47,12 @@ test('armar una lista, reordenarla y recorrerla en modo show solo con toques', a
 
   // Modo show: Ave verum (2 páginas) -> intervalo -> Canción de ejemplo.
   await page.getByRole('button', { name: 'Modo show' }).click();
+  // Antes de entrar, el recordatorio de "No molestar" (con el cómo plegado). Se puede apagar.
+  const dnd = page.getByRole('dialog', { name: 'Antes de empezar' });
+  await dnd.getByText('Cómo se hace').click();
+  await expect(dnd.getByText(/^Android: bajá la cortina/)).toBeVisible();
+  await dnd.getByLabel('No volver a recordarme').check();
+  await dnd.getByRole('button', { name: 'Empezar' }).click();
   await expect(page.locator('.page-indicator')).toHaveText('1 / 2');
   const box = (await page.locator('.reader-stage').boundingBox())!;
   const tapRight = () => page.mouse.click(box.x + box.width * 0.9, box.y + box.height / 2);
@@ -78,11 +81,6 @@ test('listas con fecha y etiquetas: orden, filtros y duplicar con fecha nueva', 
   page,
 }) => {
   await importFixtures(page);
-  // Una etiqueta para usar en listas (las mismas de las partituras).
-  const chips = page.locator('.tagnav.chips');
-  await chips.getByRole('button', { name: 'Nueva etiqueta' }).click();
-  await chips.getByLabel('Nombre de la etiqueta').fill('Coro');
-  await page.keyboard.press('Enter');
   await page.getByRole('link', { name: 'Listas' }).click();
 
   const create = async (name: string, date: string) => {
@@ -97,8 +95,15 @@ test('listas con fecha y etiquetas: orden, filtros y duplicar con fecha nueva', 
   // En tablet parada la lista abierta tapa el índice: se vuelve con la flecha.
   await page.getByRole('button', { name: 'Todas las listas' }).click();
   await create('Gala', '2099-12-24');
-  // La lista abierta (Gala) lleva la etiqueta Coro.
-  await page.locator('.list-editor').getByRole('button', { name: 'Coro' }).click();
+  // La etiqueta se crea desde la lista abierta (Gala) y queda puesta.
+  const editor = page.locator('.list-editor');
+  await editor.getByRole('button', { name: 'Nueva etiqueta' }).click();
+  await editor.getByLabel('Nombre de la etiqueta nueva').fill('Coro');
+  await page.keyboard.press('Enter');
+  await expect(editor.getByRole('button', { name: 'Coro' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
 
   const cards = page.getByRole('list', { name: 'Todas las listas' }).getByRole('listitem');
   await page.getByRole('button', { name: 'Todas las listas' }).click();

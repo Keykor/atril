@@ -7,8 +7,6 @@ import { Sheet } from '../../ui/Sheet';
 import { t } from '../../app/strings';
 import './library.css';
 
-const COLORS = ['#2950C7', '#C2410C', '#15803D', '#7E22CE', '#B45309', '#0E7490', '#BE185D'];
-
 interface Props {
   tagId?: string;
   onSelect: (tagId?: string) => void;
@@ -23,7 +21,7 @@ export function TagNav({ tagId, onSelect, variant }: Props) {
   const [name, setName] = useState('');
 
   const create = async () => {
-    if (name.trim()) await addTag(name.trim(), COLORS[tags.length % COLORS.length]);
+    if (name.trim()) await addTag(name.trim());
     setName('');
     setAdding(false);
   };

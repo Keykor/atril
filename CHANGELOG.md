@@ -4,6 +4,17 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.11.1
+
+- El volumen del teclado tiene un parlante y dice "Volumen", para que se entienda.
+- Sacar el pedal corta las notas que seguían sonando, como en un piano.
+- Listas en horizontal: sin ninguna lista abierta, las tarjetas ocupan todo el ancho; al abrir
+  una, el índice pasa al costado.
+- El recordatorio de "No molestar" ya no queda fijo en la lista: aparece al tocar Modo show, con
+  "Cómo se hace" y "No volver a recordarme". Vuelve con "Volver a mostrar todas las pistas".
+- Las etiquetas de una lista se pueden crear ahí mismo, con "Nueva etiqueta".
+- Las canciones del orden de una lista ya no tienen campo de nota.
+
 ## 0.11.0
 
 - Listas con fecha y etiquetas: al crear una lista le ponés la fecha del concierto o ensayo, y
