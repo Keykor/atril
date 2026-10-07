@@ -48,13 +48,14 @@ export function pianoPartials(midi: number) {
 }
 
 let out: { volume: GainNode } | undefined;
+let volumeValue = 0.8;
 
 /** Salida del piano: volumen y un limitador, así varias notas juntas no saturan. */
 function pianoOut() {
   if (!out) {
     const c = audio();
     const volume = c.createGain();
-    volume.gain.value = 0.8;
+    volume.gain.value = volumeValue;
     const limiter = c.createDynamicsCompressor();
     limiter.threshold.value = -12;
     limiter.knee.value = 6;
@@ -67,10 +68,13 @@ function pianoOut() {
   return out;
 }
 
-/** Volumen del piano, de 0 a 1. */
+/**
+ * Volumen del piano, de 0 a 1. No crea el audio: se aplica cuando suena la primera nota (crear
+ * el AudioContext sin un toque del usuario no sirve en iOS y falla donde no hay audio).
+ */
 export function setPianoVolume(value: number) {
-  const { volume } = pianoOut();
-  volume.gain.setTargetAtTime(Math.min(1, Math.max(0, value)), audio().currentTime, 0.02);
+  volumeValue = Math.min(1, Math.max(0, value));
+  out?.volume.gain.setTargetAtTime(volumeValue, audio().currentTime, 0.02);
 }
 
 /** Una nota de piano que empieza en `at`. Devuelve cómo apagarla (el apagador). */
