@@ -36,7 +36,6 @@ export const t = {
     others: 'Todas las partituras',
   },
   tags: {
-    title: 'Etiquetas',
     all: 'Todas',
     new: 'Nueva etiqueta',
     edit: 'Editar etiquetas',
@@ -103,7 +102,7 @@ export const t = {
     to: 'Hasta',
     clearDates: 'Borrar fechas',
     noResults: 'Ninguna lista coincide con los filtros.',
-    more: (n: number) => `y ${n} más`,
+    works: (n: number) => `${n} ${n === 1 ? 'obra' : 'obras'}`,
     empty: 'Todavía no hay listas. Creá una para armar un concierto o un ensayo.',
     count: (scores: number, breaks: number) =>
       `${scores} ${scores === 1 ? 'obra' : 'obras'}` +

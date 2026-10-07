@@ -77,7 +77,11 @@
   align-items: center;
   gap: 5px;
 }
-.list-card-works {
+.list-card-count {
+  font-weight: 400;
+  color: var(--text-2);
+}
+.list-card-notes {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

@@ -104,6 +104,7 @@ test('listas con fecha y etiquetas: orden, filtros y duplicar con fecha nueva', 
     'aria-pressed',
     'true',
   );
+  await expect(editor.getByRole('button', { name: 'Coro' })).toHaveCount(1); // una sola, no duplicada
 
   const cards = page.getByRole('list', { name: 'Todas las listas' }).getByRole('listitem');
   await page.getByRole('button', { name: 'Todas las listas' }).click();

@@ -14,6 +14,11 @@ nuevas y el último con arreglos o cambios internos.
   "Cómo se hace" y "No volver a recordarme". Vuelve con "Volver a mostrar todas las pistas".
 - Las etiquetas de una lista se pueden crear ahí mismo, con "Nueva etiqueta".
 - Las canciones del orden de una lista ya no tienen campo de nota.
+- La tarjeta de cada lista muestra título, cantidad de obras, fecha, etiquetas y el comienzo de
+  sus notas.
+- Biblioteca: las etiquetas son chips arriba de las partituras también con la tablet acostada, y
+  con la tablet parada la búsqueda va en su propia fila.
+- Crear una etiqueta ya no la duplica.
 
 ## 0.11.0
 

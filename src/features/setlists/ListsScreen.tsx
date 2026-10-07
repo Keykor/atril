@@ -16,7 +16,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { getSetting, listScores, listSetLists, listTags } from '../../core/db/queries';
 import {
   addSetList,
@@ -53,8 +53,6 @@ const formatDate = (date: string) =>
 export function ListsScreen({ listId, onSelect, onShow }: Props) {
   const lists = useLiveQuery(listSetLists, []);
   const tags = useLiveQuery(listTags, []) ?? [];
-  const scores = useLiveQuery(listScores, []);
-  const titles = useMemo(() => new Map((scores ?? []).map((sc) => [sc.id, sc.title])), [scores]);
   const selected = lists?.find((l) => l.id === listId);
   const [naming, setNaming] = useState(false);
   const [filter, setFilter] = useState<SetListFilter>({});
@@ -127,8 +125,7 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
         {!!lists?.length && shown.length === 0 && <p className="empty">{s.noResults}</p>}
         <ul aria-label={s.all}>
           {shown.map((l) => {
-            const works = l.items.flatMap((i) => (i.type === 'score' ? [i.scoreId] : []));
-            const { scores: n, breaks } = counts(l);
+            const n = counts(l).scores;
             return (
               <li key={l.id}>
                 <button
@@ -137,7 +134,10 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
                   onClick={() => onSelect(l.id)}
                 >
                   <span className="list-card-top">
-                    <strong>{l.name}</strong>
+                    <strong>
+                      {l.name}
+                      <span className="list-card-count"> · {s.works(n)}</span>
+                    </strong>
                     {l.date && (
                       <time dateTime={l.date}>{l.date === now ? s.today : formatDate(l.date)}</time>
                     )}
@@ -154,16 +154,7 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
                         ))}
                     </span>
                   )}
-                  <span>{s.count(n, breaks)}</span>
-                  {works.length > 0 && (
-                    <span className="list-card-works">
-                      {works
-                        .slice(0, 3)
-                        .map((id) => titles.get(id) ?? s.missingScore)
-                        .join(' · ')}
-                      {works.length > 3 && ` ${s.more(works.length - 3)}`}
-                    </span>
-                  )}
+                  {l.notes && <span className="list-card-notes">{l.notes}</span>}
                 </button>
               </li>
             );
@@ -211,10 +202,15 @@ function TagChips({
 }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
-  const create = async () => {
-    if (name.trim()) await onCreate?.(name.trim());
+  // Enter y el blur del campo llaman los dos: se crea una sola vez por apertura del campo.
+  const created = useRef(false);
+  const create = () => {
+    if (created.current) return;
+    created.current = true;
+    const value = name.trim();
     setName('');
     setAdding(false);
+    if (value) void onCreate?.(value);
   };
   return (
     <div className="list-tags" role="group" aria-label={label}>
@@ -234,7 +230,7 @@ function TagChips({
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              void create();
+              create();
             }}
           >
             <input
@@ -244,11 +240,18 @@ function TagChips({
               aria-label={t.lists.newTagName}
               placeholder={t.lists.newTag}
               onChange={(e) => setName(e.target.value)}
-              onBlur={() => void create()}
+              onBlur={create}
             />
           </form>
         ) : (
-          <button type="button" className="list-tag-new" onClick={() => setAdding(true)}>
+          <button
+            type="button"
+            className="list-tag-new"
+            onClick={() => {
+              created.current = false;
+              setAdding(true);
+            }}
+          >
             <Icon name="plus" size={14} />
             {t.lists.newTag}
           </button>
