@@ -122,6 +122,15 @@ test('aviso de versión nueva: no se aplica sola y se actualiza con un toque', a
     await writeFile(swPath, `${original}\n// versión nueva ${Date.now()}`);
     await page.reload();
     await expect(banner).toBeVisible();
+    // "Más tarde" oculta el aviso, pero Actualizar sigue en Ajustes → Versión.
+    await page.getByRole('button', { name: 'Más tarde' }).click();
+    await expect(banner).toHaveCount(0);
+    await page.getByRole('link', { name: 'Ajustes' }).click();
+    await page
+      .getByRole('dialog', { name: 'Backup' })
+      .getByRole('button', { name: 'Entendido' })
+      .click();
+    await expect(page.getByRole('button', { name: 'Actualizar' })).toBeVisible();
     // Queda esperando: no se activa sola.
     const waiting = () =>
       page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => !!r?.waiting));
@@ -134,6 +143,9 @@ test('aviso de versión nueva: no se aplica sola y se actualiza con un toque', a
     ]);
     await expect.poll(waiting).toBe(false);
     await expect(banner).toHaveCount(0);
+    // Ya actualizada: buscar a mano dice que es la última.
+    await page.getByRole('button', { name: 'Buscar actualización' }).click();
+    await expect(page.getByText('Tenés la última versión.')).toBeVisible();
   } finally {
     await writeFile(swPath, original);
   }
@@ -212,4 +224,21 @@ test('tutorial: quien ya tenía partituras no ve las pistas', async ({ page }) =
   await page.getByRole('button', { name: 'Cancion de ejemplo', exact: true }).click();
   await expect(page.locator('.page-indicator')).toHaveText('1 / 3');
   await expect(page.getByRole('dialog', { name: 'Cómo se lee' })).toBeHidden();
+});
+
+test('destacar una partitura la pone primero y queda guardado', async ({ page }) => {
+  await importFixtures(page);
+  const pinned = page.getByRole('list', { name: 'Destacadas' });
+  await expect(pinned).toHaveCount(0);
+  await page.getByRole('button', { name: 'Destacar Cancion de ejemplo' }).click();
+  await expect(pinned.getByRole('listitem')).toHaveCount(1);
+  await expect(pinned).toContainText('Cancion de ejemplo');
+  await expect(page.getByRole('list', { name: 'Partituras' }).getByRole('listitem')).toHaveCount(1);
+  await page.reload();
+  await expect(pinned.getByRole('button', { name: 'Destacar Cancion de ejemplo' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await pinned.getByRole('button', { name: 'Destacar Cancion de ejemplo' }).click();
+  await expect(pinned).toHaveCount(0);
 });

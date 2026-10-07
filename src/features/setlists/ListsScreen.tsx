@@ -17,7 +17,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
-import { listScores, listSetLists } from '../../core/db/queries';
+import { listScores, listSetLists, listTags } from '../../core/db/queries';
 import {
   addSetList,
   deleteSetList,
@@ -25,8 +25,8 @@ import {
   newId,
   updateSetList,
 } from '../../core/db/repos';
-import { filterScores } from '../../core/db/search';
-import type { Score, SetList, SetListItem } from '../../core/db/types';
+import { filterScores, filterSetLists, type SetListFilter } from '../../core/db/search';
+import type { Score, SetList, SetListItem, Tag } from '../../core/db/types';
 import { Icon } from '../../ui/Icon';
 import { Sheet } from '../../ui/Sheet';
 import { t } from '../../app/strings';
@@ -39,11 +39,27 @@ interface Props {
   onShow: (listId: string, index: number) => void;
 }
 
+const today = () => new Date().toLocaleDateString('sv'); // "YYYY-MM-DD" en hora local
+const formatDate = (date: string) =>
+  new Date(`${date}T12:00`).toLocaleDateString('es', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
 export function ListsScreen({ listId, onSelect, onShow }: Props) {
   const lists = useLiveQuery(listSetLists, []);
+  const tags = useLiveQuery(listTags, []) ?? [];
+  const scores = useLiveQuery(listScores, []);
+  const titles = useMemo(() => new Map((scores ?? []).map((sc) => [sc.id, sc.title])), [scores]);
   const selected = lists?.find((l) => l.id === listId);
   const [naming, setNaming] = useState(false);
+  const [filter, setFilter] = useState<SetListFilter>({});
   const s = t.lists;
+  const now = today();
+  const shown = filterSetLists(lists ?? [], filter, now);
+  const set = (patch: SetListFilter) => setFilter((f) => ({ ...f, ...patch }));
 
   return (
     <div className={`lists${selected ? ' has-selection' : ''}`}>
@@ -55,24 +71,111 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
             {s.new}
           </button>
         </header>
-        {lists?.length === 0 && <p className="empty">{s.empty}</p>}
+        {lists?.length === 0 ? (
+          <p className="empty">{s.empty}</p>
+        ) : (
+          <div className="lists-filters">
+            <input
+              className="input"
+              type="search"
+              aria-label={s.search}
+              placeholder={s.search}
+              value={filter.query ?? ''}
+              onChange={(e) => set({ query: e.target.value })}
+            />
+            {tags.length > 0 && (
+              <TagChips
+                label={s.tags}
+                tags={[{ id: '', name: s.allTags, color: '' }, ...tags]}
+                pressed={(id) => (filter.tagId ?? '') === id}
+                onToggle={(id) => set({ tagId: id || undefined })}
+              />
+            )}
+            <div className="lists-dates">
+              <label>
+                <span>{s.from}</span>
+                <input
+                  className="input"
+                  type="date"
+                  value={filter.from ?? ''}
+                  onChange={(e) => set({ from: e.target.value || undefined })}
+                />
+              </label>
+              <label>
+                <span>{s.to}</span>
+                <input
+                  className="input"
+                  type="date"
+                  value={filter.to ?? ''}
+                  onChange={(e) => set({ to: e.target.value || undefined })}
+                />
+              </label>
+              {(filter.from || filter.to) && (
+                <button
+                  className="icon-btn"
+                  aria-label={s.clearDates}
+                  onClick={() => set({ from: undefined, to: undefined })}
+                >
+                  <Icon name="close" size={18} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        {!!lists?.length && shown.length === 0 && <p className="empty">{s.noResults}</p>}
         <ul aria-label={s.all}>
-          {lists?.map((l) => (
-            <li key={l.id}>
-              <button aria-current={l.id === listId || undefined} onClick={() => onSelect(l.id)}>
-                <strong>{l.name}</strong>
-                <span>{s.count(counts(l).scores, counts(l).breaks)}</span>
-              </button>
-            </li>
-          ))}
+          {shown.map((l) => {
+            const works = l.items.flatMap((i) => (i.type === 'score' ? [i.scoreId] : []));
+            const { scores: n, breaks } = counts(l);
+            return (
+              <li key={l.id}>
+                <button
+                  className={`list-card${l.date && l.date < now ? ' past' : ''}`}
+                  aria-current={l.id === listId || undefined}
+                  onClick={() => onSelect(l.id)}
+                >
+                  <span className="list-card-top">
+                    <strong>{l.name}</strong>
+                    {l.date && (
+                      <time dateTime={l.date}>{l.date === now ? s.today : formatDate(l.date)}</time>
+                    )}
+                  </span>
+                  {!!l.tagIds?.length && (
+                    <span className="list-card-tags">
+                      {tags
+                        .filter((tag) => l.tagIds!.includes(tag.id))
+                        .map((tag) => (
+                          <span key={tag.id}>
+                            <span className="tag-dot" style={{ background: tag.color }} />
+                            {tag.name}
+                          </span>
+                        ))}
+                    </span>
+                  )}
+                  <span>{s.count(n, breaks)}</span>
+                  {works.length > 0 && (
+                    <span className="list-card-works">
+                      {works
+                        .slice(0, 3)
+                        .map((id) => titles.get(id) ?? s.missingScore)
+                        .join(' · ')}
+                      {works.length > 3 && ` ${s.more(works.length - 3)}`}
+                    </span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </section>
       {naming && (
         <NewList
+          title={s.newTitle}
+          submitLabel={s.create}
           onCancel={() => setNaming(false)}
-          onCreate={async (name) => {
+          onCreate={async (name, date) => {
             setNaming(false);
-            onSelect((await addSetList(name)).id);
+            onSelect((await addSetList(name, date)).id);
           }}
         />
       )}
@@ -80,6 +183,7 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
         <Editor
           key={selected.id}
           list={selected}
+          tags={tags}
           onBack={() => onSelect(undefined)}
           onSelect={onSelect}
           onShow={onShow}
@@ -89,19 +193,58 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
   );
 }
 
-/** La lista se crea recién al confirmar el nombre: cancelar no deja una lista vacía. */
+/** Etiquetas como chips que se prenden y apagan. */
+function TagChips({
+  label,
+  tags,
+  pressed,
+  onToggle,
+}: {
+  label: string;
+  tags: Tag[];
+  pressed: (id: string) => boolean;
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <div className="list-tags" role="group" aria-label={label}>
+      {tags.map((tag) => (
+        <button
+          key={tag.id}
+          type="button"
+          aria-pressed={pressed(tag.id)}
+          onClick={() => onToggle(tag.id)}
+        >
+          {tag.color && <span className="tag-dot" style={{ background: tag.color }} />}
+          {tag.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Nombre y fecha de una lista nueva (o de la copia, al duplicar). La lista se crea recién al
+ * confirmar: cancelar no deja una lista vacía.
+ */
 function NewList({
+  title,
+  submitLabel,
+  initialName = '',
   onCancel,
   onCreate,
 }: {
+  title: string;
+  submitLabel: string;
+  initialName?: string;
   onCancel: () => void;
-  onCreate: (name: string) => void;
+  onCreate: (name: string, date?: string) => void;
 }) {
   const s = t.lists;
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initialName);
+  const [date, setDate] = useState('');
   return (
     <Sheet
-      title={s.newTitle}
+      title={title}
       closeLabel={t.close}
       onClose={onCancel}
       footer={
@@ -111,16 +254,17 @@ function NewList({
             {t.cancel}
           </button>
           <button type="submit" form="new-list" className="btn primary">
-            {s.create}
+            {submitLabel}
           </button>
         </>
       }
     >
       <form
         id="new-list"
+        className="new-list"
         onSubmit={(e) => {
           e.preventDefault();
-          onCreate(name.trim() || s.newName);
+          onCreate(name.trim() || s.newName, date || undefined);
         }}
       >
         <label className="field">
@@ -133,18 +277,36 @@ function NewList({
             onChange={(e) => setName(e.target.value)}
           />
         </label>
+        <label className="field">
+          <span className="field-label">{s.date}</span>
+          <input
+            className="input"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </label>
       </form>
     </Sheet>
   );
 }
 
+/** El campo de notas crece con el texto, sin manija para estirarlo. */
+const grow = (el: HTMLTextAreaElement | null) => {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
+};
+
 function Editor({
   list,
+  tags,
   onBack,
   onSelect,
   onShow,
 }: {
   list: SetList;
+  tags: Tag[];
   onBack: () => void;
   onSelect: Props['onSelect'];
   onShow: Props['onShow'];
@@ -153,6 +315,7 @@ function Editor({
   const scores = useLiveQuery(listScores, []);
   const byId = useMemo(() => new Map((scores ?? []).map((sc) => [sc.id, sc])), [scores]);
   const [picking, setPicking] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -186,10 +349,7 @@ function Editor({
             e.target.value.trim() && updateSetList(list.id, { name: e.target.value.trim() })
           }
         />
-        <button
-          className="btn"
-          onClick={async () => onSelect((await duplicateSetList(list.id, s.copySuffix))?.id)}
-        >
+        <button className="btn" onClick={() => setDuplicating(true)}>
           <Icon name="copy" size={18} />
           {s.duplicate}
         </button>
@@ -198,6 +358,35 @@ function Editor({
           {s.show}
         </button>
       </header>
+
+      <div className="list-meta">
+        <label className="field list-date">
+          <span className="field-label">{s.date}</span>
+          <input
+            className="input"
+            type="date"
+            value={list.date ?? ''}
+            onChange={(e) => updateSetList(list.id, { date: e.target.value || undefined })}
+          />
+        </label>
+        {tags.length > 0 && (
+          <div className="field">
+            <span className="field-label">{s.tags}</span>
+            <TagChips
+              label={s.tags}
+              tags={tags}
+              pressed={(id) => !!list.tagIds?.includes(id)}
+              onToggle={(id) =>
+                updateSetList(list.id, {
+                  tagIds: list.tagIds?.includes(id)
+                    ? list.tagIds.filter((x) => x !== id)
+                    : [...(list.tagIds ?? []), id],
+                })
+              }
+            />
+          </div>
+        )}
+      </div>
 
       {/* Una web no puede silenciar el teléfono: se recuerda acá, nunca adentro del show. */}
       {first >= 0 && (
@@ -215,8 +404,10 @@ function Editor({
       <label className="field">
         <span className="field-label">{s.notes}</span>
         <textarea
-          className="input"
-          rows={2}
+          className="input list-notes"
+          rows={1}
+          ref={grow}
+          onInput={(e) => grow(e.currentTarget)}
           defaultValue={list.notes ?? ''}
           onBlur={(e) => updateSetList(list.id, { notes: e.target.value.trim() || undefined })}
         />
@@ -269,6 +460,18 @@ function Editor({
         {s.delete}
       </button>
 
+      {duplicating && (
+        <NewList
+          title={s.duplicateTitle}
+          submitLabel={s.duplicate}
+          initialName={`${list.name} ${s.copySuffix}`}
+          onCancel={() => setDuplicating(false)}
+          onCreate={async (name, date) => {
+            setDuplicating(false);
+            onSelect((await duplicateSetList(list.id, name, date))?.id);
+          }}
+        />
+      )}
       {picking && (
         <Picker
           scores={scores ?? []}

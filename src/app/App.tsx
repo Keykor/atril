@@ -13,7 +13,7 @@ import { InstallBanner, InstallCard } from '../features/settings/Install';
 import { VersionCard } from '../features/settings/Update';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { back, navigate, useRoute } from './router';
-import { HINTS, LEGACY_HINTS, PlaceHint, type HintId } from './hints';
+import { HINTS, LEGACY_HINTS, PlaceHint, RESHOW_HINTS, type HintId } from './hints';
 import { ScoreScreen } from './ScoreScreen';
 import { Shell } from './Shell';
 import { t } from './strings';
@@ -33,7 +33,7 @@ export function App() {
   const footer = <BackupStatus />;
   const lastScore = useLiveQuery(getLastOpenedScore, []);
 
-  useEffect(() => void initHints([...HINTS], LEGACY_HINTS), []);
+  useEffect(() => void initHints([...HINTS], LEGACY_HINTS, RESHOW_HINTS), []);
 
   const showHint = async (hint: HintId) => {
     if (IN_SCORE.includes(hint) && !lastScore) return;

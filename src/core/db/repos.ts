@@ -67,7 +67,7 @@ export async function addTag(name: string, color: string) {
 export const renameTag = (id: string, name: string) => db.tags.update(id, { name });
 
 export function deleteTag(id: string) {
-  return db.transaction('rw', db.tags, db.scores, async () => {
+  return db.transaction('rw', db.tags, db.scores, db.setlists, async () => {
     await db.tags.delete(id);
     const now = Date.now();
     await db.scores
@@ -76,6 +76,12 @@ export function deleteTag(id: string) {
       .modify((s) => {
         s.tagIds = s.tagIds.filter((t) => t !== id);
         s.updatedAt = now;
+      });
+    await db.setlists
+      .filter((l) => !!l.tagIds?.includes(id))
+      .modify((l) => {
+        l.tagIds = l.tagIds!.filter((t) => t !== id);
+        l.updatedAt = now;
       });
   });
 }
@@ -98,9 +104,9 @@ export const saveAnnotations = (a: PageAnnotations) =>
 
 // --- Listas ---
 
-export async function addSetList(name: string) {
+export async function addSetList(name: string, date?: string) {
   const now = Date.now();
-  const list: SetList = { id: newId(), name, items: [], createdAt: now, updatedAt: now };
+  const list: SetList = { id: newId(), name, date, items: [], createdAt: now, updatedAt: now };
   await db.setlists.add(list);
   return list;
 }
@@ -110,14 +116,16 @@ export const updateSetList = (id: string, patch: Partial<SetList>) =>
 
 export const deleteSetList = (id: string) => db.setlists.delete(id);
 
-export async function duplicateSetList(id: string, suffix: string) {
+/** Copia una lista (ítems con ids nuevos) con otro nombre y fecha: el mismo show otro día. */
+export async function duplicateSetList(id: string, name: string, date?: string) {
   const src = await db.setlists.get(id);
   if (!src) return;
   const now = Date.now();
   const copy: SetList = {
     ...src,
     id: newId(),
-    name: `${src.name} ${suffix}`,
+    name,
+    date,
     items: src.items.map((i) => ({ ...i, id: newId() })),
     createdAt: now,
     updatedAt: now,
@@ -146,7 +154,7 @@ export const setSetting = (key: string, value: unknown) => db.settings.put({ key
  * venía usando y las pistas que no conocía (todas, o las nuevas de esta versión) se dan por
  * vistas. `legacy`: las pistas que existían antes de llevar la cuenta de las conocidas.
  */
-export const initHints = (all: string[], legacy: string[] = []) =>
+export const initHints = (all: string[], legacy: string[] = [], reshow: string[] = []) =>
   db.transaction('rw', db.settings, db.scores, async () => {
     const seen = (await db.settings.get('hintsSeen'))?.value as string[] | undefined;
     const known =
@@ -154,9 +162,20 @@ export const initHints = (all: string[], legacy: string[] = []) =>
       (seen ? legacy : []);
     const fresh = all.filter((id) => !known.includes(id));
     const used = (await db.scores.count()) > 0;
-    if (!seen) await setSetting('hintsSeen', used ? all : []);
-    else if (fresh.length && used) await setSetting('hintsSeen', [...new Set([...seen, ...fresh])]);
+    let next = !seen
+      ? used
+        ? all
+        : []
+      : fresh.length && used
+        ? [...new Set([...seen, ...fresh])]
+        : seen;
+    // Pistas que cambiaron con novedades: se vuelven a mostrar una vez, también a quien ya las vio.
+    const reshown = ((await db.settings.get('hintsReshown'))?.value as string[] | undefined) ?? [];
+    const again = seen ? reshow.filter((id) => !reshown.includes(id)) : [];
+    next = next.filter((id) => !again.includes(id));
+    if (next !== seen) await setSetting('hintsSeen', next);
     await setSetting('hintsKnown', all);
+    await setSetting('hintsReshown', [...new Set([...reshown, ...reshow])]);
   });
 
 export const markHintSeen = (id: string) =>

@@ -70,6 +70,7 @@ export interface Score {
   createdAt: number;
   updatedAt: number;
   lastOpenedAt?: number;
+  pinned?: boolean; // destacada: va primero en la biblioteca
 }
 
 export interface Stroke {
@@ -112,6 +113,8 @@ export interface SetList {
   id: ID;
   name: string;
   notes?: string;
+  date?: string; // "YYYY-MM-DD", el día del concierto o ensayo
+  tagIds?: ID[]; // las mismas etiquetas que las partituras
   items: SetListItem[];
   createdAt: number;
   updatedAt: number;
