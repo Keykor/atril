@@ -199,6 +199,19 @@ function Editor({
         </button>
       </header>
 
+      {/* Una web no puede silenciar el teléfono: se recuerda acá, nunca adentro del show. */}
+      {first >= 0 && (
+        <details className="dnd-reminder">
+          <summary>
+            <Icon name="lock" size={16} />
+            <span>{s.dnd}</span>
+            <span className="dnd-how">{s.dndHow}</span>
+          </summary>
+          <p>{s.dndAndroid}</p>
+          <p>{s.dndIos}</p>
+        </details>
+      )}
+
       <label className="field">
         <span className="field-label">{s.notes}</span>
         <textarea
