@@ -28,6 +28,12 @@ test('armar una lista, reordenarla y recorrerla en modo show solo con toques', a
 
   const items = page.getByRole('list', { name: 'Orden de la lista' }).getByRole('listitem');
   await expect(items).toHaveCount(3);
+  // Las notas crecen con el texto, sin manija para estirarlas.
+  const notes = page.getByLabel('Notas');
+  const h0 = (await notes.boundingBox())!.height;
+  await notes.fill(['Afinar antes.', 'Salida por la izquierda.', 'Bis: Ave verum.'].join('\n'));
+  await expect.poll(async () => (await notes.boundingBox())!.height).toBeGreaterThan(h0 + 20);
+  expect(await notes.evaluate((el) => getComputedStyle(el).resize)).toBe('none');
   // Recordatorio de "No molestar" al lado de Modo show, con el cómo plegado.
   await page.getByText('Antes de tocar, activá "No molestar"').click();
   await expect(page.getByText(/^Android: bajá la cortina/)).toBeVisible();

@@ -11,6 +11,7 @@ nuevas y el último con arreglos o cambios internos.
   versión nueva.
 - Si tocabas la X del aviso de versión nueva, el botón "Actualizar" desaparecía también de
   Ajustes; ahora sigue ahí.
+- Las notas de una lista ya no tienen manija para estirarlas: el campo crece solo con el texto.
 
 ## 0.10.0
 

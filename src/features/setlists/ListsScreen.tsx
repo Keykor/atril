@@ -138,6 +138,13 @@ function NewList({
   );
 }
 
+/** El campo de notas crece con el texto, sin manija para estirarlo. */
+const grow = (el: HTMLTextAreaElement | null) => {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
+};
+
 function Editor({
   list,
   onBack,
@@ -215,8 +222,10 @@ function Editor({
       <label className="field">
         <span className="field-label">{s.notes}</span>
         <textarea
-          className="input"
-          rows={2}
+          className="input list-notes"
+          rows={1}
+          ref={grow}
+          onInput={(e) => grow(e.currentTarget)}
           defaultValue={list.notes ?? ''}
           onBlur={(e) => updateSetList(list.id, { notes: e.target.value.trim() || undefined })}
         />
