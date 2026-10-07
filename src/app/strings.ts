@@ -106,6 +106,8 @@ export const t = {
     from: 'Desde',
     to: 'Hasta',
     clearDates: 'Borrar fechas',
+    noDate: 'Sin fecha',
+    worksColumn: 'Obras',
     noResults: 'Ninguna lista coincide con los filtros.',
     works: (n: number) => `${n} ${n === 1 ? 'obra' : 'obras'}`,
     empty: 'Todavía no hay listas. Creá una para armar un concierto o un ensayo.',

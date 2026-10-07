@@ -29,6 +29,7 @@ import {
 } from '../../core/db/repos';
 import { filterScores, filterSetLists, type SetListFilter } from '../../core/db/search';
 import type { Score, SetList, SetListItem, Tag } from '../../core/db/types';
+import { DateField } from '../../ui/controls';
 import { Icon } from '../../ui/Icon';
 import { Sheet } from '../../ui/Sheet';
 import { t } from '../../app/strings';
@@ -123,38 +124,45 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
           </div>
         )}
         {!!lists?.length && shown.length === 0 && <p className="empty">{s.noResults}</p>}
-        <ul aria-label={s.all}>
+        {shown.length > 0 && (
+          <div className="lists-table-head" aria-hidden="true">
+            <span>{s.name}</span>
+            <span>{s.date}</span>
+            <span>{s.worksColumn}</span>
+            <span>{s.tags}</span>
+          </div>
+        )}
+        <ul aria-label={s.all} className="lists-table">
           {shown.map((l) => {
             const n = counts(l).scores;
+            const listTags = tags.filter((tag) => l.tagIds?.includes(tag.id));
             return (
               <li key={l.id}>
                 <button
-                  className={`list-card${l.date && l.date < now ? ' past' : ''}`}
+                  className={`list-row${l.date && l.date < now ? ' past' : ''}`}
                   aria-current={l.id === listId || undefined}
                   onClick={() => onSelect(l.id)}
                 >
-                  <span className="list-card-top">
-                    <strong>
-                      {l.name}
-                      <span className="list-card-count"> · {s.works(n)}</span>
-                    </strong>
-                    {l.date && (
+                  <span className="list-row-name">
+                    <strong>{l.name}</strong>
+                    {l.notes && <small>{l.notes}</small>}
+                  </span>
+                  <span className="list-row-date">
+                    {l.date ? (
                       <time dateTime={l.date}>{l.date === now ? s.today : formatDate(l.date)}</time>
+                    ) : (
+                      <span className="muted">{s.noDate}</span>
                     )}
                   </span>
-                  {!!l.tagIds?.length && (
-                    <span className="list-card-tags">
-                      {tags
-                        .filter((tag) => l.tagIds!.includes(tag.id))
-                        .map((tag) => (
-                          <span key={tag.id}>
-                            <span className="tag-dot" style={{ background: tag.color }} />
-                            {tag.name}
-                          </span>
-                        ))}
-                    </span>
-                  )}
-                  {l.notes && <span className="list-card-notes">{l.notes}</span>}
+                  <span className="list-row-count">{s.works(n)}</span>
+                  <span className="list-row-tags">
+                    {listTags.map((tag) => (
+                      <span key={tag.id}>
+                        <span className="tag-dot" style={{ background: tag.color }} />
+                        {tag.name}
+                      </span>
+                    ))}
+                  </span>
                 </button>
               </li>
             );
@@ -166,9 +174,10 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
           title={s.newTitle}
           submitLabel={s.create}
           onCancel={() => setNaming(false)}
-          onCreate={async (name, date) => {
+          tags={tags}
+          onCreate={async (name, date, tagIds) => {
             setNaming(false);
-            onSelect((await addSetList(name, date)).id);
+            onSelect((await addSetList(name, date, tagIds)).id);
           }}
         />
       )}
@@ -227,22 +236,22 @@ function TagChips({
       ))}
       {onCreate &&
         (adding ? (
-          <form
-            onSubmit={(e) => {
+          // Sin <form> propio: estos chips también van dentro del formulario de lista nueva, y
+          // un formulario anidado haría que Enter enviara el de afuera.
+          <input
+            className="input list-tag-input"
+            autoFocus
+            value={name}
+            aria-label={t.lists.newTagName}
+            placeholder={t.lists.newTag}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key !== 'Enter') return;
               e.preventDefault();
               create();
             }}
-          >
-            <input
-              className="input list-tag-input"
-              autoFocus
-              value={name}
-              aria-label={t.lists.newTagName}
-              placeholder={t.lists.newTag}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={create}
-            />
-          </form>
+            onBlur={create}
+          />
         ) : (
           <button
             type="button"
@@ -261,25 +270,30 @@ function TagChips({
 }
 
 /**
- * Nombre y fecha de una lista nueva (o de la copia, al duplicar). La lista se crea recién al
- * confirmar: cancelar no deja una lista vacía.
+ * Nombre, fecha y etiquetas de una lista nueva (o de la copia, al duplicar). La lista se crea
+ * recién al confirmar: cancelar no deja una lista vacía.
  */
 function NewList({
   title,
   submitLabel,
+  tags,
   initialName = '',
+  initialTagIds = [],
   onCancel,
   onCreate,
 }: {
   title: string;
   submitLabel: string;
+  tags: Tag[];
   initialName?: string;
+  initialTagIds?: string[];
   onCancel: () => void;
-  onCreate: (name: string, date?: string) => void;
+  onCreate: (name: string, date: string | undefined, tagIds: string[]) => void;
 }) {
   const s = t.lists;
   const [name, setName] = useState(initialName);
   const [date, setDate] = useState('');
+  const [tagIds, setTagIds] = useState(initialTagIds);
   return (
     <Sheet
       title={title}
@@ -302,7 +316,7 @@ function NewList({
         className="new-list"
         onSubmit={(e) => {
           e.preventDefault();
-          onCreate(name.trim() || s.newName, date || undefined);
+          onCreate(name.trim() || s.newName, date || undefined, tagIds);
         }}
       >
         <label className="field">
@@ -315,15 +329,22 @@ function NewList({
             onChange={(e) => setName(e.target.value)}
           />
         </label>
-        <label className="field">
-          <span className="field-label">{s.date}</span>
-          <input
-            className="input"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+        <DateField label={s.date} value={date} onChange={setDate} clearLabel={s.noDate} />
+        <div className="field">
+          <span className="field-label">{s.tags}</span>
+          <TagChips
+            label={s.tags}
+            tags={tags}
+            pressed={(id) => tagIds.includes(id)}
+            onToggle={(id) =>
+              setTagIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]))
+            }
+            onCreate={async (tagName) => {
+              const tag = await addTag(tagName);
+              setTagIds((ids) => [...ids, tag.id]);
+            }}
           />
-        </label>
+        </div>
       </form>
     </Sheet>
   );
@@ -449,15 +470,13 @@ function Editor({
       </header>
 
       <div className="list-meta">
-        <label className="field list-date">
-          <span className="field-label">{s.date}</span>
-          <input
-            className="input"
-            type="date"
-            value={list.date ?? ''}
-            onChange={(e) => updateSetList(list.id, { date: e.target.value || undefined })}
-          />
-        </label>
+        <DateField
+          className="list-date"
+          label={s.date}
+          value={list.date ?? ''}
+          onChange={(date) => updateSetList(list.id, { date: date || undefined })}
+          clearLabel={s.noDate}
+        />
         <div className="field">
           <span className="field-label">{s.tags}</span>
           <TagChips
@@ -553,10 +572,12 @@ function Editor({
           title={s.duplicateTitle}
           submitLabel={s.duplicate}
           initialName={`${list.name} ${s.copySuffix}`}
+          tags={tags}
+          initialTagIds={list.tagIds ?? []}
           onCancel={() => setDuplicating(false)}
-          onCreate={async (name, date) => {
+          onCreate={async (name, date, tagIds) => {
             setDuplicating(false);
-            onSelect((await duplicateSetList(list.id, name, date))?.id);
+            onSelect((await duplicateSetList(list.id, name, date, tagIds))?.id);
           }}
         />
       )}

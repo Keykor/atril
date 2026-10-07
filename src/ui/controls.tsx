@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
+import { Icon } from './Icon';
 import './ui.css';
 
 interface SegmentedProps<T extends string | number> {
@@ -55,6 +56,44 @@ export function Switch({ label, hint, checked, onChange }: SwitchProps) {
         aria-label={label}
         onClick={() => onChange(!checked)}
       />
+    </div>
+  );
+}
+
+interface DateFieldProps {
+  label: string;
+  value: string; // "YYYY-MM-DD" o "" sin fecha
+  onChange: (value: string) => void;
+  clearLabel: string;
+  className?: string;
+}
+
+/**
+ * Campo de fecha con un botón para dejarlo sin fecha: en el celular el selector del navegador
+ * no trae cómo borrarla, y una vez puesta no se podía sacar.
+ */
+export function DateField({ label, value, onChange, clearLabel, className }: DateFieldProps) {
+  const id = useId();
+  return (
+    <div className={`field date-field ${className ?? ''}`}>
+      <label className="field-label" htmlFor={id}>
+        {label}
+      </label>
+      <div className="date-row">
+        <input
+          id={id}
+          className="input"
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {value && (
+          <button type="button" className="btn ghost" onClick={() => onChange('')}>
+            <Icon name="close" size={16} />
+            {clearLabel}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

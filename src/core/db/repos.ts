@@ -108,9 +108,17 @@ export const saveAnnotations = (a: PageAnnotations) =>
 
 // --- Listas ---
 
-export async function addSetList(name: string, date?: string) {
+export async function addSetList(name: string, date?: string, tagIds?: string[]) {
   const now = Date.now();
-  const list: SetList = { id: newId(), name, date, items: [], createdAt: now, updatedAt: now };
+  const list: SetList = {
+    id: newId(),
+    name,
+    date,
+    tagIds: tagIds?.length ? tagIds : undefined,
+    items: [],
+    createdAt: now,
+    updatedAt: now,
+  };
   await db.setlists.add(list);
   return list;
 }
@@ -120,8 +128,11 @@ export const updateSetList = (id: string, patch: Partial<SetList>) =>
 
 export const deleteSetList = (id: string) => db.setlists.delete(id);
 
-/** Copia una lista (ítems con ids nuevos) con otro nombre y fecha: el mismo show otro día. */
-export async function duplicateSetList(id: string, name: string, date?: string) {
+/**
+ * Copia una lista (ítems con ids nuevos) con otro nombre, fecha y etiquetas: el mismo show otro
+ * día. Sin `tagIds`, conserva las de la original.
+ */
+export async function duplicateSetList(id: string, name: string, date?: string, tagIds?: string[]) {
   const src = await db.setlists.get(id);
   if (!src) return;
   const now = Date.now();
@@ -130,6 +141,7 @@ export async function duplicateSetList(id: string, name: string, date?: string) 
     id: newId(),
     name,
     date,
+    tagIds: tagIds ? (tagIds.length ? tagIds : undefined) : src.tagIds,
     items: src.items.map((i) => ({ ...i, id: newId() })),
     createdAt: now,
     updatedAt: now,
