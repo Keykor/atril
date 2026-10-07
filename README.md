@@ -16,16 +16,17 @@ servidor. Tus partituras y anotaciones quedan solo en tu dispositivo.
 ## Qué hace
 
 - **Biblioteca:** importás PDFs (en Android también desde "Compartir"), los buscás por título o
-  compositor y los organizás con etiquetas.
+  compositor, los organizás con etiquetas y destacás las que más usás con una estrella.
 - **Lector:** una página por pantalla, scroll vertical o dos páginas lado a lado; media página
   para pasar sin cortar; temas claro, sepia y oscuro; la pantalla no se apaga mientras leés.
 - **Anotaciones:** lápiz, resaltador, texto, goma y símbolos musicales (figuras, silencios,
   alteraciones, dinámicas y articulaciones) que se pegan con un toque. El PDF nunca se modifica.
 - **Marcadores y saltos:** marcás un lugar ("Letra B") y saltás ahí; los saltos sirven para
   D.S., coda y repeticiones.
-- **Listas y modo show:** armás el orden de un concierto con separadores y lo recorrés de una
-  obra a la siguiente sin salir del lector.
-- **Ensayo:** metrónomo y teclado de dos octavas; las notas de inicio de cada obra quedan
+- **Listas y modo show:** armás el orden de un concierto con separadores, fecha y etiquetas, las
+  filtrás por nombre, etiqueta o fechas, y recorrés la lista de una obra a la siguiente sin
+  salir del lector.
+- **Ensayo:** metrónomo y teclado de dos octavas con pedal y volumen; las notas de inicio de cada obra quedan
   guardadas para dar el tono con un toque.
 - **Imprimir o compartir:** desde los datos de la partitura exportás un PDF con la partitura
   original y encima lo que dibujaste, escribiste y los símbolos que pegaste.
