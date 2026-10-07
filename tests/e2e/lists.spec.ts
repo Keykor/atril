@@ -28,6 +28,9 @@ test('armar una lista, reordenarla y recorrerla en modo show solo con toques', a
 
   const items = page.getByRole('list', { name: 'Orden de la lista' }).getByRole('listitem');
   await expect(items).toHaveCount(3);
+  // Recordatorio de "No molestar" al lado de Modo show, con el cómo plegado.
+  await page.getByText('Antes de tocar, activá "No molestar"').click();
+  await expect(page.getByText(/^Android: bajá la cortina/)).toBeVisible();
   await expect(items.nth(0)).toContainText('Ave verum corpus');
 
   // Reordenar con el teclado (dnd-kit): el separador sube al medio.

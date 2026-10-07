@@ -57,6 +57,33 @@
   font-weight: 700;
   letter-spacing: -0.01em;
 }
+.dnd-reminder {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  font-size: 14px;
+}
+.dnd-reminder summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  cursor: pointer;
+  list-style: none;
+}
+.dnd-reminder summary::-webkit-details-marker {
+  display: none;
+}
+.dnd-how {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--accent-dark);
+}
+.dnd-reminder p {
+  margin: 8px 0 0;
+  color: var(--text-2);
+}
 .list-order-head {
   display: flex;
   align-items: center;

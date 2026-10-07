@@ -4,6 +4,12 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.10.0
+
+- Recordatorio de "No molestar": al lado de Modo show, en cada lista, Atril te recuerda silenciar
+  el teléfono antes de tocar, y en "Cómo" explica cómo hacerlo en Android, Xiaomi, iPhone y iPad.
+  La app no puede frenar las notificaciones sola; el recordatorio no aparece durante el show.
+
 ## 0.9.1
 
 - Las pistas se cierran al instante al tocar "Entendido", y también tocando cualquier parte de
