@@ -58,7 +58,11 @@ export function deleteScore(id: string) {
 
 // --- Etiquetas ---
 
-export async function addTag(name: string, color: string) {
+const TAG_COLORS = ['#2950C7', '#C2410C', '#15803D', '#7E22CE', '#B45309', '#0E7490', '#BE185D'];
+
+/** Etiqueta nueva; sin color, toma el siguiente de la paleta. */
+export async function addTag(name: string, color?: string) {
+  color ??= TAG_COLORS[(await db.tags.count()) % TAG_COLORS.length];
   const tag: Tag = { id: newId(), name, color };
   await db.tags.add(tag);
   return tag;
@@ -184,7 +188,10 @@ export const markHintSeen = (id: string) =>
     if (!seen.includes(id)) await setSetting('hintsSeen', [...seen, id]);
   });
 
-export const resetHints = () => setSetting('hintsSeen', []);
+export const resetHints = async () => {
+  await setSetting('hintsSeen', []);
+  await db.settings.delete('dndReminderOff'); // el recordatorio de "No molestar" también vuelve
+};
 
 /** Para "Mostrame": la pista vuelve a aparecer la próxima vez que se llega a su lugar. */
 export const unmarkHint = (id: string) =>

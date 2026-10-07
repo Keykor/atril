@@ -109,7 +109,17 @@
   align-items: center;
   gap: 12px;
 }
-.kb-controls .range {
+.kb-volume {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.kb-volume .range {
   flex: 1;
   min-width: 0;
 }

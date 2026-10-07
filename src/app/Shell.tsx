@@ -14,13 +14,12 @@ const ITEMS: { id: Section; href: string; icon: IconName; label: string }[] = [
 
 interface Props {
   section: Section;
-  sidebar?: ReactNode; // contenido extra de la barra lateral (etiquetas)
   footer?: ReactNode; // estado del backup
   children: ReactNode;
 }
 
 /** Barra lateral en tablet, barra inferior en celular. */
-export function Shell({ section, sidebar, footer, children }: Props) {
+export function Shell({ section, footer, children }: Props) {
   return (
     <div className="shell">
       <nav className="shell-nav" aria-label={t.nav.sections}>
@@ -36,7 +35,6 @@ export function Shell({ section, sidebar, footer, children }: Props) {
             </a>
           ))}
         </div>
-        <div className="shell-extra">{sidebar}</div>
         <div className="shell-footer">{footer}</div>
       </nav>
       <main className="shell-main">

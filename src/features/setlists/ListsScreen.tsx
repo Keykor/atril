@@ -16,10 +16,12 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useMemo, useState } from 'react';
-import { listScores, listSetLists, listTags } from '../../core/db/queries';
+import { useMemo, useRef, useState } from 'react';
+import { getSetting, listScores, listSetLists, listTags } from '../../core/db/queries';
 import {
   addSetList,
+  addTag,
+  setSetting,
   deleteSetList,
   duplicateSetList,
   newId,
@@ -51,8 +53,6 @@ const formatDate = (date: string) =>
 export function ListsScreen({ listId, onSelect, onShow }: Props) {
   const lists = useLiveQuery(listSetLists, []);
   const tags = useLiveQuery(listTags, []) ?? [];
-  const scores = useLiveQuery(listScores, []);
-  const titles = useMemo(() => new Map((scores ?? []).map((sc) => [sc.id, sc.title])), [scores]);
   const selected = lists?.find((l) => l.id === listId);
   const [naming, setNaming] = useState(false);
   const [filter, setFilter] = useState<SetListFilter>({});
@@ -125,8 +125,7 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
         {!!lists?.length && shown.length === 0 && <p className="empty">{s.noResults}</p>}
         <ul aria-label={s.all}>
           {shown.map((l) => {
-            const works = l.items.flatMap((i) => (i.type === 'score' ? [i.scoreId] : []));
-            const { scores: n, breaks } = counts(l);
+            const n = counts(l).scores;
             return (
               <li key={l.id}>
                 <button
@@ -135,7 +134,10 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
                   onClick={() => onSelect(l.id)}
                 >
                   <span className="list-card-top">
-                    <strong>{l.name}</strong>
+                    <strong>
+                      {l.name}
+                      <span className="list-card-count"> · {s.works(n)}</span>
+                    </strong>
                     {l.date && (
                       <time dateTime={l.date}>{l.date === now ? s.today : formatDate(l.date)}</time>
                     )}
@@ -152,16 +154,7 @@ export function ListsScreen({ listId, onSelect, onShow }: Props) {
                         ))}
                     </span>
                   )}
-                  <span>{s.count(n, breaks)}</span>
-                  {works.length > 0 && (
-                    <span className="list-card-works">
-                      {works
-                        .slice(0, 3)
-                        .map((id) => titles.get(id) ?? s.missingScore)
-                        .join(' · ')}
-                      {works.length > 3 && ` ${s.more(works.length - 3)}`}
-                    </span>
-                  )}
+                  {l.notes && <span className="list-card-notes">{l.notes}</span>}
                 </button>
               </li>
             );
@@ -199,12 +192,26 @@ function TagChips({
   tags,
   pressed,
   onToggle,
+  onCreate,
 }: {
   label: string;
   tags: Tag[];
   pressed: (id: string) => boolean;
   onToggle: (id: string) => void;
+  onCreate?: (name: string) => Promise<void>;
 }) {
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState('');
+  // Enter y el blur del campo llaman los dos: se crea una sola vez por apertura del campo.
+  const created = useRef(false);
+  const create = () => {
+    if (created.current) return;
+    created.current = true;
+    const value = name.trim();
+    setName('');
+    setAdding(false);
+    if (value) void onCreate?.(value);
+  };
   return (
     <div className="list-tags" role="group" aria-label={label}>
       {tags.map((tag) => (
@@ -218,6 +225,37 @@ function TagChips({
           {tag.name}
         </button>
       ))}
+      {onCreate &&
+        (adding ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              create();
+            }}
+          >
+            <input
+              className="input list-tag-input"
+              autoFocus
+              value={name}
+              aria-label={t.lists.newTagName}
+              placeholder={t.lists.newTag}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={create}
+            />
+          </form>
+        ) : (
+          <button
+            type="button"
+            className="list-tag-new"
+            onClick={() => {
+              created.current = false;
+              setAdding(true);
+            }}
+          >
+            <Icon name="plus" size={14} />
+            {t.lists.newTag}
+          </button>
+        ))}
     </div>
   );
 }
@@ -291,6 +329,51 @@ function NewList({
   );
 }
 
+/**
+ * Recordatorio al tocar Modo show: una web no puede silenciar el teléfono. Se puede apagar
+ * ("No volver a recordarme"); vuelve con "Volver a mostrar todas las pistas".
+ */
+function DndReminder({
+  onCancel,
+  onStart,
+}: {
+  onCancel: () => void;
+  onStart: (off: boolean) => void;
+}) {
+  const s = t.lists;
+  const [off, setOff] = useState(false);
+  return (
+    <Sheet
+      title={s.dndTitle}
+      closeLabel={t.close}
+      onClose={onCancel}
+      footer={
+        <>
+          <span className="spacer" />
+          <button type="button" className="btn" onClick={onCancel}>
+            {t.cancel}
+          </button>
+          <button type="button" className="btn primary" onClick={() => onStart(off)}>
+            <Icon name="play" size={18} />
+            {s.dndStart}
+          </button>
+        </>
+      }
+    >
+      <p className="dnd-text">{s.dnd}</p>
+      <details className="dnd-reminder">
+        <summary>{s.dndHow}</summary>
+        <p>{s.dndAndroid}</p>
+        <p>{s.dndIos}</p>
+      </details>
+      <label className="dnd-off">
+        <input type="checkbox" checked={off} onChange={(e) => setOff(e.target.checked)} />
+        {s.dndOff}
+      </label>
+    </Sheet>
+  );
+}
+
 /** El campo de notas crece con el texto, sin manija para estirarlo. */
 const grow = (el: HTMLTextAreaElement | null) => {
   if (!el) return;
@@ -316,6 +399,8 @@ function Editor({
   const byId = useMemo(() => new Map((scores ?? []).map((sc) => [sc.id, sc])), [scores]);
   const [picking, setPicking] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [reminding, setReminding] = useState(false);
+  const dndOff = useLiveQuery(() => getSetting('dndReminderOff', false), []) ?? false;
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -353,7 +438,11 @@ function Editor({
           <Icon name="copy" size={18} />
           {s.duplicate}
         </button>
-        <button className="btn primary" disabled={first < 0} onClick={() => onShow(list.id, first)}>
+        <button
+          className="btn primary"
+          disabled={first < 0}
+          onClick={() => (dndOff ? onShow(list.id, first) : setReminding(true))}
+        >
           <Icon name="play" size={18} />
           {s.show}
         </button>
@@ -369,37 +458,26 @@ function Editor({
             onChange={(e) => updateSetList(list.id, { date: e.target.value || undefined })}
           />
         </label>
-        {tags.length > 0 && (
-          <div className="field">
-            <span className="field-label">{s.tags}</span>
-            <TagChips
-              label={s.tags}
-              tags={tags}
-              pressed={(id) => !!list.tagIds?.includes(id)}
-              onToggle={(id) =>
-                updateSetList(list.id, {
-                  tagIds: list.tagIds?.includes(id)
-                    ? list.tagIds.filter((x) => x !== id)
-                    : [...(list.tagIds ?? []), id],
-                })
-              }
-            />
-          </div>
-        )}
+        <div className="field">
+          <span className="field-label">{s.tags}</span>
+          <TagChips
+            label={s.tags}
+            tags={tags}
+            pressed={(id) => !!list.tagIds?.includes(id)}
+            onToggle={(id) =>
+              updateSetList(list.id, {
+                tagIds: list.tagIds?.includes(id)
+                  ? list.tagIds.filter((x) => x !== id)
+                  : [...(list.tagIds ?? []), id],
+              })
+            }
+            onCreate={async (name) => {
+              const tag = await addTag(name);
+              await updateSetList(list.id, { tagIds: [...(list.tagIds ?? []), tag.id] });
+            }}
+          />
+        </div>
       </div>
-
-      {/* Una web no puede silenciar el teléfono: se recuerda acá, nunca adentro del show. */}
-      {first >= 0 && (
-        <details className="dnd-reminder">
-          <summary>
-            <Icon name="lock" size={16} />
-            <span>{s.dnd}</span>
-            <span className="dnd-how">{s.dndHow}</span>
-          </summary>
-          <p>{s.dndAndroid}</p>
-          <p>{s.dndIos}</p>
-        </details>
-      )}
 
       <label className="field">
         <span className="field-label">{s.notes}</span>
@@ -460,6 +538,16 @@ function Editor({
         {s.delete}
       </button>
 
+      {reminding && (
+        <DndReminder
+          onCancel={() => setReminding(false)}
+          onStart={(off) => {
+            if (off) void setSetting('dndReminderOff', true);
+            setReminding(false);
+            onShow(list.id, first);
+          }}
+        />
+      )}
       {duplicating && (
         <NewList
           title={s.duplicateTitle}
@@ -521,13 +609,6 @@ function Row({
             <span>{score?.composer}</span>
           </button>
           {score?.key && <span className="chip outline">{score.key}</span>}
-          <input
-            className="list-note"
-            aria-label={s.itemNote(name)}
-            placeholder={s.itemNotePlaceholder}
-            defaultValue={item.note ?? ''}
-            onBlur={(e) => onPatch({ note: e.target.value.trim() || undefined })}
-          />
         </>
       ) : (
         <input
