@@ -10,7 +10,7 @@ import { BackupCard, BackupReminder } from '../features/settings/Backup';
 import { BackupStatus, DriveCard, useDriveState } from '../features/settings/Drive';
 import { InstallBanner, InstallCard } from '../features/settings/Install';
 import { VersionCard } from '../features/settings/Update';
-import { SettingsScreen } from '../features/settings/SettingsScreen';
+import { LanguageCard, SettingsScreen } from '../features/settings/SettingsScreen';
 import { back, navigate, useRoute } from './router';
 import { HINTS, LEGACY_HINTS, PlaceHint, RESHOW_HINTS, type HintId } from './hints';
 import { ScoreScreen } from './ScoreScreen';
@@ -48,6 +48,7 @@ export function App() {
       <Shell section="settings" footer={footer}>
         <SettingsScreen>
           <HelpCard />
+          <LanguageCard />
           <BackupCard />
           <DriveCard />
           <InstallCard />
