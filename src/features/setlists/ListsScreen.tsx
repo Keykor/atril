@@ -29,6 +29,7 @@ import {
 } from '../../core/db/repos';
 import { filterScores, filterSetLists, type SetListFilter } from '../../core/db/search';
 import type { Score, SetList, SetListItem, Tag } from '../../core/db/types';
+import { language } from '../../core/language';
 import { DateField } from '../../ui/controls';
 import { Icon } from '../../ui/Icon';
 import { Sheet } from '../../ui/Sheet';
@@ -44,7 +45,7 @@ interface Props {
 
 const today = () => new Date().toLocaleDateString('sv'); // "YYYY-MM-DD" en hora local
 const formatDate = (date: string) =>
-  new Date(`${date}T12:00`).toLocaleDateString('es', {
+  new Date(`${date}T12:00`).toLocaleDateString(language, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
