@@ -33,7 +33,7 @@ const placePoint = (page: Page, fx: number, fy: number) =>
     );
 
 async function addBookmark(page: Page, label: string, fx: number, fy: number) {
-  await clickBar(page, 'Marcadores y saltos');
+  await clickBar(page, 'Marcadores');
   await page.getByRole('button', { name: 'Agregar marcador' }).click();
   await placePoint(page, fx, fy);
   await page.getByRole('textbox', { name: 'Nombre del marcador' }).fill(label);
@@ -45,7 +45,7 @@ const closeSheet = (page: Page) =>
 
 test('orden virtual de páginas y marcadores', async ({ page }) => {
   await openScore(page);
-  await clickBar(page, 'Página');
+  await clickBar(page, 'Recorte y orden de páginas');
   await page.getByLabel('Orden de páginas').fill('1, 2, 3, 2, 3');
   await page.getByLabel('Orden de páginas').blur();
   await closeSheet(page);
@@ -64,14 +64,14 @@ test('orden virtual de páginas y marcadores', async ({ page }) => {
   await page.keyboard.press('ArrowRight');
   await expect(indicator(page)).toHaveText('5 / 5');
 
-  await clickBar(page, 'Marcadores y saltos');
+  await clickBar(page, 'Marcadores');
   await page.locator('.bookmark-go', { hasText: 'Letra B' }).click();
   await expect(indicator(page)).toHaveText('2 / 5'); // primera aparición de la página 2
 });
 
 test('saltos: tocar el origen lleva al destino, sin cartel encima', async ({ page }) => {
   await openScore(page);
-  await clickBar(page, 'Marcadores y saltos');
+  await clickBar(page, 'Marcadores');
   await page.getByRole('button', { name: 'Agregar salto' }).click();
   await placePoint(page, 0.8, 0.8);
   await page.getByLabel('A una página (1 a 3)').fill('3');
@@ -89,7 +89,7 @@ test('recorte de márgenes: la página se agranda y las anotaciones siguen aline
   const full = page.locator('.reader-slot[data-where="0"] .page-full');
   const before = (await full.boundingBox())!;
 
-  await clickBar(page, 'Página');
+  await clickBar(page, 'Recorte y orden de páginas');
   // Con el panel abierto, la página entra entera en el lado libre: no queda nada debajo.
   const panel = (await page.getByRole('dialog', { name: 'Página' }).boundingBox())!;
   const shown = page.locator('.reader-slot[data-where="0"] .page');
@@ -139,7 +139,7 @@ test('una página repetida en el orden virtual se ve en todos los lugares a la v
   page,
 }) => {
   await openScore(page);
-  await clickBar(page, 'Página');
+  await clickBar(page, 'Recorte y orden de páginas');
   await page.getByLabel('Orden de páginas').fill('1, 2, 1');
   await page.getByLabel('Orden de páginas').blur();
   await closeSheet(page);
@@ -176,7 +176,7 @@ test('un salto puede ir a un marcador, y en vertical el marcador lleva al punto 
   await page.keyboard.press('ArrowLeft');
   await expect(indicator(page)).toHaveText('1 / 3');
 
-  await clickBar(page, 'Marcadores y saltos');
+  await clickBar(page, 'Marcadores');
   await page.getByRole('button', { name: 'Agregar salto' }).click();
   await placePoint(page, 0.8, 0.9);
   await page.getByRole('button', { name: 'Destino: Coda' }).click();
@@ -191,7 +191,7 @@ test('un salto puede ir a un marcador, y en vertical el marcador lleva al punto 
   await clickBar(page, 'Ajustes de lectura');
   await page.getByRole('button', { name: 'Vertical' }).click();
   await closeSheet(page);
-  await clickBar(page, 'Marcadores y saltos');
+  await clickBar(page, 'Marcadores');
   await page.locator('.bookmark-go', { hasText: 'Coda' }).click();
   const flag = page.locator('.bookmark-flag', { hasText: 'Coda' });
   await expect(flag).toBeInViewport();
@@ -206,7 +206,7 @@ test('si el orden nuevo deja afuera la página a la vista, vuelve a la primera',
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowRight');
   await expect(indicator(page)).toHaveText('3 / 3');
-  await clickBar(page, 'Página');
+  await clickBar(page, 'Recorte y orden de páginas');
   await page.getByLabel('Orden de páginas').fill('1, 2');
   await page.getByLabel('Orden de páginas').blur();
   await closeSheet(page);

@@ -277,7 +277,7 @@ test('con zoom se sigue pasando de hoja, y el botón de ajuste lo saca', async (
   await touch('touchEnd', []);
   await expect(page.locator('.page-indicator')).toHaveText('3 / 3');
 
-  await clickBar(page, 'Ajuste de página');
+  await clickBar(page, 'Página entera');
   await expect.poll(zoom).toBe(1);
 });
 
@@ -399,7 +399,7 @@ test('en el celular las hojas ocupan toda la altura y avisan si hay más abajo',
   await sheet.getByRole('button', { name: 'Cerrar' }).click();
 
   // La hoja de página muestra el valor de cada recorte.
-  await clickBar(page, 'Página');
+  await clickBar(page, 'Recorte y orden de páginas');
   await page.getByRole('button', { name: 'Automático' }).click();
   await expect(page.getByRole('dialog').locator('output').first()).toHaveText(/^\d+ %$/);
 });
@@ -455,4 +455,53 @@ test('símbolos: se pegan con un toque, se mueven, se borran y quedan guardados'
   await expect(stamps).toHaveCount(1);
   await page.getByRole('button', { name: 'Deshacer' }).click();
   await expect(stamps).toHaveCount(2);
+});
+
+test('barras del lector: en el celular el título entra y el resto está en "Más opciones"', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await openScore(page);
+  await tapAt(page, 0.5);
+  const top = page.locator('.reader-top');
+  // Arriba solo volver, el título (que se lee entero) y "Más opciones".
+  await expect(top.getByRole('button')).toHaveCount(2);
+  const title = top.locator('.reader-title strong');
+  expect(await title.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+  // Abajo, las acciones con su nombre.
+  for (const name of ['Ensayo', 'Marcadores', 'Anotar'])
+    await expect(page.locator('.reader-bottom').getByRole('button', { name })).toBeVisible();
+
+  // El menú muestra en qué ajuste está, y cambiarlo se refleja.
+  await top.getByRole('button', { name: 'Más opciones' }).click();
+  const menu = page.getByRole('menu', { name: 'Más opciones' });
+  await expect(menu.getByRole('menuitemradio', { name: 'Página entera' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await menu.getByRole('menuitemradio', { name: 'Al ancho' }).click();
+  await expect(menu).toBeHidden();
+  await clickBar(page, 'Más opciones');
+  await expect(menu.getByRole('menuitemradio', { name: 'Al ancho' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  // Tocar afuera lo cierra.
+  await page.mouse.click(20, 400);
+  await expect(menu).toBeHidden();
+});
+
+test('con la tablet acostada, Lectura y Página están a la vista con su nombre', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1180, height: 820 });
+  await openScore(page);
+  await tapAt(page, 0.5);
+  const top = page.locator('.reader-top');
+  await expect(top.getByRole('button', { name: 'Lectura' })).toBeVisible();
+  await expect(top.getByRole('button', { name: 'Página' })).toBeVisible();
+  await top.getByRole('button', { name: 'Más opciones' }).click();
+  // No se repiten en el menú.
+  await expect(page.getByRole('menuitem', { name: 'Ajustes de lectura' })).toBeHidden();
+  await expect(page.getByRole('menuitem', { name: 'Datos de la partitura' })).toBeVisible();
 });
