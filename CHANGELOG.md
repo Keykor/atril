@@ -4,6 +4,16 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.13.0
+
+- Listas en filas, una abajo de otra como una tabla: nombre (con el comienzo de las notas),
+  fecha, cantidad de obras y etiquetas. En el celular, dos renglones por lista.
+- La fecha de una lista se puede sacar con "Sin fecha", al crearla y después.
+- Al crear una lista se le pueden poner etiquetas (y crear una nueva ahí mismo). Al duplicar,
+  vienen marcadas las de la original.
+- En el celular, la pantalla de listas ya no se pasa del ancho: el botón para crear una lista y
+  la fecha de cada una quedan a la vista.
+
 ## 0.12.0
 
 - Barras del lector más claras en pantallas chicas: arriba quedan volver, el título (que ahora se
