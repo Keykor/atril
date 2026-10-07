@@ -142,3 +142,58 @@ test('listas con fecha y etiquetas: orden, filtros y duplicar con fecha nueva', 
   await page.getByRole('button', { name: 'Todas las listas' }).click();
   await expect(cards).toHaveCount(3);
 });
+
+test('listas: etiquetas al crear, fecha que se puede sacar e índice en filas', async ({ page }) => {
+  await page.setViewportSize({ width: 1180, height: 820 });
+  await importFixtures(page);
+  await page.getByRole('link', { name: 'Listas' }).click();
+
+  // Al crear: nombre, fecha (que se puede volver a dejar vacía) y una etiqueta nueva.
+  await page.getByRole('button', { name: 'Nueva' }).click();
+  const naming = page.getByRole('dialog', { name: 'Nueva lista' });
+  await naming.getByLabel('Nombre de la lista').fill('Concierto de primavera');
+  await naming.getByLabel('Fecha').fill('2099-05-10');
+  await naming.getByRole('button', { name: 'Sin fecha' }).click();
+  await expect(naming.getByLabel('Fecha')).toHaveValue('');
+  await naming.getByLabel('Fecha').fill('2099-05-10');
+  await naming.getByRole('button', { name: 'Nueva etiqueta' }).click();
+  await naming.getByLabel('Nombre de la etiqueta nueva').fill('Coro');
+  await page.keyboard.press('Enter');
+  await expect(naming.getByRole('button', { name: 'Coro' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await naming.getByRole('button', { name: 'Crear' }).click();
+
+  const editor = page.locator('.list-editor');
+  await expect(editor.getByLabel('Fecha')).toHaveValue('2099-05-10');
+  await expect(editor.getByRole('button', { name: 'Coro' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  // La fecha de una lista ya creada se puede sacar.
+  await editor.getByRole('button', { name: 'Sin fecha' }).click();
+  await expect(editor.getByLabel('Fecha')).toHaveValue('');
+
+  // El índice es una tabla: una lista por fila, con su fecha (o "Sin fecha"), obras y etiquetas.
+  const rows = page.getByRole('list', { name: 'Todas las listas' }).getByRole('listitem');
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('Sin fecha');
+  await expect(rows.first()).toContainText('0 obras');
+  await expect(rows.first()).toContainText('Coro');
+
+  // Al duplicar, vienen marcadas las etiquetas de la original.
+  await editor.getByRole('button', { name: 'Duplicar' }).click();
+  const dup = page.getByRole('dialog', { name: /copia|Duplicar/i });
+  await expect(dup.getByRole('button', { name: 'Coro' })).toHaveAttribute('aria-pressed', 'true');
+  await dup.getByRole('button', { name: 'Cancelar' }).click();
+
+  // En el celular la pantalla de listas no se pasa del ancho: "Nueva", la fecha y las obras de
+  // cada fila quedan a la vista.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/#/lists');
+  await expect(rows.first()).toContainText('Sin fecha');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(page.getByRole('button', { name: 'Nueva', exact: true })).toBeInViewport();
+});
