@@ -67,7 +67,7 @@ export async function addTag(name: string, color: string) {
 export const renameTag = (id: string, name: string) => db.tags.update(id, { name });
 
 export function deleteTag(id: string) {
-  return db.transaction('rw', db.tags, db.scores, async () => {
+  return db.transaction('rw', db.tags, db.scores, db.setlists, async () => {
     await db.tags.delete(id);
     const now = Date.now();
     await db.scores
@@ -76,6 +76,12 @@ export function deleteTag(id: string) {
       .modify((s) => {
         s.tagIds = s.tagIds.filter((t) => t !== id);
         s.updatedAt = now;
+      });
+    await db.setlists
+      .filter((l) => !!l.tagIds?.includes(id))
+      .modify((l) => {
+        l.tagIds = l.tagIds!.filter((t) => t !== id);
+        l.updatedAt = now;
       });
   });
 }
@@ -98,9 +104,9 @@ export const saveAnnotations = (a: PageAnnotations) =>
 
 // --- Listas ---
 
-export async function addSetList(name: string) {
+export async function addSetList(name: string, date?: string) {
   const now = Date.now();
-  const list: SetList = { id: newId(), name, items: [], createdAt: now, updatedAt: now };
+  const list: SetList = { id: newId(), name, date, items: [], createdAt: now, updatedAt: now };
   await db.setlists.add(list);
   return list;
 }
@@ -110,14 +116,16 @@ export const updateSetList = (id: string, patch: Partial<SetList>) =>
 
 export const deleteSetList = (id: string) => db.setlists.delete(id);
 
-export async function duplicateSetList(id: string, suffix: string) {
+/** Copia una lista (ítems con ids nuevos) con otro nombre y fecha: el mismo show otro día. */
+export async function duplicateSetList(id: string, name: string, date?: string) {
   const src = await db.setlists.get(id);
   if (!src) return;
   const now = Date.now();
   const copy: SetList = {
     ...src,
     id: newId(),
-    name: `${src.name} ${suffix}`,
+    name,
+    date,
     items: src.items.map((i) => ({ ...i, id: newId() })),
     createdAt: now,
     updatedAt: now,
