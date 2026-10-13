@@ -54,7 +54,7 @@ Resumen:
 | `thumbnails`  | Miniatura JPEG de la primera página, por partitura                                                                                 |
 | `scores`      | Partituras: título, compositor, etiquetas, BPM, notas de inicio, ajustes de lectura propios, recorte, orden virtual, última página |
 | `tags`        | Etiquetas con color                                                                                                                |
-| `annotations` | Trazos, textos y símbolos musicales por página real del PDF (`${scoreId}:${page}`)                                                 |
+| `annotations` | Trazos, textos (con fondo opcional), símbolos musicales y recordatorios por página real del PDF (`${scoreId}:${page}`)             |
 | `setlists`    | Listas: ítems de tipo partitura o separador                                                                                        |
 | `bookmarks`   | Marcadores: página real y punto (`x`, `y` de 0 a 1)                                                                                |
 | `links`       | Saltos: de un punto a una página (o al punto de un marcador)                                                                       |
