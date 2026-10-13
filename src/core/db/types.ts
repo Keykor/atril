@@ -104,6 +104,7 @@ export interface StickyNote {
   x: number; // centro del ícono, 0..1
   y: number;
   text: string;
+  color?: string; // sin color: amarillo
 }
 export interface PageAnnotations {
   id: string; // `${scoreId}:${page}`

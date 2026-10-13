@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import type { PageAnnotations, Stroke } from '../../core/db/types';
-import { eraseAt, hitsStroke, strokePath } from './strokes';
+import { eraseAt, grabAt, hitsStroke, moveGrab, strokePath } from './strokes';
 
 const stroke = (id: string, y: number): Stroke => ({
   id,
@@ -40,7 +40,7 @@ test('la goma borra el trazo que toca y deja el resto', () => {
   expect(eraseAt(a, 0.9, 0.1, 1.4)).toBe(a);
 });
 
-test('la goma borra la notita que toca y deja la de al lado', () => {
+test('la goma no borra los recordatorios: se borran solo desde su hoja', () => {
   const a: PageAnnotations = {
     id: 's:0',
     scoreId: 's',
@@ -53,6 +53,28 @@ test('la goma borra la notita que toca y deja la de al lado', () => {
     ],
     updatedAt: 0,
   };
-  expect(eraseAt(a, 0.31, 0.3, 1.4).notes?.map((n) => n.id)).toEqual(['n2']);
-  expect(eraseAt(a, 0.45, 0.3, 1.4)).toBe(a);
+  expect(eraseAt(a, 0.3, 0.3, 1.4)).toBe(a);
+});
+
+test('agarrar toma lo de más arriba y moverlo corre solo eso', () => {
+  const a: PageAnnotations = {
+    id: 's:0',
+    scoreId: 's',
+    page: 0,
+    strokes: [stroke('a', 0.2)],
+    texts: [],
+    stamps: [{ id: 'm', symbol: 'dynamicF', x: 0.2, y: 0.2, size: 0.04, color: '#000' }],
+    notes: [{ id: 'n', x: 0.8, y: 0.8, text: 'ojo' }],
+    updatedAt: 0,
+  };
+  expect(grabAt(a, 0.2, 0.2, 1.4, 0.02)).toEqual({ kind: 'stamps', id: 'm' });
+  expect(grabAt(a, 0.28, 0.2, 1.4, 0.02)).toEqual({ kind: 'strokes', id: 'a' });
+  expect(grabAt(a, 0.8, 0.81, 1.4, 0.02)).toEqual({ kind: 'notes', id: 'n' });
+  expect(grabAt(a, 0.5, 0.5, 1.4, 0.02)).toBeUndefined();
+
+  const moved = moveGrab(a, { kind: 'strokes', id: 'a' }, 0.1, 0.3);
+  expect(moved.strokes[0].points[0]).toEqual([0.2, 0.5, 0.5]);
+  expect(moved.stamps).toBe(a.stamps);
+  // Lo que se ancla a un punto no sale de la página.
+  expect(moveGrab(a, { kind: 'notes', id: 'n' }, 0.5, 0).notes?.[0].x).toBe(1);
 });

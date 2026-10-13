@@ -6,7 +6,7 @@ import { Sheet } from '../../ui/Sheet';
 
 interface Props {
   note: StickyNote;
-  isNew: boolean;
+  isNew: boolean; // recién pegada: se escribe enseguida (si se elimina, nunca existió)
   readOnly: boolean; // modo show: se lee, no se edita
   onSave: (text: string) => void; // vacío: se borra
   onDelete: () => void;
@@ -32,11 +32,9 @@ export function NoteSheet(p: Props) {
         footer={
           !p.readOnly && (
             <>
-              {!p.isNew && (
-                <button className="btn danger" onClick={p.onDelete}>
-                  {t.delete}
-                </button>
-              )}
+              <button className="btn danger" onClick={p.onDelete}>
+                {t.delete}
+              </button>
               <button className="btn primary" onClick={() => p.onSave(text)}>
                 {t.done}
               </button>

@@ -6,14 +6,19 @@ import type { PageAnnotations, Stamp, StickyNote, Stroke, TextNote } from '../..
 import { t } from '../../app/strings';
 import { Icon } from '../../ui/Icon';
 import {
+  clamp01,
   eraseAt,
+  grabAt,
   HIGHLIGHTER_FACTOR,
   hitsNote,
+  moveGrab,
   NOTE_RADIUS,
+  round,
   strokePath,
   TEXT_SIZE,
   VB,
   WIDTHS,
+  type Grab,
   type ToolState,
 } from './strokes';
 import { NoteSheet } from './NoteSheet';
@@ -67,7 +72,10 @@ export function AnnotationLayer(p: Props) {
 
   const g = useRef({
     id: -1,
-    mode: 'stroke' as 'stroke' | 'erase' | 'stamp' | 'note',
+    mode: 'stroke' as 'stroke' | 'erase' | 'stamp' | 'note' | 'drag',
+    // Mantener apretado sobre algo: si el dedo no se mueve, a los HOLD_MS se agarra para moverlo.
+    hold: null as { grab: Grab; pointerId: number; cx: number; cy: number; timer: number } | null,
+    drag: null as { grab: Grab; x: number; y: number } | null, // lo agarrado y dónde se agarró
     noteAt: null as { x: number; y: number; hit?: StickyNote } | null, // notita: tocada o nueva
     stampAt: null as [number, number] | null, // símbolo nuevo: dónde se apoyó
     stampDrag: null as { id: string; dx: number; dy: number } | null, // símbolo que se arrastra
@@ -89,6 +97,8 @@ export function AnnotationLayer(p: Props) {
     WIDTHS[p.tool.width] * (p.tool.tool === 'highlighter' ? HIGHLIGHTER_FACTOR : 1);
 
   const cancel = (keepDraft = false) => {
+    clearTimeout(g.hold?.timer);
+    g.hold = g.drag = null;
     g.id = -1;
     g.stampAt = g.stampDrag = null;
     if (!keepDraft) setDraft(undefined);
@@ -117,12 +127,23 @@ export function AnnotationLayer(p: Props) {
     if (!p.active) p.onPenStart();
 
     const [x, y] = norm(e);
-    // Tocar una notita la abre (salvo con la goma, que la borra); con la herramienta, tocar en
-    // otro lado pega una nueva. Se resuelve al soltar.
-    const note =
-      p.active && tool !== 'eraser'
-        ? [...(shown.notes ?? [])].reverse().find((n) => hitsNote(n, x, y, p.aspect, noteHit()))
-        : undefined;
+    const grab = p.active && tool !== 'eraser' && grabAt(shown, x, y, p.aspect, noteHit());
+    if (grab) {
+      const { pointerId, clientX: cx, clientY: cy } = e;
+      g.hold = {
+        grab,
+        pointerId,
+        cx,
+        cy,
+        timer: window.setTimeout(() => startDrag(x, y), HOLD_MS),
+      };
+    }
+    // Tocar una notita la abre, con cualquier herramienta (la goma no la borra: se borra solo
+    // desde su hoja, para no perderla sin querer). Con la herramienta, tocar en otro lado pega
+    // una nueva. Se resuelve al soltar.
+    const note = p.active
+      ? shown.notes?.findLast((n) => hitsNote(n, x, y, p.aspect, noteHit()))
+      : undefined;
     if (note || tool === 'note') {
       root.current!.setPointerCapture(e.pointerId);
       g.id = e.pointerId;
@@ -169,11 +190,44 @@ export function AnnotationLayer(p: Props) {
     ctx.globalAlpha = tool === 'highlighter' ? 0.4 : 1;
   };
 
+  // Se agarró lo que estaba debajo: lo que había empezado el toque (trazo, texto, notita) se
+  // descarta y desde acá el dedo lo arrastra. Se guarda con commit, así se puede deshacer.
+  const startDrag = (x: number, y: number) => {
+    const h = g.hold;
+    if (!h || g.stampDrag) return; // con la herramienta de símbolos, el símbolo ya se arrastra
+    cancel();
+    g.textAt = g.noteAt = null;
+    try {
+      root.current!.setPointerCapture(h.pointerId);
+    } catch {
+      return; // el dedo ya no está
+    }
+    g.id = h.pointerId;
+    g.mode = 'drag';
+    g.before = g.erased = shown;
+    g.drag = { grab: h.grab, x, y };
+    navigator.vibrate?.(15);
+  };
+
   const onPointerMove = (e: React.PointerEvent) => {
     const touch = g.twoFingerAt ? g.touches.get(e.pointerId) : undefined;
     if (touch && Math.hypot(e.clientX - touch.x, e.clientY - touch.y) > 12) g.twoFingerMoved = true;
+    const h = g.hold;
+    if (
+      h?.pointerId === e.pointerId &&
+      Math.hypot(e.clientX - h.cx, e.clientY - h.cy) > DRAG_SLOP
+    ) {
+      clearTimeout(h.timer); // se movió: es un trazo (o lo que corresponda), no agarrar
+      g.hold = null;
+    }
     if (e.pointerId !== g.id) return;
     e.stopPropagation();
+    if (g.mode === 'drag') {
+      const [x, y] = norm(e);
+      const d = g.drag!;
+      setDraft((g.erased = moveGrab(g.before, d.grab, x - d.x, y - d.y)));
+      return;
+    }
     if (g.mode === 'stamp') {
       const drag = g.stampDrag;
       if (!drag) return;
@@ -215,17 +269,32 @@ export function AnnotationLayer(p: Props) {
         return;
       }
     }
+    if (g.hold?.pointerId === e.pointerId) {
+      clearTimeout(g.hold.timer);
+      g.hold = null;
+    }
     if (e.pointerId !== g.id) return;
     e.stopPropagation();
     g.committed = false;
-    if (g.mode === 'note') {
+    if (g.mode === 'drag') {
+      if (g.erased !== g.before) commit(g.before, g.erased);
+    } else if (g.mode === 'note') {
       const at = g.noteAt;
       g.noteAt = null;
       if (at && e.type === 'pointerup')
         setNoteOpen(
           at.hit
             ? { note: at.hit, isNew: false }
-            : { note: { id: newId(), x: round(at.x), y: round(at.y), text: '' }, isNew: true },
+            : {
+                note: {
+                  id: newId(),
+                  x: round(at.x),
+                  y: round(at.y),
+                  text: '',
+                  color: p.tool.color,
+                },
+                isNew: true,
+              },
         );
     } else if (g.mode === 'stamp') {
       if (g.stampDrag) {
@@ -391,14 +460,19 @@ export function AnnotationLayer(p: Props) {
           style={{ left: `${n.x * 100}%`, top: `${n.y * 100}%` }}
           aria-label={t.annotate.note.open(n.text)}
           // Leyendo, es un botón más (el toque no pasa la hoja). Anotando, el toque lo resuelve la
-          // capa: abrirla, borrarla con la goma o moverla.
+          // capa: abrirla o moverla.
           onPointerDown={(e) => !p.active && e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             if (!p.active || e.detail === 0) setNoteOpen({ note: n, isNew: false });
           }}
         >
-          <span>
+          <span
+            style={{
+              background: n.color ?? NOTE_COLOR,
+              color: LIGHT.has(n.color ?? NOTE_COLOR) ? '#3d3200' : '#fff',
+            }}
+          >
             <Icon name="sticky" size={14} />
           </span>
         </button>
@@ -439,8 +513,10 @@ export function AnnotationLayer(p: Props) {
   );
 }
 
-const round = (n: number) => Math.round(n * 10000) / 10000;
-const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+const NOTE_COLOR = '#FFD43B'; // los recordatorios de antes de poder elegir color
+const LIGHT = new Set(['#FFD43B', '#FFFFFF']); // sobre estos, el ícono va oscuro
+const HOLD_MS = 500; // mantener apretado para mover (el mismo tiempo que en el lector)
+const DRAG_SLOP = 8; // px que puede moverse el dedo y seguir siendo "mantener apretado"
 const roundStamps = (a: PageAnnotations): PageAnnotations => ({
   ...a,
   stamps: a.stamps?.map((s) => ({ ...s, x: round(s.x), y: round(s.y) })),

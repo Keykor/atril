@@ -256,8 +256,6 @@
   align-items: center;
   justify-content: center;
   border-radius: 3px 3px 9px 3px;
-  background: #ffd43b;
-  color: #5c4a00;
   box-shadow: 0 1px 3px rgba(23, 24, 28, 0.35);
 }
 .sticky-note svg {
