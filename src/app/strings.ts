@@ -203,7 +203,7 @@ const es = {
       breathMarkComma: 'Respiración',
     },
     color: 'Color',
-    colors: ['Negro', 'Rojo', 'Azul', 'Verde', 'Amarillo'],
+    colors: ['Negro', 'Rojo', 'Azul', 'Verde', 'Amarillo', 'Blanco'],
     width: 'Grosor',
     widths: ['Fino', 'Medio', 'Grueso'],
     style: 'Color y grosor',

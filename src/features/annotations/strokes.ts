@@ -10,7 +10,8 @@ export interface ToolState {
   symbol: string; // símbolo elegido para la herramienta 'stamp'
 }
 
-export const COLORS = ['#17181C', '#D7352B', '#2950C7', '#15803D', '#FFD43B'] as const;
+// El blanco tapa: sirve para tachar o "borrar" algo impreso (con el resaltador no se ve).
+export const COLORS = ['#17181C', '#D7352B', '#2950C7', '#15803D', '#FFD43B', '#FFFFFF'] as const;
 // Grosores como fracción del ancho de página: se ven igual en tablet y en celular.
 export const WIDTHS = [0.002, 0.004, 0.007] as const;
 export const HIGHLIGHTER_FACTOR = 5;

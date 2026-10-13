@@ -201,7 +201,7 @@ export const en: Strings = {
       breathMarkComma: 'Breath mark',
     },
     color: 'Color',
-    colors: ['Black', 'Red', 'Blue', 'Green', 'Yellow'],
+    colors: ['Black', 'Red', 'Blue', 'Green', 'Yellow', 'White'],
     width: 'Width',
     widths: ['Thin', 'Medium', 'Thick'],
     style: 'Color and width',
