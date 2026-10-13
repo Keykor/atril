@@ -35,7 +35,7 @@ test('exportar el PDF con anotaciones: lo dibujado queda en su lugar en el PDF n
   // Exportar desde los datos de la partitura, que explican qué entra.
   await clickBar(page, 'Datos de la partitura');
   const sheet = page.getByRole('dialog', { name: 'Datos de la partitura' });
-  await expect(sheet).toContainText('No lleva los marcadores ni los saltos');
+  await expect(sheet).toContainText('No lleva los recordatorios, los marcadores ni los saltos');
   const downloading = page.waitForEvent('download');
   await sheet.getByRole('button', { name: 'Exportar PDF con anotaciones' }).click();
   const download = await downloading;

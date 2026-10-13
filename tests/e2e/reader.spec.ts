@@ -583,3 +583,25 @@ test('mantener apretado agarra lo anotado y lo mueve; deshacer lo devuelve', asy
   await page.mouse.up();
   await expect(layer.locator('path')).toHaveCount(1);
 });
+
+test('texto con fondo blanco y color blanco en la paleta', async ({ page }) => {
+  await openScore(page);
+  await clickBar(page, 'Anotar');
+  const box = (await page.locator('.reader-slot[data-where="0"] .page').boundingBox())!;
+  const texts = page.locator('.reader-slot[data-where="0"] .annotation-layer text');
+
+  await page.getByRole('button', { name: 'Texto' }).click();
+  await page.getByRole('button', { name: 'Color y grosor' }).click();
+  await expect(page.getByRole('button', { name: 'Blanco', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Fondo blanco' }).click();
+  await expect(page.getByRole('button', { name: 'Fondo blanco' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await page.getByRole('button', { name: 'Color y grosor' }).click();
+  await page.mouse.click(box.x + box.width * 0.4, box.y + box.height * 0.6);
+  await page.getByLabel('Escribí una nota').fill('dolce');
+  await page.keyboard.press('Enter');
+  await expect(texts).toHaveText('dolce');
+  await expect(texts).toHaveAttribute('filter', /text-bg/);
+});
