@@ -98,6 +98,13 @@ export interface Stamp {
   size: number; // tamaño de la fuente como fracción del ancho de página (~ alto del pentagrama)
   color: string;
 }
+/** Notita pegada en la página: se ve un ícono y al tocarlo se lee el texto. */
+export interface StickyNote {
+  id: ID;
+  x: number; // centro del ícono, 0..1
+  y: number;
+  text: string;
+}
 export interface PageAnnotations {
   id: string; // `${scoreId}:${page}`
   scoreId: ID;
@@ -105,6 +112,7 @@ export interface PageAnnotations {
   strokes: Stroke[];
   texts: TextNote[];
   stamps?: Stamp[]; // opcional: las anotaciones de antes de 0.5.0 no lo tienen
+  notes?: StickyNote[]; // opcional: las de antes de 0.16.0 no lo tienen
   updatedAt: number;
 }
 

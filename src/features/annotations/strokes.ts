@@ -1,8 +1,8 @@
 import { getStroke } from 'perfect-freehand';
-import type { PageAnnotations, Stroke } from '../../core/db/types';
+import type { PageAnnotations, StickyNote, Stroke } from '../../core/db/types';
 import { hitsStamp } from './symbols';
 
-export type Tool = 'pen' | 'highlighter' | 'text' | 'eraser' | 'stamp';
+export type Tool = 'pen' | 'highlighter' | 'text' | 'note' | 'eraser' | 'stamp';
 export interface ToolState {
   tool: Tool;
   color: string;
@@ -18,6 +18,7 @@ export const WIDTHS = [0.002, 0.004, 0.007] as const;
 export const HIGHLIGHTER_FACTOR = 5;
 export const TEXT_SIZE = 0.028;
 export const ERASER_RADIUS = 0.012;
+export const NOTE_RADIUS = 0.02; // el ícono de una notita, como fracción del ancho de página
 
 export const VB = 1000; // ancho del viewBox del SVG de cada página
 
@@ -60,6 +61,10 @@ export function hitsStroke(stroke: Stroke, x: number, y: number, aspect: number,
   });
 }
 
+/** ¿El punto (x, y) toca la notita? `radius`, como fracción del ancho de página. */
+export const hitsNote = (n: StickyNote, x: number, y: number, aspect: number, radius: number) =>
+  Math.hypot(n.x - x, (n.y - y) * aspect) <= radius;
+
 /** Borra por trazo (y las notas de texto cercanas). Devuelve el mismo objeto si no tocó nada. */
 export function eraseAt(a: PageAnnotations, x: number, y: number, aspect: number): PageAnnotations {
   const strokes = a.strokes.filter((s) => !hitsStroke(s, x, y, aspect, ERASER_RADIUS));
@@ -72,9 +77,11 @@ export function eraseAt(a: PageAnnotations, x: number, y: number, aspect: number
       ),
   );
   const stamps = a.stamps?.filter((s) => !hitsStamp(s, x, y, aspect, ERASER_RADIUS));
+  const notes = a.notes?.filter((n) => !hitsNote(n, x, y, aspect, NOTE_RADIUS + ERASER_RADIUS));
   return strokes.length === a.strokes.length &&
     texts.length === a.texts.length &&
-    (stamps?.length ?? 0) === (a.stamps?.length ?? 0)
+    (stamps?.length ?? 0) === (a.stamps?.length ?? 0) &&
+    (notes?.length ?? 0) === (a.notes?.length ?? 0)
     ? a
-    : { ...a, strokes, texts, stamps };
+    : { ...a, strokes, texts, stamps, notes };
 }

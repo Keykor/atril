@@ -19,6 +19,7 @@ const TOOLS: { id: Exclude<Tool, 'stamp'>; icon: IconName }[] = [
   { id: 'pen', icon: 'pen' },
   { id: 'highlighter', icon: 'highlighter' },
   { id: 'text', icon: 'text' },
+  { id: 'note', icon: 'sticky' },
   { id: 'eraser', icon: 'eraser' },
 ];
 

@@ -236,3 +236,52 @@
   background: #fff;
   color: var(--bar);
 }
+/* Notita: se ve un cuadrito chico; el botón alrededor es transparente y mide 44 px para tocarlo. */
+.sticky-note {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sticky-note > span {
+  width: clamp(18px, 3.6cqw, 30px);
+  height: clamp(18px, 3.6cqw, 30px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px 3px 9px 3px;
+  background: #ffd43b;
+  color: #5c4a00;
+  box-shadow: 0 1px 3px rgba(23, 24, 28, 0.35);
+}
+.sticky-note svg {
+  width: 65%;
+  height: 65%;
+}
+.annotations-hidden .sticky-note {
+  display: none;
+}
+.note-text {
+  resize: vertical;
+  font-size: 16px;
+  line-height: 1.4;
+}
+/* 320–340px: un poco más apretado todavía, para que entren las seis herramientas. */
+@media (max-width: 340px) {
+  .annotation-toolbar .icon-btn,
+  .annotation-toolbar > .at-color {
+    width: 29px;
+  }
+  .annotation-toolbar .at-sep {
+    display: none;
+  }
+  .annotation-toolbar .btn.at-done {
+    width: 36px;
+  }
+}

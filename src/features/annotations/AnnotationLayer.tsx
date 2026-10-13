@@ -2,16 +2,21 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
 import { getPageAnnotations } from '../../core/db/queries';
 import { emptyAnnotations, newId } from '../../core/db/repos';
-import type { PageAnnotations, Stamp, Stroke, TextNote } from '../../core/db/types';
+import type { PageAnnotations, Stamp, StickyNote, Stroke, TextNote } from '../../core/db/types';
+import { t } from '../../app/strings';
+import { Icon } from '../../ui/Icon';
 import {
   eraseAt,
   HIGHLIGHTER_FACTOR,
+  hitsNote,
+  NOTE_RADIUS,
   strokePath,
   TEXT_SIZE,
   VB,
   WIDTHS,
   type ToolState,
 } from './strokes';
+import { NoteSheet } from './NoteSheet';
 import { hitsStamp, STAMP_SIZES, stampGeometry } from './symbols';
 import './annotations.css';
 
@@ -40,6 +45,7 @@ export function AnnotationLayer(p: Props) {
     emptyAnnotations(p.scoreId, p.page);
   const [draft, setDraft] = useState<PageAnnotations>(); // mientras se borra o se mueve un símbolo
   const [editing, setEditing] = useState<TextNote>();
+  const [noteOpen, setNoteOpen] = useState<{ note: StickyNote; isNew: boolean }>();
   const root = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -61,7 +67,8 @@ export function AnnotationLayer(p: Props) {
 
   const g = useRef({
     id: -1,
-    mode: 'stroke' as 'stroke' | 'erase' | 'stamp',
+    mode: 'stroke' as 'stroke' | 'erase' | 'stamp' | 'note',
+    noteAt: null as { x: number; y: number; hit?: StickyNote } | null, // notita: tocada o nueva
     stampAt: null as [number, number] | null, // símbolo nuevo: dónde se apoyó
     stampDrag: null as { id: string; dx: number; dy: number } | null, // símbolo que se arrastra
     points: [] as Stroke['points'],
@@ -106,11 +113,23 @@ export function AnnotationLayer(p: Props) {
     if (!draws || g.id !== -1 || (e.pointerType === 'mouse' && e.button !== 0)) return;
     e.stopPropagation();
     // Con el lápiz apoyado mientras se lee, texto y símbolos no tienen sentido: dibuja.
-    const tool =
-      p.active || (p.tool.tool !== 'text' && p.tool.tool !== 'stamp') ? p.tool.tool : 'pen';
+    const tool = p.active || !['text', 'stamp', 'note'].includes(p.tool.tool) ? p.tool.tool : 'pen';
     if (!p.active) p.onPenStart();
 
     const [x, y] = norm(e);
+    // Tocar una notita la abre (salvo con la goma, que la borra); con la herramienta, tocar en
+    // otro lado pega una nueva. Se resuelve al soltar.
+    const note =
+      p.active && tool !== 'eraser'
+        ? [...(shown.notes ?? [])].reverse().find((n) => hitsNote(n, x, y, p.aspect, noteHit()))
+        : undefined;
+    if (note || tool === 'note') {
+      root.current!.setPointerCapture(e.pointerId);
+      g.id = e.pointerId;
+      g.mode = 'note';
+      g.noteAt = { x, y, hit: note };
+      return;
+    }
     if (tool === 'text') {
       // El editor se abre en el click: abrirlo acá lo desenfocaría el mousedown que sigue.
       g.textAt = [x, y];
@@ -199,7 +218,16 @@ export function AnnotationLayer(p: Props) {
     if (e.pointerId !== g.id) return;
     e.stopPropagation();
     g.committed = false;
-    if (g.mode === 'stamp') {
+    if (g.mode === 'note') {
+      const at = g.noteAt;
+      g.noteAt = null;
+      if (at && e.type === 'pointerup')
+        setNoteOpen(
+          at.hit
+            ? { note: at.hit, isNew: false }
+            : { note: { id: newId(), x: round(at.x), y: round(at.y), text: '' }, isNew: true },
+        );
+    } else if (g.mode === 'stamp') {
       if (g.stampDrag) {
         if (g.erased !== g.before) commit(g.before, roundStamps(g.erased));
       } else if (g.stampAt && e.type === 'pointerup') {
@@ -276,6 +304,29 @@ export function AnnotationLayer(p: Props) {
     setEditing(undefined);
   };
 
+  // Para el dedo, la notita se agarra en 22 px alrededor del centro aunque se vea más chica.
+  const noteHit = () => Math.max(NOTE_RADIUS, 22 / (root.current?.offsetWidth || 1));
+
+  const saveNote = (text: string) => {
+    if (!noteOpen) return;
+    const { note } = noteOpen;
+    const others = (shown.notes ?? []).filter((n) => n.id !== note.id);
+    const clean = text.trim();
+    if (clean !== note.text)
+      commit(shown, { ...shown, notes: clean ? [...others, { ...note, text: clean }] : others });
+    setNoteOpen(undefined);
+  };
+  const deleteNote = () => {
+    if (!noteOpen) return;
+    commit(shown, {
+      ...shown,
+      notes: (shown.notes ?? []).filter((n) => n.id !== noteOpen.note.id),
+    });
+    setNoteOpen(undefined);
+  };
+  // La nueva se ve mientras se escribe, aunque todavía no esté guardada.
+  const notes = noteOpen?.isNew ? [...(shown.notes ?? []), noteOpen.note] : (shown.notes ?? []);
+
   const vbH = VB * p.aspect;
   return (
     <div
@@ -333,6 +384,25 @@ export function AnnotationLayer(p: Props) {
         })}
       </svg>
       <canvas ref={canvas} />
+      {notes.map((n) => (
+        <button
+          key={n.id}
+          className="sticky-note"
+          style={{ left: `${n.x * 100}%`, top: `${n.y * 100}%` }}
+          aria-label={t.annotate.note.open(n.text)}
+          // Leyendo, es un botón más (el toque no pasa la hoja). Anotando, el toque lo resuelve la
+          // capa: abrirla, borrarla con la goma o moverla.
+          onPointerDown={(e) => !p.active && e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!p.active || e.detail === 0) setNoteOpen({ note: n, isNew: false });
+          }}
+        >
+          <span>
+            <Icon name="sticky" size={14} />
+          </span>
+        </button>
+      ))}
       {editing && (
         <input
           ref={input}
@@ -353,6 +423,16 @@ export function AnnotationLayer(p: Props) {
             if (e.key === 'Enter') e.currentTarget.blur();
           }}
           onBlur={(e) => commitText(e.target.value)}
+        />
+      )}
+      {noteOpen && (
+        <NoteSheet
+          key={noteOpen.note.id}
+          note={noteOpen.note}
+          isNew={noteOpen.isNew}
+          readOnly={!!p.locked}
+          onSave={saveNote}
+          onDelete={deleteNote}
         />
       )}
     </div>

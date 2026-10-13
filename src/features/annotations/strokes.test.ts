@@ -39,3 +39,20 @@ test('la goma borra el trazo que toca y deja el resto', () => {
   expect(eraseAt(a, 0.55, 0.89, 1.4).texts).toEqual([]);
   expect(eraseAt(a, 0.9, 0.1, 1.4)).toBe(a);
 });
+
+test('la goma borra la notita que toca y deja la de al lado', () => {
+  const a: PageAnnotations = {
+    id: 's:0',
+    scoreId: 's',
+    page: 0,
+    strokes: [],
+    texts: [],
+    notes: [
+      { id: 'n1', x: 0.3, y: 0.3, text: 'mirar al director' },
+      { id: 'n2', x: 0.6, y: 0.3, text: 'repetir' },
+    ],
+    updatedAt: 0,
+  };
+  expect(eraseAt(a, 0.31, 0.3, 1.4).notes?.map((n) => n.id)).toEqual(['n2']);
+  expect(eraseAt(a, 0.45, 0.3, 1.4)).toBe(a);
+});

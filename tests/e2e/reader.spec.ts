@@ -147,6 +147,7 @@ test('la barra de anotar entra entera en un celular de 320px', async ({ page }) 
   await clickBar(page, 'Anotar');
   for (const name of [
     'Lápiz',
+    'Recordatorio',
     'Goma',
     'Símbolos',
     'Color y grosor',
@@ -504,4 +505,39 @@ test('con la tablet acostada, Lectura y Página están a la vista con su nombre'
   // No se repiten en el menú.
   await expect(page.getByRole('menuitem', { name: 'Ajustes de lectura' })).toBeHidden();
   await expect(page.getByRole('menuitem', { name: 'Datos de la partitura' })).toBeVisible();
+});
+
+test('recordatorios: se pegan, se leen con un toque, se borran y no tapan el pasar hoja', async ({
+  page,
+}) => {
+  await openScore(page);
+  await clickBar(page, 'Anotar');
+  const box = (await page.locator('.reader-slot[data-where="0"] .page').boundingBox())!;
+  const at = (fx: number, fy: number) => [box.x + box.width * fx, box.y + box.height * fy] as const;
+  const notes = page.locator('.reader-slot[data-where="0"] .sticky-note');
+
+  await page.getByRole('button', { name: 'Recordatorio', exact: true }).click();
+  await page.mouse.click(...at(0.5, 0.4));
+  const sheet = page.getByRole('dialog', { name: 'Recordatorio' });
+  await sheet.getByLabel('Recordatorio').fill('mirar al director');
+  await sheet.getByRole('button', { name: 'Listo' }).click();
+  await expect(sheet).toBeHidden();
+  await expect(notes).toHaveCount(1);
+
+  // Leyendo, tocarla la abre y no pasa la hoja; el teclado no salta.
+  await page.getByRole('button', { name: 'Listo' }).click();
+  await page.reload();
+  await page.getByRole('button', { name: 'Recordatorio: mirar al director' }).click();
+  await expect(sheet.getByLabel('Recordatorio')).toHaveValue('mirar al director');
+  await expect(sheet.getByLabel('Recordatorio')).not.toBeFocused();
+  await expect(page.locator('.page-indicator')).toHaveText('1 / 3');
+  await sheet.getByRole('button', { name: 'Eliminar' }).click();
+  await expect(notes).toHaveCount(0);
+
+  // Un recordatorio vacío no queda.
+  await clickBar(page, 'Anotar');
+  await page.getByRole('button', { name: 'Recordatorio', exact: true }).click();
+  await page.mouse.click(...at(0.3, 0.6));
+  await sheet.getByRole('button', { name: 'Cerrar' }).click();
+  await expect(notes).toHaveCount(0);
 });
