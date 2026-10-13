@@ -89,6 +89,22 @@ test('el PDF exportado tiene las mismas páginas y dibuja lo anotado en su pági
   expect(await fills(out, 3)).toBeGreaterThan(await fills(before, 3));
 });
 
+test('un texto con fondo dibuja un relleno más que sin fondo', async () => {
+  const text = { id: 't', x: 0.3, y: 0.6, text: 'ojo', color: '#D7352B', size: 0.03 };
+  const fills = async (bg: boolean) => {
+    const out = await buildAnnotatedPdf(
+      await original(),
+      [page(0, { texts: [{ ...text, ...(bg && { bg: true as const }) }] })],
+      fonts,
+    );
+    const pdf = await getDocument({ data: out }).promise;
+    const ops = await (await pdf.getPage(1)).getOperatorList();
+    await pdf.loadingTask.destroy();
+    return ops.fnArray.filter((op) => op === OPS.constructPath || op === OPS.fill).length;
+  };
+  expect(await fills(true)).toBe((await fills(false)) + 1);
+});
+
 test('sin anotaciones devuelve el PDF tal cual y no carga fuentes', async () => {
   const fail = () => Promise.reject(new Error('no debería cargar fuentes'));
   const out = await buildAnnotatedPdf(await original(), [], { bravura: fail, caveat: fail });

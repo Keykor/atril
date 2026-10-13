@@ -2,6 +2,8 @@ import 'fake-indexeddb/auto';
 import { beforeEach, expect, test } from 'vitest';
 import { db } from './db';
 import {
+  addBookmark,
+  addLink,
   addScore,
   addSetList,
   addTag,
@@ -12,6 +14,7 @@ import {
   emptyAnnotations,
   initHints,
   markHintSeen,
+  moveBookmark,
   unmarkHint,
   resetHints,
   saveAnnotations,
@@ -227,4 +230,16 @@ test('pistas que cambiaron se vuelven a mostrar una sola vez', async () => {
   await markHintSeen('b');
   await initHints(['a', 'b'], [], ['b']); // ya se volvió a mostrar: no otra vez
   expect(await getHintsSeen()).toEqual(['a', 'b']);
+});
+
+test('mover un marcador lleva con él los saltos que iban a él', async () => {
+  await addBookmark({ scoreId: 's', page: 2, x: 0.1, y: 0.4, label: 'Coda' });
+  await addLink({ scoreId: 's', from: { page: 0, x: 0.5, y: 0.5 }, to: { page: 2, y: 0.4 } });
+  await addLink({ scoreId: 's', from: { page: 1, x: 0.5, y: 0.5 }, to: { page: 2, y: 0.7 } });
+  const [b] = await db.bookmarks.toArray();
+
+  await moveBookmark(b.id, 0.3, 0.6);
+  expect(await db.bookmarks.get(b.id)).toMatchObject({ page: 2, x: 0.3, y: 0.6 });
+  const links = await db.links.toArray();
+  expect(links.map((l) => l.to.y).sort()).toEqual([0.6, 0.7]);
 });

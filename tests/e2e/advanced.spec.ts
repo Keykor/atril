@@ -213,3 +213,27 @@ test('si el orden nuevo deja afuera la página a la vista, vuelve a la primera',
   await expect(indicator(page)).toHaveText('1 / 2');
   await expect(page.locator('.reader-slot[data-where="0"] canvas').first()).toBeVisible();
 });
+
+test('anotando, mantener apretado un marcador lo mueve y queda guardado', async ({ page }) => {
+  await openScore(page);
+  await addBookmark(page, 'Coda', 0.3, 0.5);
+  await clickBar(page, 'Anotar');
+  const flag = page.locator('.reader-slot[data-where="0"] .bookmark-flag', { hasText: 'Coda' });
+  const pageBox = (await page.locator('.reader-slot[data-where="0"] .page').boundingBox())!;
+  const before = (await flag.boundingBox())!;
+
+  await page.mouse.move(before.x + before.width / 2, before.y + before.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(700);
+  await page.mouse.move(before.x + before.width / 2 + pageBox.width * 0.3, before.y + 10, {
+    steps: 6,
+  });
+  await page.mouse.up();
+  await expect(page.locator('.annotation-layer path')).toHaveCount(0); // no dibujó
+
+  await page.getByRole('button', { name: 'Listo' }).click();
+  await page.reload();
+  await expect
+    .poll(async () => (await flag.boundingBox())!.x)
+    .toBeGreaterThan(before.x + pageBox.width * 0.25);
+});

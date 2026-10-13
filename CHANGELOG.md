@@ -4,6 +4,21 @@ Cada versión publicada de Atril, la más nueva arriba. La versión instalada se
 Ajustes → Versión. Mientras la app esté en 0.x: el número del medio sube con funcionalidades
 nuevas y el último con arreglos o cambios internos.
 
+## 0.16.0
+
+- Recordatorios: una herramienta nueva en la barra de anotar. Tocás la página, escribís, y queda
+  un cuadradito del color que elegiste. Tocarlo (leyendo, anotando o en el show) abre el texto
+  sin que salte el teclado. Se borran solo con "Eliminar" adentro del recordatorio: la goma no
+  los borra, para no perderlos sin querer. No van en el PDF exportado.
+- Mantené apretado medio segundo lo que anotaste (un trazo, un texto, un símbolo, un
+  recordatorio) o una banderita de marcador, con el modo anotar abierto, y arrastralo a otro
+  lugar. Se deshace como cualquier cambio. Los saltos que iban a un marcador lo siguen.
+- Color blanco, para tapar o "borrar" algo impreso en la partitura.
+- Textos con fondo blanco, para que se lean sobre el pentagrama: en "Color y grosor", con la
+  herramienta Texto.
+- Escribir un texto ya no deja la partitura corrida ni con el zoom trabado al cerrar el teclado.
+- Un toque cancelado (como el gesto de volver de Android) ya no abre el teclado después.
+
 ## 0.15.0
 
 - Elegí cómo se nombran las notas: Do Re Mi o C D E, en Ajustes, junto al idioma. Cambia el

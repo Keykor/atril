@@ -19,6 +19,7 @@ const TOOLS: { id: Exclude<Tool, 'stamp'>; icon: IconName }[] = [
   { id: 'pen', icon: 'pen' },
   { id: 'highlighter', icon: 'highlighter' },
   { id: 'text', icon: 'text' },
+  { id: 'note', icon: 'sticky' },
   { id: 'eraser', icon: 'eraser' },
 ];
 
@@ -102,6 +103,15 @@ export function AnnotationToolbar(p: Props) {
               </button>
             ))}
           </div>
+          {p.tool.tool === 'text' && (
+            <button
+              className="btn at-text-bg"
+              aria-pressed={p.tool.textBg}
+              onClick={() => p.onTool({ ...p.tool, textBg: !p.tool.textBg })}
+            >
+              {a.textBg}
+            </button>
+          )}
           <div className="at-group" role="group" aria-label={a.width}>
             {WIDTHS.map((_, i) => (
               <button

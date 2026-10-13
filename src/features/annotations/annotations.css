@@ -24,9 +24,10 @@
 }
 .annotation-text {
   position: absolute;
-  transform: translateY(-80%);
-  min-width: 140px;
-  padding: 0 4px;
+  transform-origin: 0 0;
+  font-size: 16px;
+  min-width: 9em;
+  padding: 0 0.3em;
   border: 1px dashed var(--accent);
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.9);
@@ -116,7 +117,7 @@
 .at-done {
   gap: 6px;
 }
-/* Celulares angostos (320–380px): controles más chicos y "Listo" solo con ícono, para que
+/* Celulares angostos (320â€“380px): controles mÃ¡s chicos y "Listo" solo con Ã­cono, para que
    la fila entera entre en pantalla. */
 @media (max-width: 380px) {
   .annotation-toolbar {
@@ -140,8 +141,8 @@
   font-family: 'Bravura';
   font-weight: normal;
 }
-/* Los glifos SMuFL miden un pentagrama de alto (1 em) y se apoyan en la línea de base: se
-   achican y se bajan un poco para que entren centrados en un botón. */
+/* Los glifos SMuFL miden un pentagrama de alto (1 em) y se apoyan en la lÃ­nea de base: se
+   achican y se bajan un poco para que entren centrados en un botÃ³n. */
 .music-glyph {
   display: inline-block;
   font-size: 22px;
@@ -192,7 +193,7 @@
   font-size: 26px;
 }
 .at-symbol[data-group='notes'] .music-glyph {
-  transform: translateY(0.35em); /* las notas suben por la plica: se bajan más */
+  transform: translateY(0.35em); /* las notas suben por la plica: se bajan mÃ¡s */
 }
 .at-symbol[aria-pressed='true'] {
   background: rgba(110, 139, 234, 0.45);
@@ -224,5 +225,61 @@
   }
   .at-symbol .music-glyph {
     font-size: 22px;
+  }
+}
+.at-text-bg {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: #fff;
+}
+.at-text-bg[aria-pressed='true'] {
+  background: #fff;
+  color: var(--bar);
+}
+/* Notita: se ve un cuadrito chico; el botón alrededor es transparente y mide 44 px para tocarlo. */
+.sticky-note {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sticky-note > span {
+  width: clamp(18px, 3.6cqw, 30px);
+  height: clamp(18px, 3.6cqw, 30px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px 3px 9px 3px;
+  box-shadow: 0 1px 3px rgba(23, 24, 28, 0.35);
+}
+.sticky-note svg {
+  width: 65%;
+  height: 65%;
+}
+.annotations-hidden .sticky-note {
+  display: none;
+}
+.note-text {
+  resize: vertical;
+  font-size: 16px;
+  line-height: 1.4;
+}
+/* 320–340px: un poco más apretado todavía, para que entren las seis herramientas. */
+@media (max-width: 340px) {
+  .annotation-toolbar .icon-btn,
+  .annotation-toolbar > .at-color {
+    width: 29px;
+  }
+  .annotation-toolbar .at-sep {
+    display: none;
+  }
+  .annotation-toolbar .btn.at-done {
+    width: 36px;
   }
 }

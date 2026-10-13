@@ -158,6 +158,21 @@ export async function addBookmark(data: Omit<Bookmark, 'id'>) {
 export async function addLink(data: Omit<JumpLink, 'id'>) {
   await db.links.add({ id: newId(), ...data });
 }
+/**
+ * Mueve un marcador dentro de su página. Los saltos que iban a él lo siguen: lo apuntan por
+ * su posición (página e y), no por id.
+ */
+export const moveBookmark = (id: string, x: number, y: number) =>
+  db.transaction('rw', db.bookmarks, db.links, async () => {
+    const b = await db.bookmarks.get(id);
+    if (!b) return;
+    await db.bookmarks.update(id, { x, y });
+    await db.links
+      .where('scoreId')
+      .equals(b.scoreId)
+      .filter((l) => l.to.page === b.page && l.to.y === b.y)
+      .modify((l) => void (l.to = { page: b.page, y }));
+  });
 export const deleteBookmark = (id: string) => db.bookmarks.delete(id);
 export const deleteLink = (id: string) => db.links.delete(id);
 
