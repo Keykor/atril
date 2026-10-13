@@ -24,9 +24,10 @@
 }
 .annotation-text {
   position: absolute;
-  transform: translateY(-80%);
-  min-width: 140px;
-  padding: 0 4px;
+  transform-origin: 0 0;
+  font-size: 16px;
+  min-width: 9em;
+  padding: 0 0.3em;
   border: 1px dashed var(--accent);
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.9);

@@ -41,6 +41,7 @@ export function AnnotationLayer(p: Props) {
   const [draft, setDraft] = useState<PageAnnotations>(); // mientras se borra o se mueve un símbolo
   const [editing, setEditing] = useState<TextNote>();
   const root = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   // Lo que se ve, y desde donde arranca cada gesto: puede ir adelante de lo guardado.
   const shown = draft ?? saved;
@@ -53,6 +54,10 @@ export function AnnotationLayer(p: Props) {
   useEffect(() => {
     setDraft((d) => (d && saved.updatedAt >= d.updatedAt ? undefined : d));
   }, [saved.updatedAt]);
+
+  // Sin desplazar: con autoFocus, Chrome en Android corre la página para mostrar el campo arriba
+  // del teclado, y al cerrarlo la deja corrida.
+  useEffect(() => input.current?.focus({ preventScroll: true }), [editing?.id]);
 
   const g = useRef({
     id: -1,
@@ -234,7 +239,15 @@ export function AnnotationLayer(p: Props) {
     g.committed = true;
   };
 
+  const onPointerCancel = (e: React.PointerEvent) => {
+    // Un toque cancelado (el gesto de atrás de Android empieza en la página) no es un toque:
+    // si quedara anotado, el próximo click abriría el editor y el teclado.
+    g.textAt = null;
+    onPointerUp(e);
+  };
+
   const onClick = () => {
+    if (p.tool.tool !== 'text') g.textAt = null;
     if (!g.textAt) return;
     const [x, y] = g.textAt;
     g.textAt = null;
@@ -262,7 +275,7 @@ export function AnnotationLayer(p: Props) {
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerCancel={onPointerCancel}
       onClick={onClick}
     >
       <svg viewBox={`0 0 ${VB} ${vbH}`} preserveAspectRatio="none" aria-label={p.label}>
@@ -301,8 +314,8 @@ export function AnnotationLayer(p: Props) {
       <canvas ref={canvas} />
       {editing && (
         <input
+          ref={input}
           className="annotation-text"
-          autoFocus
           defaultValue={editing.text}
           placeholder={p.textPlaceholder}
           aria-label={p.textPlaceholder}
@@ -310,7 +323,8 @@ export function AnnotationLayer(p: Props) {
             left: `${editing.x * 100}%`,
             top: `${editing.y * 100}%`,
             color: editing.color,
-            fontSize: `${editing.size * (root.current?.offsetWidth ?? 800)}px`,
+            // 16 px y achicado: con menos, iOS hace zoom al enfocar y no lo deshace.
+            transform: `scale(${(editing.size * (root.current?.offsetWidth ?? 800)) / 16}) translateY(-80%)`,
           }}
           onPointerDown={(e) => e.stopPropagation()}
           onKeyDown={(e) => {
