@@ -210,6 +210,7 @@ const es = {
     undo: 'Deshacer',
     redo: 'Rehacer',
     textPlaceholder: 'Escribí una nota',
+    textBg: 'Fondo blanco',
     show: 'Mostrar anotaciones',
     hide: 'Ocultar anotaciones',
   },

@@ -208,6 +208,7 @@ export const en: Strings = {
     undo: 'Undo',
     redo: 'Redo',
     textPlaceholder: 'Write a note',
+    textBg: 'White background',
     show: 'Show annotations',
     hide: 'Hide annotations',
   },

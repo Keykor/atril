@@ -71,6 +71,13 @@ function textPath(font: ParsedFont, text: string) {
     .join('');
 }
 
+/** Rectángulo detrás de un texto, en las mismas unidades que textPath: el fondo blanco. */
+function backgroundPath(font: ParsedFont, text: string) {
+  const w = font.layout(text).positions.reduce((sum, p) => sum + p.xAdvance, 0);
+  const [pad, top, bottom] = [0.15, -0.85, 0.3].map((k) => k * font.unitsPerEm);
+  return `M${-pad} ${top}L${w + pad} ${top}L${w + pad} ${bottom}L${-pad} ${bottom}Z`;
+}
+
 export async function buildAnnotatedPdf(
   pdfBytes: ArrayBuffer,
   pages: PageAnnotations[],
@@ -119,18 +126,15 @@ export async function buildAnnotatedPdf(
       v: number,
       size: number,
       color: string,
+      bg?: boolean,
     ) => {
       const [x, y] = at(u, v);
-      page.drawSvgPath(textPath(font, text), {
-        x,
-        y,
-        scale: (size * width) / font.unitsPerEm,
-        rotate,
-        color: await toRgb(color),
-        borderWidth: 0,
-      });
+      const place = { x, y, scale: (size * width) / font.unitsPerEm, rotate, borderWidth: 0 };
+      if (bg)
+        page.drawSvgPath(backgroundPath(font, text), { ...place, color: await toRgb('#FFFFFF') });
+      page.drawSvgPath(textPath(font, text), { ...place, color: await toRgb(color) });
     };
-    for (const n of a.texts) await drawRun(caveat!, n.text, n.x, n.y, n.size, n.color);
+    for (const n of a.texts) await drawRun(caveat!, n.text, n.x, n.y, n.size, n.color, n.bg);
     for (const s of a.stamps ?? []) {
       const g = stampGeometry(s, aspect);
       await drawRun(bravura!, g.char, g.originX, g.originY / aspect, s.size, s.color);

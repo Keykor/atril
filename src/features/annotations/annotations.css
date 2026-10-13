@@ -117,7 +117,7 @@
 .at-done {
   gap: 6px;
 }
-/* Celulares angostos (320–380px): controles más chicos y "Listo" solo con ícono, para que
+/* Celulares angostos (320â€“380px): controles mÃ¡s chicos y "Listo" solo con Ã­cono, para que
    la fila entera entre en pantalla. */
 @media (max-width: 380px) {
   .annotation-toolbar {
@@ -141,8 +141,8 @@
   font-family: 'Bravura';
   font-weight: normal;
 }
-/* Los glifos SMuFL miden un pentagrama de alto (1 em) y se apoyan en la línea de base: se
-   achican y se bajan un poco para que entren centrados en un botón. */
+/* Los glifos SMuFL miden un pentagrama de alto (1 em) y se apoyan en la lÃ­nea de base: se
+   achican y se bajan un poco para que entren centrados en un botÃ³n. */
 .music-glyph {
   display: inline-block;
   font-size: 22px;
@@ -193,7 +193,7 @@
   font-size: 26px;
 }
 .at-symbol[data-group='notes'] .music-glyph {
-  transform: translateY(0.35em); /* las notas suben por la plica: se bajan más */
+  transform: translateY(0.35em); /* las notas suben por la plica: se bajan mÃ¡s */
 }
 .at-symbol[aria-pressed='true'] {
   background: rgba(110, 139, 234, 0.45);
@@ -226,4 +226,13 @@
   .at-symbol .music-glyph {
     font-size: 22px;
   }
+}
+.at-text-bg {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: #fff;
+}
+.at-text-bg[aria-pressed='true'] {
+  background: #fff;
+  color: var(--bar);
 }

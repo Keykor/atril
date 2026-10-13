@@ -8,6 +8,7 @@ export interface ToolState {
   color: string;
   width: number; // índice en WIDTHS (y en STAMP_SIZES para los símbolos)
   symbol: string; // símbolo elegido para la herramienta 'stamp'
+  textBg: boolean; // los textos nuevos van con fondo blanco
 }
 
 // El blanco tapa: sirve para tachar o "borrar" algo impreso (con el resaltador no se ve).

@@ -254,7 +254,17 @@ export function AnnotationLayer(p: Props) {
     const hit = shown.texts.find(
       (n) => Math.abs(n.x - x) < 0.08 && Math.abs((n.y - y) * p.aspect) < n.size,
     );
-    setEditing(hit ?? { id: newId(), x, y, text: '', color: p.tool.color, size: TEXT_SIZE });
+    setEditing(
+      hit ?? {
+        id: newId(),
+        x,
+        y,
+        text: '',
+        color: p.tool.color,
+        size: TEXT_SIZE,
+        ...(p.tool.textBg && { bg: true as const }),
+      },
+    );
   };
 
   const commitText = (text: string) => {
@@ -279,6 +289,10 @@ export function AnnotationLayer(p: Props) {
       onClick={onClick}
     >
       <svg viewBox={`0 0 ${VB} ${vbH}`} preserveAspectRatio="none" aria-label={p.label}>
+        <filter id={`text-bg-${p.page}`} x="-0.04" y="-0.08" width="1.08" height="1.16">
+          <feFlood floodColor="#fff" />
+          <feComposite in="SourceGraphic" />
+        </filter>
         {shown.strokes.map((s) => (
           <path
             key={s.id}
@@ -290,7 +304,14 @@ export function AnnotationLayer(p: Props) {
         {shown.texts
           .filter((n) => n.id !== editing?.id)
           .map((n) => (
-            <text key={n.id} x={n.x * VB} y={n.y * vbH} fontSize={n.size * VB} fill={n.color}>
+            <text
+              key={n.id}
+              x={n.x * VB}
+              y={n.y * vbH}
+              fontSize={n.size * VB}
+              fill={n.color}
+              filter={n.bg && `url(#text-bg-${p.page})`}
+            >
               {n.text}
             </text>
           ))}

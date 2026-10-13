@@ -57,6 +57,7 @@ export function ScoreScreen({ scoreId, show, tour }: Props) {
     color: COLORS[1],
     width: 1,
     symbol: 'noteQuarterUp',
+    textBg: false,
   });
   const [practice, setPractice] = useState(false);
   const [practiceHeight, setPracticeHeight] = useState(0);

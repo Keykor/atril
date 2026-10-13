@@ -87,6 +87,7 @@ export interface TextNote {
   text: string;
   color: string;
   size: number; // fracción del ancho de página
+  bg?: true; // fondo blanco detrás, para que se lea sobre la partitura
 }
 /** Símbolo musical pegado sobre la página (figura, silencio, dinámica...). */
 export interface Stamp {
