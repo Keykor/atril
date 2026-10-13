@@ -381,6 +381,21 @@
   transform: translate(-3px, 0);
   border-radius: 0 4px 4px 4px;
 }
+/* Anotando, las banderitas se agarran (mantener apretado): con un margen invisible para el dedo. */
+.marker-layer[data-movable] .bookmark-flag {
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+}
+.marker-layer[data-movable] .bookmark-flag::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+}
+.bookmark-flag[data-dragging] {
+  cursor: grabbing;
+  box-shadow: 0 4px 12px rgba(23, 24, 28, 0.35);
+}
 .bookmark-flag[data-highlight] {
   animation: flag-pulse 0.5s ease-in-out 4;
 }

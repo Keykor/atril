@@ -1,7 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { getGlobalReading, getScore, getScoreMarkers, resolveReading } from '../core/db/queries';
-import { addBookmark, addLink, setSetting, touchScore, updateScore } from '../core/db/repos';
+import {
+  addBookmark,
+  addLink,
+  moveBookmark,
+  setSetting,
+  touchScore,
+  updateScore,
+} from '../core/db/repos';
 import type { JumpLink, ReadingPrefs, SetList } from '../core/db/types';
 import { MissingPdfError, pageSizes } from '../core/pdf/render';
 import { keepAwake } from '../core/wakeLock';
@@ -284,6 +291,8 @@ export function ScoreScreen({ scoreId, show, tour }: Props) {
                 setDraft({ kind: placing!, point });
                 setPlacing(undefined);
               }}
+              movable={annotating}
+              onMove={(id, x, y) => void moveBookmark(id, x, y)}
             />
           </>
         )}
