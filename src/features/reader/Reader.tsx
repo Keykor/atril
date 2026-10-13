@@ -249,6 +249,13 @@ export function Reader(p: Props) {
   // evento para dibujar, y maneja los gestos de dos dedos (pellizco y arrastre).
   const onPointerDownCapture = (e: React.PointerEvent) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // El primer dedo de un gesto arranca la cuenta de cero: si se perdió el pointerup de uno
+    // anterior (se desmontó lo que tocaba, el sistema se quedó el gesto), ese dedo fantasma
+    // haría que uno solo cuente como pellizco y el zoom se mueva solo.
+    if (e.isPrimary) {
+      g.pointers.clear();
+      if (g.pinch) endPinch();
+    }
     g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (g.pointers.size !== 2 || p.framed) return;
     clearTimeout(g.longTimer);
